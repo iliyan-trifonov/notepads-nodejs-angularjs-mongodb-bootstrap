@@ -2,11 +2,12 @@
 
 var express = require('express'),
     routes = require('./routes'),
-    user = require('./routes/user'),
-    path = require('path'),
+    //user = require('./routes/user'),
     session = require('express-session'),
-    favicon = require('serve-favicon'),
-    errorHandler = require('errorhandler');
+    //favicon = require('serve-favicon')
+    path = require('path'),
+    passport = require('passport'),
+    FacebookAuth = require('./FacebookAuth');
 
 var app = express();
 
@@ -21,11 +22,28 @@ app.use(session({
     //TODO: use the app.conf.js config file for this
     secret: 'SECRET'
 }));
+FacebookAuth.call(null, passport);
+app.use(passport.initialize());
+app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', routes.index);
+app.get('/auth/facebbok',
+    passport.authenticate('facebook', {
+        scope: 'email'
+    }),
+    function () {}
+);
+app.get('/auth/facebook/callback',
+    passport.authenticate('facebook', {
+        failureRedirect: '/'
+    }),
+    FacebookAuth.login
+);
+app.get('/logout', FacebookAuth.logout);
 
 if ('development' === app.get('env')) {
+    var errorHandler = require('errorhandler');
     app.use(errorHandler());
 }
 

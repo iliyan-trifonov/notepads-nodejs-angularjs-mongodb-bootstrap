@@ -8,6 +8,7 @@ var userSchema = new mongoose.Schema({
     firstName: String,
     lastName: String,
     email: String,
+    photo: String,
     categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
     notepads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notepad' }]
 });

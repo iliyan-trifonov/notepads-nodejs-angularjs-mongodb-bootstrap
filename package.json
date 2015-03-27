@@ -32,6 +32,8 @@
     "express": "^4.12.3",
     "express-session": "^1.10.4",
     "mongoose": "^4.0.0",
+    "passport": "^0.2.1",
+    "passport-facebook": "^2.0.0",
     "serve-favicon": "^2.2.0"
   }
 }
