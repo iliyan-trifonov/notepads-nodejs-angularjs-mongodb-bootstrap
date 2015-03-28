@@ -3,17 +3,21 @@
 
     angular.module('Nodepads', [
         'Notepads.controllers',
+        'Notepads.vars',
         'ngRoute'
     ])
-    .config(['$routeProvider', function ($routeProvider) {
-        $routeProvider.when('/', {
-            templateUrl: '/partials/index.html',
-            controller: 'IndexCtrl'
-        });
-        $routeProvider.when('/register', {
-            templateUrl: '/partials/register.html',
-            controller: 'RegCtrl'
-        });
+    .config(['$routeProvider', 'USER_CONTEXT', function ($routeProvider, USER_CONTEXT) {
+        if (USER_CONTEXT.id) {
+            $routeProvider.when('/', {
+                templateUrl: '/partials/dashboard.html',
+                controller: 'DashboardCtrl'
+            });
+        } else {
+            $routeProvider.when('/', {
+                templateUrl: '/partials/index.html',
+                controller: 'IndexCtrl'
+            });
+        }
         $routeProvider.otherwise({ redirectTo: '/' });
     }]);
 })(angular);

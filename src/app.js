@@ -28,10 +28,8 @@ app.use(passport.session());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', routes.index);
-app.get('/auth/facebbok',
-    passport.authenticate('facebook', {
-        scope: 'email'
-    }),
+app.get('/auth/facebook',
+    passport.authenticate('facebook', {}),
     function () {}
 );
 app.get('/auth/facebook/callback',
@@ -41,6 +39,11 @@ app.get('/auth/facebook/callback',
     FacebookAuth.login
 );
 app.get('/logout', FacebookAuth.logout);
+/*
+app.get('/revokelogin', function () {
+    //call the graph api with DELETE /{user-id}/permissions and a valid access token
+});
+*/
 
 if ('development' === app.get('env')) {
     var errorHandler = require('errorhandler');

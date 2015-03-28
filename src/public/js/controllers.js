@@ -8,10 +8,10 @@
             $scope.test = "Test";
         }
     ])
-    .controller('RegCtrl', [
+    .controller('DashboardCtrl', [
         '$scope',
         function ($scope) {
-            $scope.test = "Register";
+            $scope.message = 'Notepads Dashboard';
         }
     ]);
 })(angular);

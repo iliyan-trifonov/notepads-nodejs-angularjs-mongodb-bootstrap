@@ -1,7 +1,7 @@
 'use strict';
 
 var path = require('path'),
-    config = require(path.join('config', 'app.conf.json')),
+    config = require(path.join('..', 'config', 'app.conf.json')),
     FacebookStrategy = require('passport-facebook').Strategy,
     User = require('./models/user');
 
@@ -10,12 +10,10 @@ var authVerification = function (accessToken, refreshToken, profile, done) {
         if (existingUser) {
             done(null, existingUser);
         } else {
+            console.log("profile = ", profile);
             var newUser = new User({
                 facebookId: profile.id,
-                username: profile.username,
-                firstName: profile.name.givenName,
-                lastName: profile.name.familyName,
-                email: profile.emails[0].value,
+                name: profile.displayName,
                 photo: profile.photos[0].value
             });
             newUser.save(done);
@@ -24,7 +22,7 @@ var authVerification = function (accessToken, refreshToken, profile, done) {
 };
 
 var authSerialize = function (user, done) {
-    done(null. user.facebookId);
+    done(null, user.facebookId);
 };
 
 var authDeserialize = function (id, done) {
@@ -33,11 +31,13 @@ var authDeserialize = function (id, done) {
 
 module.exports = exports = function (passport) {
     passport.use(new FacebookStrategy({
-        clientID: config.facebbok.app.id,
-        clientSecret: config.facebook.app.secret,
-        callbackURL: '/auth/facebook/callback'
-    }),
-    authVerification);
+            clientID: config.facebook.app.id,
+            clientSecret: config.facebook.app.secret,
+            callbackURL: '/auth/facebook/callback',
+            profileFields: ['id', 'displayName', 'picture']
+        },
+        authVerification
+    ));
 
     passport.serializeUser(authSerialize);
 
