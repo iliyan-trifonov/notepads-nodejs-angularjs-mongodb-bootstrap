@@ -1,13 +1,15 @@
 'use strict';
 
-var express = require('express'),
+var config = require('../config/app.conf.json'),
+    express = require('express'),
     routes = require('./routes'),
-    //user = require('./routes/user'),
     session = require('express-session'),
     //favicon = require('serve-favicon')
     path = require('path'),
     passport = require('passport'),
-    FacebookAuth = require('./FacebookAuth');
+    FacebookAuth = require('./FacebookAuth'),
+    notepadsRouter = require('./routes/notepads'),
+    categoriesRouter = require('./routes/categories');
 
 var app = express();
 
@@ -25,6 +27,8 @@ app.use(session({
 FacebookAuth.call(null, passport);
 app.use(passport.initialize());
 app.use(passport.session());
+//get all data sent to the API inside req.body
+app.use(require('body-parser').json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', routes.index);
@@ -39,17 +43,19 @@ app.get('/auth/facebook/callback',
     FacebookAuth.login
 );
 app.get('/logout', FacebookAuth.logout);
-/*
-app.get('/revokelogin', function () {
-    //call the graph api with DELETE /{user-id}/permissions and a valid access token
-});
-*/
 
-if ('development' === app.get('env')) {
+//API URLs
+app.use(config.apiBase + '/notepads', notepadsRouter);
+app.use(config.apiBase + '/categories', categoriesRouter);
+
+
+//dev env
+//if ('development' === app.get('env')) {
     var errorHandler = require('errorhandler');
     app.use(errorHandler());
-}
+//}
 
+//server
 if (module === require.main) {
     var connection = require('./db');
     connection().on('connected', function (err) {

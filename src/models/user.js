@@ -4,10 +4,7 @@ var mongoose = require('mongoose');
 
 var userSchema = new mongoose.Schema({
     facebookId: String,
-    username: String,
-    firstName: String,
-    lastName: String,
-    email: String,
+    name: String,
     photo: String,
     categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
     notepads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notepad' }]

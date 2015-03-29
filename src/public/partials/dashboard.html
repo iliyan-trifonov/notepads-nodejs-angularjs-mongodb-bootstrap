@@ -1,1 +1,42 @@
-{{message}}
+<div class="page-header dashboard">
+    <h2>Dashboard</h2>
+
+    <div class="alert alert-{{alertMessage.type}} flash"
+         ng-bind="alertMessage.msg"
+         ng-show="alertMessage.msg"></div>
+</div>
+
+<button ng-click="showMessage()">Click me</button>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="col-md-12" ng-repeat="cat in categories | orderBy: 'name'">
+            <div class="row">
+                <h3 ng-bind="cat.name"></h3>
+            </div>
+            <div class="row">
+                <div class="col-md-2" ng-repeat="notepad in cat.notepads | orderBy: '-_id'">
+                    <div class="notepad">
+                        <div class="title" ng-bind="notepad.title"></div>
+                        <div class="text" ng-bind="notepad.text"></div>
+                        <div class="row buttons">
+                            <div class="col-md-2">
+                                <button class="btn pull-left" ng-click="editNotepad(notepad._id)">
+                                    <i class="glyphicon glyphicon-edit"></i>
+                                </button>
+                            </div>
+                            <div class="col-md-8 text-center created">
+                                {{notepad.created}}
+                            </div>
+                            <div class="col-md-2">
+                                <button class="btn pull-right">
+                                    <i class="glyphicon glyphicon-trash" style="color: red"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

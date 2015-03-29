@@ -1,3 +1,38 @@
 body {
     padding-top: 50px;
 }
+
+div.notepad {
+    border: 1px dashed #000000;
+    min-height: 200px;
+    max-height: 200px;
+    overflow: hidden;
+    margin-top: 10px;
+}
+
+div.notepad div.title {
+    font-weight: bold;
+    border-bottom: 1px solid #000000;
+    min-height: 22px;
+    max-height: 22px;
+    overflow: hidden;
+}
+
+div.notepad div.text {
+    min-height: 140px;
+    max-height: 140px;
+    overflow: hidden;
+}
+
+div.notepad div.buttons {
+}
+
+div.notepad div.created {
+    margin-top: 7px;
+}
+
+div.alert.flash {
+    top: 70px;
+    right: 10px;
+    position: absolute;
+}

@@ -1,0 +1,30 @@
+<div class="page-header">
+    <h2 ng-bind="pageTitle"></h2>
+</div>
+
+<div class="row">
+    <div class="col-md-4 col-md-offset-4">
+        <div class="alert alert-{{alertType}}" ng-bind="alert" ng-show="alert"></div>
+        <form>
+            <div class="form-group">
+                <label for="category">Category:</label>
+                <select id="category" class="form-control" ng-model="notepad.category">
+                    <option value="">Select category</option>
+                    <option ng-repeat="category in categories"
+                            ng-value="category._id"
+                            ng-bind="category.name"
+                            ng-selected="category._id === notepad.category"></option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="title">Title:</label>
+                <input type="text" id="title" class="form-control" ng-model="notepad.title"/>
+            </div>
+            <div class="form-group">
+                <label for="text">Text:</label>
+                <textarea id="text" class="form-control" rows="20" ng-model="notepad.text"></textarea>
+            </div>
+            <button class="btn btn-primary" ng-click="addEditNotepad()" ng-bind="buttonText"></button>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,21 @@
+<div class="page-header">
+    <h2 class="pull-left">Categories</h2>
+    <button class="btn btn-primary pull-right"
+            style="top: 15px; bottom: 15px; position: relative;"
+            ng-click="addCategory()">Add New Category</button>
+    <div class="clearfix"></div>
+</div>
+
+<div class="row">
+    <div class="col-md-4 col-md-offset-4">
+        <table class="table">
+            <tr ng-repeat="category in categories">
+                <td class="text-center">
+                    <span ng-bind="category.name"></span>
+                    <a ng-href="#/categories/{{category._id}}/edit"><i class="glyphicon glyphicon-edit"></i></a>
+                    <a ng-href="#/categories/{{category._id}}/delete"><i class="glyphicon glyphicon-trash" style="color: red"></i></a>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
