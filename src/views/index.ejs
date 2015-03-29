@@ -52,7 +52,11 @@
             </div>
         </nav>
 
-        <div class="container-fluid">
+        <div class="container-fluid" ng-controller="MainCtrl">
+            <div class="alert alert-{{flash.get().type}} flash"
+                 ng-bind="flash.get().msg"
+                 ng-show="flash.get().msg"></div>
+
             <div ng-view></div>
         </div>
 

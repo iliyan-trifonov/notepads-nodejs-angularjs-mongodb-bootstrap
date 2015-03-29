@@ -2,15 +2,24 @@
     'use strict';
 
     angular.module('Notepads.controllers', [])
+
+    .controller('MainCtrl', [
+        '$scope', 'flash',
+        function ($scope, flash) {
+            $scope.flash = flash;
+        }
+    ])
+
     .controller('IndexCtrl', [
         '$scope',
         function ($scope) {
-            $scope.test = "Test";
+            //...
         }
     ])
+
     .controller('DashboardCtrl', [
-        '$scope', 'Api', '$location', '$timeout', 'flash',
-        function ($scope, Api, $location, $timeout, flash) {
+        '$scope', 'Api', '$location',
+        function ($scope, Api, $location) {
             function list() {
                 Api.notepads.list()
                     .success(function (categories) {
@@ -23,10 +32,6 @@
             };
 
             list();
-            $scope.alertMessage = flash.get();
-            $timeout(function () {
-                $scope.alertMessage = {};
-            }, 1E3);
         }
     ])
     .controller('NotepadCtrl', [

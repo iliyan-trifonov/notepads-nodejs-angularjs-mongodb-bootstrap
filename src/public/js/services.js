@@ -76,18 +76,25 @@
             }
         ])
         .factory('flash', [
-            function () {
-                var msg = {};
+            '$rootScope',
+            function ($rootScope) {
+                //TODO: use the queue and show many messages (with timeout)
+                var messages = [],
+                    currentMessage = {};
+
+                $rootScope.$on('$routeChangeSuccess', function () {
+                    if (messages.length > 0) {
+                        currentMessage = messages.shift();
+                    } else {
+                        currentMessage = {};
+                    }
+                });
 
                 return {
                     set: function (message) {
-                        msg = message;
-                        console.log('set new message', msg);
+                        messages.push(message);
                     },
                     get: function () {
-                        var currentMessage = msg;
-                        msg = {};
-                        console.log('getting new message', currentMessage);
                         return currentMessage;
                     }
                 };
