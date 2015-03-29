@@ -10,7 +10,6 @@ var authVerification = function (accessToken, refreshToken, profile, done) {
         if (existingUser) {
             done(null, existingUser);
         } else {
-            console.log("profile = ", profile);
             var newUser = new User({
                 facebookId: profile.id,
                 name: profile.displayName,

@@ -3,17 +3,18 @@
 var mongoose = require('mongoose');
 
 var notepadSchema = new mongoose.Schema({
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
     title: String,
-    text: String
+    text: String,
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 });
 
 notepadSchema.static('getById', function (id, cb) {
     return this.findOne({ _id: id }, 'title text category', cb);
 });
 
-notepadSchema.static('list', function (userId, cb) {
-    return this.find({}, cb);
+notepadSchema.static('getByUserId', function (uid, cb) {
+    return this.find({ user: uid }, 'title text category', cb);
 });
 
 var Notepad = mongoose.model('Notepad', notepadSchema);

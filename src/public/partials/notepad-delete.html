@@ -1,0 +1,11 @@
+<div class="col-md-12">
+    <div class="page-header">
+        <h2>Delete Notepad</h2>
+    </div>
+
+    <div class="text-center delete-notepad">
+        Delete notepad '<strong>{{title | limitTo: 20}}</strong>' ?
+        <button class="btn btn-danger" ng-click="remove()">Delete</button>
+        <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+    </div>
+</div>

@@ -1,21 +1,29 @@
-<div class="page-header">
-    <h2 class="pull-left">Categories</h2>
-    <button class="btn btn-primary pull-right"
-            style="top: 15px; bottom: 15px; position: relative;"
-            ng-click="addCategory()">Add New Category</button>
-    <div class="clearfix"></div>
-</div>
+<div class="col-md-12">
 
-<div class="row">
-    <div class="col-md-4 col-md-offset-4">
-        <table class="table">
-            <tr ng-repeat="category in categories">
-                <td class="text-center">
-                    <span ng-bind="category.name"></span>
-                    <a ng-href="#/categories/{{category._id}}/edit"><i class="glyphicon glyphicon-edit"></i></a>
-                    <a ng-href="#/categories/{{category._id}}/delete"><i class="glyphicon glyphicon-trash" style="color: red"></i></a>
-                </td>
-            </tr>
-        </table>
+    <div class="page-header">
+        <h2>Categories
+            <button class="btn btn-primary"
+                    ng-click="addCategory()">Add New Category</button>
+        </h2>
+        <div class="clearfix"></div>
     </div>
+
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <table class="table">
+                <tr ng-repeat="category in categories">
+                    <td class="text-left">
+                        <span ng-bind="category.name"></span>
+                    </td>
+                    <td class="text-right">
+                        <a type="button" ng-href="#/categories/{{category._id}}/edit"
+                           class="btn btn-primary glyphicon glyphicon-edit">Edit</a>
+                        <a type="button" ng-href="#/categories/{{category._id}}/delete"
+                           class="btn btn-primary glyphicon glyphicon-trash" style="color: red">Delete</a>
+                    </td>
+                </tr>
+            </table>
+        </div>
+    </div>
+
 </div>

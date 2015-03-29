@@ -4,24 +4,22 @@ var express = require('express'),
     router = express.Router(),
     FacebookAuth = require('../FacebookAuth'),
     User = require('../models/user'),
-    Category = require('../models/category');
+    Category = require('../models/category'),
+    Notepad = require('../models/notepad');
 
 //protect this resource to the logged in user
+//TODO: return API error not redirect to the home page!!!
 router.use(FacebookAuth.verifyAuth);
 
 //base: /categories
 
 // GET /categories
 router.get('/', function (req, res) {
-    //get user's categories' ObjectIds
-    User.findOne({ _id: req.user.id }, 'categories', function (err, user) {
-        //TODO: if err
-        //get the categories data by these ObjectIds
-        Category.find({ _id: { $in: user.categories }}, function (err, categories) {
-            //TODO: if err / categories === null
-            //TODO: empty status
-            res.json(categories);
-        });
+    //get the categories by user id
+    Category.getByUserId(req.user._id, function (err, categories) {
+        //TODO: if err / categories === null
+        //TODO: empty status
+        res.json(categories);
     });
 });
 
@@ -29,7 +27,8 @@ router.get('/', function (req, res) {
 router.post('/', function (req, res) {
     //TODO: check if name is given and is clean
     var category = new Category({
-        name: req.body.name
+        name: req.body.name,
+        user: req.user._id
     });
     category.save(function (err, category) {
         //TODO: if err / category === null
@@ -50,6 +49,7 @@ router.get('/:id', function (req, res) {
 router.put('/:id', function (req, res) {
     //TODO: check id, name allowed chars, belongs to user, etc.
     //res.send(500, {error: err})
+    //TODO: use a model function for this
     Category.findOneAndUpdate(
         { _id: req.params.id },
         {$set: {name: req.body.name}},
@@ -59,6 +59,25 @@ router.put('/:id', function (req, res) {
             res.json(category);
         }
     );
+});
+
+// DELETE /categories/1
+router.delete('/:id', function (req, res) {
+    //TODO: check for valid id and belonging to the current user
+    Category.findByIdAndRemove(req.params.id, function (err, category) {
+        //TODO: check if err / category === null - missing
+        //finds user by category._id looking into user.categories[]
+        User.findOneAndUpdate({ categories: req.params.id }, {
+            $pull: { categories: req.params.id }
+        }, function (err, user) {
+            //TODO: check if err / user === null, etc.
+            //delete all orphaned notepads belonging to the deleted category
+            Notepad.remove({ category: req.params.id }, function (err, data) {
+                //TODO: check if err / data === null - missing/not found?
+                res.json(category);
+            });
+        });
+    });
 });
 
 module.exports = exports = router;

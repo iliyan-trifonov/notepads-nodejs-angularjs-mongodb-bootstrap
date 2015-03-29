@@ -1,0 +1,12 @@
+<div class="col-md-12">
+    <div class="page-header">
+        <h2>Delete Category</h2>
+    </div>
+
+    <div class="text-center delete-notepad">
+        Delete category '<strong>{{name | limitTo: 20}}</strong>' ?<br/><br/>
+        <span class="text-danger">This will delete ALL NOTEPADS in the category!</span><br/><br/>
+        <button class="btn btn-danger" ng-click="remove()">Delete</button>
+        <button class="btn btn-default" ng-click="cancel()">Cancel</button>
+    </div>
+</div>

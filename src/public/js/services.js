@@ -38,6 +38,13 @@
                                 method: 'PUT',
                                 cache: false
                             });
+                        },
+                        remove: function(id) {
+                            return $http({
+                                url: apiBase + '/notepads/' + id,
+                                method: 'DELETE',
+                                cache: false
+                            });
                         }
                     },
                     categories: {
@@ -70,11 +77,19 @@
                                 method: 'PUT',
                                 cache: false
                             });
+                        },
+                        remove: function(id) {
+                            return $http({
+                                url: apiBase + '/categories/' + id,
+                                method: 'DELETE',
+                                cache: false
+                            });
                         }
                     }
                 };
             }
         ])
+
         .factory('flash', [
             '$rootScope',
             function ($rootScope) {
@@ -96,6 +111,10 @@
                     },
                     get: function () {
                         return currentMessage;
+                    },
+                    clear: function () {
+                        messages = [];
+                        currentMessage = {};
                     }
                 };
             }

@@ -10,16 +10,18 @@ var userSchema = new mongoose.Schema({
     notepads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notepad' }]
 });
 
-userSchema.static('fb', function (id, cb) {
-    return this.findOne({ facebookId: id }, cb);
+//return only the _id for now,
+//all that we need to keep a logged in user and make checks on it
+userSchema.static('fb', function (fbId, cb) {
+    return this.findOne({ facebookId: fbId }, null, cb);
 });
 
-userSchema.static('getCategories', function (id, cb) {
-    return this.findOne({ _id: id }, 'categories', null, cb);
+userSchema.static('getCategories', function (uid, cb) {
+    return this.findOne({ _id: uid }, 'categories', null, cb);
 });
 
-userSchema.static('getNotepads', function (id, cb) {
-    return this.findOne({ _id: id }, 'notepads', null, cb);
+userSchema.static('getNotepads', function (uid, cb) {
+    return this.findOne({ _id: uid }, 'notepads', null, cb);
 });
 
 userSchema.static('addCategory', function (userId, categoryId, cb) {

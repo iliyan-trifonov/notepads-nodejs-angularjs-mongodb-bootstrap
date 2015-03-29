@@ -1,21 +1,28 @@
-<div class="page-header">
-    <h1 ng-bind="pageTitle"></h1>
-</div>
+<div class="col-md-12">
+    <div class="page-header">
+        <h2 ng-bind="pageTitle"></h2>
+    </div>
 
-<div class="row">
-    <div class="col-md-4 col-md-offset-4">
-        <div class="alert" ng-bind="alert"></div>
-        <form>
-            <div class="form-group">
-                <label for="name">Name:</label>
-                <input type="text" id="name"
-                       ng-model="category.name"
-                        class="form-control"/>
-            </div>
-            <button type="button"
-                    class="btn btn-primary"
-                    ng-click="addEditCategory()"
-                    ng-bind="buttonText"></button>
-        </form>
+    <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+            <div class="alert" ng-bind="alert"></div>
+            <form>
+                <div class="form-group">
+                    <label for="name">Name:</label>
+                    <input type="text" id="name"
+                           ng-model="category.name"
+                           class="form-control"/>
+                </div>
+                <button type="button"
+                        class="btn btn-primary"
+                        ng-click="addEditCategory()"
+                        ng-bind="buttonText"
+                        ng-disabled="!category.name"></button>
+                <button type="button"
+                        ng-click="cancel()"
+                        class="btn btn-default">Cancel
+                </button>
+            </form>
+        </div>
     </div>
 </div>

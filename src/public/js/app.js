@@ -17,9 +17,17 @@
                 templateUrl: '/partials/notepad.html',
                 controller: 'NotepadCtrl'
             })
+            .when('/notepads/add/catid/:cid', {
+                templateUrl: '/partials/notepad.html',
+                controller: 'NotepadCtrl'
+            })
             .when('/notepads/:id/edit', {
                 templateUrl: '/partials/notepad.html',
                 controller: 'NotepadCtrl'
+            })
+            .when('/notepads/:id/delete', {
+                templateUrl: '/partials/notepad-delete.html',
+                controller: 'NotepadDelCtrl'
             })
             .when('/categories', {
                 templateUrl: '/partials/categories.html',
@@ -32,6 +40,10 @@
             .when('/categories/:id/edit', {
                 templateUrl: '/partials/category.html',
                 controller: 'CategoryCtrl'
+            })
+            .when('/categories/:id/delete', {
+                templateUrl: '/partials/category-delete.html',
+                controller: 'CategoryDelCtrl'
             });
         } else {
             $routeProvider.when('/', {
