@@ -13,7 +13,7 @@
             <table class="table">
                 <tr ng-repeat="category in categories">
                     <td class="text-left">
-                        <span ng-bind="category.name"></span>
+                        <span>{{category.name}}<small>({{category.notepadsCount}})</small></span>
                     </td>
                     <td class="text-right">
                         <a type="button" ng-href="#/categories/{{category._id}}/edit"

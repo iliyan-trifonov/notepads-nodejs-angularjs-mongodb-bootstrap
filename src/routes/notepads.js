@@ -12,7 +12,7 @@ var express = require('express'),
 //TODO: with the Facebook authentication process
 function checkAuth(req, res, next) {
     if (!req.isAuthenticated()) {
-        res.send(403, 'Unauthorized');
+        res.status(403).send('Unauthorized');
     } else {
         next();
     }

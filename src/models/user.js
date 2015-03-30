@@ -1,19 +1,39 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+    hat = require('hat');
 
 var userSchema = new mongoose.Schema({
     facebookId: String,
+    accessToken: String,
     name: String,
     photo: String,
     categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
     notepads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notepad' }]
 });
 
-//return only the _id for now,
+//TODO: fix it with static calls only, no new User, etc.
+userSchema.static('create', function (data, cb) {
+    var user = new User({
+        facebookId: data.facebookId,
+        accessToken: hat(),
+        name: data.displayName,
+        photo: data.photo
+    });
+    return user.save(function (err, user) {
+        cb(err, user);
+    });
+});
+
+//returns only _id
+userSchema.static('getByAccessToken', function (accessToken, cb) {
+    return this.findOne({ accessToken: accessToken }, null, null, cb);
+});
+
+//return only the _id and accessToken for now,
 //all that we need to keep a logged in user and make checks on it
 userSchema.static('fb', function (fbId, cb) {
-    return this.findOne({ facebookId: fbId }, null, cb);
+    return this.findOne({ facebookId: fbId }, 'facebookId accessToken', null, cb);
 });
 
 userSchema.static('getCategories', function (uid, cb) {
