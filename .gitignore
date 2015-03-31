@@ -82,3 +82,4 @@ src/public/vendor
 
 #the config file
 config/app.conf.json
+config/app.conf.dev.json
