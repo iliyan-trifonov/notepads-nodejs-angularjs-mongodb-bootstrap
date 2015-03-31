@@ -40,7 +40,7 @@ userSchema.static('getByAccessToken', function (accessToken, cb) {
 //return only the _id and accessToken for now,
 //all that we need to keep a logged in user and make checks on it
 userSchema.static('fb', function (fbId, cb) {
-    return this.findOne({ facebookId: fbId }, 'facebookId accessToken', null, cb);
+    return this.findOne({ facebookId: fbId }, 'facebookId accessToken name photo', null, cb);
 });
 
 userSchema.static('getCategories', function (uid, cb) {
