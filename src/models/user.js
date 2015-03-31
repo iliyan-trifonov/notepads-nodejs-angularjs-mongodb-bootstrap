@@ -15,12 +15,6 @@ var userSchema = new mongoose.Schema({
 
 //TODO: fix it with static calls only, no new User, etc.
 userSchema.static('create', function (data, cb) {
-    console.log('new user data', {
-        facebookId: data.facebookId,
-        accessToken: hat(),
-        name: data.name,
-        photo: data.photo
-    });
     var user = new User({
         facebookId: data.facebookId,
         accessToken: hat(),
