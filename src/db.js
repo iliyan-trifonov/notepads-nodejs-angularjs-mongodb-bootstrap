@@ -1,8 +1,9 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+    config = require('../config/app.conf.json');
 
-var uri = 'mongodb://localhost/notepads';
+var uri = config.mongodb.uri;
 var options = {
     db: { native_parser: true },
     server: { poolSize: 5 },

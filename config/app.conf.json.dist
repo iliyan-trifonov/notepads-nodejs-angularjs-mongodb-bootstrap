@@ -7,6 +7,9 @@
     }
   },
   "apiBase": "/api/v1",
+  "mongodb": {
+    "uri": "MONGODB_URI"
+  },
   "defaultData": {
     "cats": [],
     "notepads": []
