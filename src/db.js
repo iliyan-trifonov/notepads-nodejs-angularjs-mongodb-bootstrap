@@ -1,9 +1,9 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-    config = require('../config/app.conf.json');
+    config;
 
-var uri = config.mongodb.uri;
+var uri;
 var options = {
     db: { native_parser: true },
     server: { poolSize: 5 },
@@ -19,4 +19,10 @@ module.exports = exports = function () {
     });
 
     return db.connection;
+};
+
+module.exports.setAppConfig = exports.setAppConfig = function (cnf) {
+    config = cnf;
+    console.log('db: using config - ', config);
+    uri = config.mongodb.uri;
 };

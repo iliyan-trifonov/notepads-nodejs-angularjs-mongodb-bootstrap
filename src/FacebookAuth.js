@@ -1,7 +1,7 @@
 'use strict';
 
 var path = require('path'),
-    config = require(path.join('..', 'config', 'app.conf.json')),
+    config,
     FacebookStrategy = require('passport-facebook').Strategy,
     User = require('./models/user');
 
@@ -12,6 +12,7 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
             done(null, existingUser);
         } else {
             console.log('creating new user');
+            console.log('fb profile', fbProfile);
 /*
             var newUser = new User({
                 facebookId: profile.id,
@@ -76,4 +77,8 @@ module.exports.verifyAuth = exports.verifyAuth = function (req, res, next) {
     } else {
         return res.redirect('/');
     }
+};
+
+module.exports.setAppConfig = exports.setAppConfig = function (cnf) {
+    config = cnf;
 };

@@ -34,6 +34,7 @@ app.use(session({
     //TODO: use the app.conf.js config file for this
     secret: 'SECRET'
 }));
+FacebookAuth.setAppConfig(config);
 FacebookAuth.call(null, passport);
 app.use(passport.initialize());
 app.use(passport.session());
@@ -86,6 +87,7 @@ app.use(function (req, res, next) {
         next();
     }
 });
+usersRouter.setAppConfig(config);
 app.use(config.apiBase + '/users', usersRouter);
 app.use(config.apiBase + '/notepads', notepadsRouter);
 app.use(config.apiBase + '/categories', categoriesRouter);
@@ -100,6 +102,7 @@ if ('development' === app.get('env')) {
 //server
 if (module === require.main) {
     var connection = require('./db');
+    connection.setAppConfig(config);
     connection().on('connected', function (err) {
         if (err) {
             process.stderr.write(err);

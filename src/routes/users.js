@@ -4,7 +4,7 @@ var express = require('express'),
     router = express.Router(),
     User = require('../models/user'),
     graph = require('fbgraph'),
-    config = require('../../config/app.conf.json');
+    config;
 
 //base: /users
 
@@ -31,12 +31,13 @@ router.post('/auth', function (req, res) {
             }
         });
     } else {
+        console.log('graph: set appsecret to: ' + config.facebook.app.secret);
         graph.setAppSecret(config.facebook.app.secret);
         graph.setAccessToken(fbAccessToken);
 
         graph.get('me?id,displayName,photo', function (err, graphUser) {
             if (err) {
-                return res.json(400, err);
+                return res.status(400).json(err);
             }
 
             if (graphUser.id !== fbUserId) {
@@ -76,3 +77,7 @@ router.post('/auth', function (req, res) {
 });
 
 module.exports = exports = router;
+
+module.exports.setAppConfig = exports.setAppConfig = function (cnf) {
+    config = cnf;
+};

@@ -3,6 +3,7 @@
 var mongoose = require('mongoose'),
     hat = require('hat');
 
+//TODO: add required to the fields
 var userSchema = new mongoose.Schema({
     facebookId: String,
     accessToken: String,
@@ -14,10 +15,16 @@ var userSchema = new mongoose.Schema({
 
 //TODO: fix it with static calls only, no new User, etc.
 userSchema.static('create', function (data, cb) {
+    console.log('new user data', {
+        facebookId: data.facebookId,
+        accessToken: hat(),
+        name: data.name,
+        photo: data.photo
+    });
     var user = new User({
         facebookId: data.facebookId,
         accessToken: hat(),
-        name: data.displayName,
+        name: data.name,
         photo: data.photo
     });
     return user.save(function (err, user) {
