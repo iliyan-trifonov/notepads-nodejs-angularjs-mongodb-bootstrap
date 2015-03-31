@@ -8,7 +8,7 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
     User.fb(fbProfile.id, function (err, existingUser) {
         if (existingUser) {
             console.log('user already in DB');
-            done(null, existingUser);
+            return done(null, existingUser);
         } else {
             console.log('creating new user');
             console.log('fb profile', fbProfile);
@@ -16,15 +16,9 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
                 facebookId: fbProfile.id,
                 name: fbProfile.displayName,
                 photo: fbProfile.photos[0].value
-            }, function (err/*, user*/) {
-                if (err) {
-                    throw err;
-                }
-
+            }, function (err, user) {
                 console.log('new user created');
-
-                //put err, user params here?
-                done();
+                return done(err, user);
             });
         }
     });
@@ -54,12 +48,12 @@ module.exports = exports = function (passport) {
 };
 
 module.exports.login = exports.login = function (req, res) {
-    res.redirect('/');
+    return res.redirect('/');
 };
 
 module.exports.logout = exports.logout = function (req, res) {
     req.logout();
-    res.redirect('/');
+    return res.redirect('/');
 };
 
 module.exports.verifyAuth = exports.verifyAuth = function (req, res, next) {
