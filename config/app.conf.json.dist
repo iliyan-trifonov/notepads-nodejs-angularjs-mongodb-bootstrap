@@ -1,0 +1,14 @@
+{
+  "sessionSecret": "SECRET",
+  "facebook": {
+    "app": {
+      "id": "FACEBOOK_APP_ID",
+      "secret": "FACEBOOK_APP_SECRET"
+    }
+  },
+  "apiBase": "/api/v1",
+  "defaultData": {
+    "cats": [],
+    "notepads": []
+  }
+}
