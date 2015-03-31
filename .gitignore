@@ -79,3 +79,6 @@ node_modules
 
 #bower installs
 src/public/vendor
+
+#the config file
+config/app.conf.json
