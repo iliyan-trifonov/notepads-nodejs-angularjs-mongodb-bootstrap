@@ -1,7 +1,6 @@
 'use strict';
 
-var path = require('path'),
-    config,
+var config,
     FacebookStrategy = require('passport-facebook').Strategy,
     User = require('./models/user');
 
@@ -13,19 +12,11 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
         } else {
             console.log('creating new user');
             console.log('fb profile', fbProfile);
-/*
-            var newUser = new User({
-                facebookId: profile.id,
-                name: profile.displayName,
-                photo: profile.photos[0].value
-            });
-            newUser.save(done);
-*/
             User.create({
                 facebookId: fbProfile.id,
                 name: fbProfile.displayName,
                 photo: fbProfile.photos[0].value
-            }, function (err, user) {
+            }, function (err/*, user*/) {
                 if (err) {
                     throw err;
                 }

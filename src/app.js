@@ -15,9 +15,10 @@ var config,
 var app = express();
 
 //TODO: make the config handling better - one config file with dev/prod keys?
-//env=development npm start
+//export NODE_ENV=development npm start
 if ('development' === app.get('env')) {
     console.log('development environment detected');
+    //TODO: use path.join
     config = require('../config/app.conf.dev.json');
 } else {
     config = require('../config/app.conf.json');
