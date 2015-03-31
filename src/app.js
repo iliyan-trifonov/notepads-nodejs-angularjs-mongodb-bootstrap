@@ -1,6 +1,6 @@
 'use strict';
 
-var config = require('../config/app.conf.json'),
+var config,
     express = require('express'),
     routes = require('./routes'),
     session = require('express-session'),
@@ -13,6 +13,13 @@ var config = require('../config/app.conf.json'),
     categoriesRouter = require('./routes/categories');
 
 var app = express();
+
+//TODO: make the config handling better - one config file with dev/prod keys?
+if ('development' === app.get('env')) {
+    config = require('../config/app.conf.dev.json');
+} else {
+    config = require('../config/app.conf.json');
+}
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
@@ -83,10 +90,10 @@ app.use(config.apiBase + '/categories', categoriesRouter);
 
 
 //dev env
-//if ('development' === app.get('env')) {
+if ('development' === app.get('env')) {
     var errorHandler = require('errorhandler');
     app.use(errorHandler());
-//}
+}
 
 //server
 if (module === require.main) {
