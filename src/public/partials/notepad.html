@@ -15,7 +15,7 @@
                             ng-model="notepad.category"
                             ng-disabled="!categories">
                         <option value="">Select category</option>
-                        <option ng-repeat="category in categories"
+                        <option ng-repeat="category in categories | orderBy: 'name'"
                                 ng-value="category._id"
                                 ng-bind="category.name"
                                 ng-selected="category._id === notepad.category || (catId && category._id === catId)">

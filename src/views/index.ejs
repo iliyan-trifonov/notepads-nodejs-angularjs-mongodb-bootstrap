@@ -8,7 +8,7 @@
         <meta name="description" content="Notepads App built with NodeJS, AngularJS, ExpressJS and MongoDB">
         <meta name="author" content="Iliyan Trifonov">
         <!--<link rel="icon" href="/favicon.ico">-->
-        <title>Notepads JS</title>
+        <title>Notepads by Iliyan Trifonov</title>
 
         <link href="/vendor/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
         <link href="/css/styles.css" rel="stylesheet">
@@ -32,13 +32,15 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="#/">Nodepads JS</a>
+                    <a class="navbar-brand" href="#/">Nodepads</a>
                 </div>
                 <div id="navbar" class="collapse navbar-collapse">
                     <ul class="nav navbar-nav">
                         <li><a ng-href="#/">Home</a></li>
+                        <% if (user) { %>
                         <li><a ng-href="#/categories">Categories</a></li>
                         <li><a ng-href="#/notepads/add">Add Notepad</a></li>
+                        <% } %>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <% if (user) { %>
