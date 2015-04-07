@@ -16,6 +16,7 @@ router.post('/auth', function (req, res) {
     console.log('params', fbUserId, fbAccessToken, accessToken);
 
     if (!fbUserId || (!fbAccessToken && !accessToken)) {
+        console.log('API /auth: not enough params!', fbUserId, fbAccessToken, accessToken);
         return res.status(500).send("Not enough data!");
     }
 
@@ -23,6 +24,7 @@ router.post('/auth', function (req, res) {
         User.getByAccessToken(accessToken, function (err, user) {
             if (err) {
                 //user does not exist
+                console.log('user with accessToken ' + accessToken + ' does not exist!');
                 return res.json(500, err);
             }
 

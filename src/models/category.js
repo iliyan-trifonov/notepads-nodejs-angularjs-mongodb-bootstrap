@@ -14,8 +14,8 @@ categorySchema.static('getByUserId', function (uid, cb) {
     return this.find({ user: uid }, 'name notepadsCount', cb);
 });
 
-categorySchema.static('getById', function (id, cb) {
-    return this.findOne({ _id: id }, 'name', cb);
+categorySchema.static('getByIdForUser', function (id, uid, cb) {
+    return this.findOne({ _id: id, user: uid }, 'name', cb);
 });
 
 categorySchema.static('increaseNotepadsCountById', function (id, cb) {

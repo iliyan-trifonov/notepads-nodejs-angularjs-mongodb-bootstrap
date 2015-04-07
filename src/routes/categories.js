@@ -41,22 +41,22 @@ router.post('/', function (req, res) {
 
 router.get('/:id', function (req, res) {
     //TODO: check for valid id, belongs to the current user, etc.
-    Category.getById(req.params.id, function (err, category) {
-        res.json(category);
+    Category.getByIdForUser(req.params.id, req.user.id, function (err, category) {
+        //TODO: check for error, !category
+        return res.status(200).json(category);
     });
 });
 
 router.put('/:id', function (req, res) {
-    //TODO: check id, name allowed chars, belongs to user, etc.
-    //res.send(500, {error: err})
-    //TODO: use a model function for this
+    //TODO: check id, name allowed chars, etc.
+    //TODO: use a model function for this: Category.updateCategory(id, uid, newName)
     Category.findOneAndUpdate(
-        { _id: req.params.id },
+        { _id: req.params.id, user: req.user.id },
         {$set: {name: req.body.name}},
         {},
         function (err, category) {
             //TODO: if err / category === null
-            res.json(category);
+            return res.status(200).json(category);
         }
     );
 });
@@ -64,19 +64,42 @@ router.put('/:id', function (req, res) {
 // DELETE /categories/1
 router.delete('/:id', function (req, res) {
     //TODO: check for valid id and belonging to the current user
-    Category.findByIdAndRemove(req.params.id, function (err, category) {
-        //TODO: check if err / category === null - missing
-        //finds user by category._id looking into user.categories[]
-        User.findOneAndUpdate({ categories: req.params.id }, {
-            $pull: { categories: req.params.id }
-        }, function (err, user) {
-            //TODO: check if err / user === null, etc.
-            //delete all orphaned notepads belonging to the deleted category
-            Notepad.remove({ category: req.params.id }, function (err, data) {
-                //TODO: check if err / data === null - missing/not found?
-                res.json(category);
+    Category.getByIdForUser(req.params.id, req.user.id, function (err, category) {
+
+        if (err) {
+            return res.status(500).json(err);
+        }
+
+        if (!category) {
+            return res.status(500).json('Could not find category!');
+        }
+
+        //TODO: it should be better if used only one call including the cat id and user id
+        Category.findByIdAndRemove(req.params.id, function (err, category) {
+            if (err) {
+                return res.status(500).json(err);
+            }
+            if (!category) {
+                return res.status(500).json('Category not found!');
+            }
+            //finds user by category._id looking into user.categories[]
+            User.findOneAndUpdate({ categories: req.params.id }, {
+                $pull: { categories: req.params.id }
+            }, function (err, user) {
+                if (err) {
+                    return res.status(500).json(err);
+                }
+                if (!user) {
+                    return res.status(500).json('Category not found for user!');
+                }
+                //delete all orphaned notepads belonging to the deleted category
+                Notepad.remove({ category: req.params.id }, function (err, data) {
+                    //TODO: check if err / data === null - missing/not found?
+                    return res.status(200).json(category);
+                });
             });
         });
+
     });
 });
 

@@ -12,6 +12,7 @@ var express = require('express'),
 //TODO: with the Facebook authentication process
 function checkAuth(req, res, next) {
     if (!req.isAuthenticated()) {
+        console.log('API cats: checkAuth(), not authenticated!');
         res.status(403).send('Unauthorized');
     } else {
         next();
@@ -91,7 +92,7 @@ router.get('/', insidecatsFromQueryString(), function (req, res) {
                                     .format('YYYY/MM/DD HH:mm:ss')
                         });
                     });
-                    res.json(categories);
+                    return res.json(categories);
                 });
         });
     /*} else {
@@ -111,37 +112,62 @@ router.get('/', insidecatsFromQueryString(), function (req, res) {
 // GET /notepads/1
 router.get('/:id', function (req, res) {
     //TODO: check id validity, belongs to the current user, etc.
-    Notepad.getById(req.params.id, function (err, notepad) {
-        //TODO: check err / notepad === null
-        res.json(notepad);
+    Notepad.getByIdForUser(req.params.id, req.user.id, function (err, notepad) {
+        if (err) {
+            return res.status(500).json(err);
+        }
+        if (!notepad) {
+            //TODO: return empty set status
+            return res.status(500).json({});
+        }
+        return res.json(notepad);
     });
 });
 
 // POST /notepads
 router.post('/', function (req, res) {
-    //TODO: check the values and if they belong to the user
-    var notepad = new Notepad({
-        category: req.body.category,
-        title: req.body.title,
-        text: req.body.text,
-        user: req.user.id
-    });
-    notepad.save(function (err, notepad) {
-        User.addNotepad(req.user.id, notepad, function (err, user) {
-            //TODO: err / user === null
-            Category.increaseNotepadsCountById(notepad.category, function (err, category) {
-                //TODO: if err / category === null
-                res.json(notepad);
+    //TODO: check for empty or invalid values
+    //TODO: create a common checkCatBelongsTo() function to use everywhere here
+    Category.getByIdForUser(req.body.category, req.user.id, function (err, category) {
+
+        if (err) {
+            return res.status(500).json(err);
+        }
+        if (!category) {
+            return res.status(500).json('Unknown category!');
+        }
+
+        var notepad = new Notepad({
+            category: req.body.category,
+            title: req.body.title,
+            text: req.body.text,
+            user: req.user.id
+        });
+
+        notepad.save(function (err, notepad) {
+            User.addNotepad(req.user.id, notepad, function (err, user) {
+                if (err) {
+                    return res.status(500).json(err);
+                }
+                if (!user) {
+                    return res.status(500).json('Error assigning the notepad to the user!');
+                }
+                Category.increaseNotepadsCountById(notepad.category, function (err, category) {
+                    //TODO: if err / category === null
+                    return res.json(notepad);
+                });
             });
         });
+
     });
 });
 
 // PUT /notepads/1
 router.put('/:id', function (req, res) {
     //TODO: check id and notepad props validity, belongs to user, etc.
+    //TODO: check if cat belongs to the user: create a common function for that
     Notepad.findOneAndUpdate(
-        { _id: req.params.id },
+        { _id: req.params.id, user: req.user.id },
         {$set: {
             title: req.body.title,
             text: req.body.text,
@@ -150,29 +176,40 @@ router.put('/:id', function (req, res) {
         {},
         function (err, notepad) {
             //TODO: check err / notepad === null
-            res.json(notepad);
+            return res.status(200).json(notepad);
         }
     );
 });
 
 // DELETE /notepads/1
 router.delete('/:id', function (req, res) {
-    //TODO: check for valid id and belonging to the current user
-    Notepad.findByIdAndRemove(req.params.id, function (err, notepad) {
-        console.log('the removed notepad', notepad);
-        //TODO: check if err / notepad === null - missing
-        //finds user by notepad._id looking into user.notepads[]
-        User.findOneAndUpdate({ notepads: req.params.id }, {
-            $pull: { notepads: req.params.id }
-        }, function (err, user) {
-            console.log('notepad removed from the user');
-            //TODO: check if err / user === null, etc.
-            Category.decreaseNotepadsCountById(notepad.category, function (err, category) {
-                console.log('category notepadsCount decreased');
-                //TODO: check if err / category === null - not found?
-                res.json(notepad);
+    //TODO: check for valid id: exists/is ObjectID/etc.
+    Notepad.getByIdForUser(req.params.id, req.user.id, function (err, notepad) {
+
+        if (err) {
+            return res.status(500).json(err);
+        }
+        if (!notepad) {
+            return res.status(500).json('Notepad not found!');
+        }
+
+        Notepad.findByIdAndRemove(req.params.id, function (err, notepad) {
+            console.log('notepad removed:', notepad);
+            //TODO: check if err / notepad === null - missing
+            //finds user by notepad._id looking into user.notepads[]
+            User.findOneAndUpdate({ notepads: req.params.id }, {
+                $pull: { notepads: req.params.id }
+            }, function (err, user) {
+                console.log('notepad removed from the user');
+                //TODO: check if err / user === null, etc.
+                Category.decreaseNotepadsCountById(notepad.category, function (err, category) {
+                    console.log('category notepadsCount decreased');
+                    //TODO: check if err / category === null - not found?
+                    return res.status(200).json(notepad);
+                });
             });
         });
+
     });
 });
 
