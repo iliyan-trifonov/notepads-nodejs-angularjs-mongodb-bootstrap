@@ -22,6 +22,7 @@ router.post('/auth', function (req, res) {
     if (accessToken) {
         User.getByAccessToken(accessToken, function (err, user) {
             if (err) {
+                //user does not exist
                 return res.json(500, err);
             }
 
@@ -35,7 +36,7 @@ router.post('/auth', function (req, res) {
         graph.setAppSecret(config.facebook.app.secret);
         graph.setAccessToken(fbAccessToken);
 
-        graph.get('me?id,displayName,photo', function (err, graphUser) {
+        graph.get('me?fields=id,name,picture', function (err, graphUser) {
             if (err) {
                 return res.status(400).json(err);
             }
@@ -54,8 +55,8 @@ router.post('/auth', function (req, res) {
                 if (!user) {
                     User.create({
                         facebookId: graphUser.id,
-                        name: graphUser.displayName,
-                        photo: graphUser.photos[0].value
+                        name: graphUser.name,
+                        photo: graphUser.picture.data.url
                     }, function (err, user) {
                         if (err) {
                             return res.json(400, err);
