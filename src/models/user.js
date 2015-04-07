@@ -21,9 +21,7 @@ userSchema.static('create', function (data, cb) {
         name: data.name,
         photo: data.photo
     });
-    return user.save(function (err, user) {
-        cb(err, user);
-    });
+    return user.save(cb);
 });
 
 //returns only _id

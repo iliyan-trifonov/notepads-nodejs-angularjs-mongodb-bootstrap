@@ -65,6 +65,7 @@ router.post('/auth', function (req, res) {
                         name: graphUser.name,
                         photo: graphUser.picture.data.url
                     }, function (err, user) {
+                        console.log('new user created results', err, user);
                         if (err) {
                             console.log('API: error creating new user, err = ', err);
                             return res.json(400, err);
