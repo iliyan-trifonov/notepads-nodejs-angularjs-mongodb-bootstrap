@@ -49,20 +49,29 @@ router.post('/auth', function (req, res) {
 
             User.fb(fbUserId, function (err, user) {
                 if (err) {
+                    console.log('API: error searching for user with User.fb('+fbUserId+')', err, user);
                     return res.json(400, err);
                 }
 
                 if (!user) {
+                    //TODO: use var obj = {...} to avoid repeated code for log
+                    console.log('API: creating new user', {
+                        facebookId: graphUser.id,
+                        name: graphUser.name,
+                        photo: graphUser.picture.data.url
+                    });
                     User.create({
                         facebookId: graphUser.id,
                         name: graphUser.name,
                         photo: graphUser.picture.data.url
                     }, function (err, user) {
                         if (err) {
+                            console.log('API: error creating new user, err = ', err);
                             return res.json(400, err);
                         }
 
                         if (!user) {
+                            console.log('API: error creating new user, user = ', user);
                             return res.json(400, {error: 'Could not create new user!'});
                         }
 
