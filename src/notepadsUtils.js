@@ -33,10 +33,10 @@ module.exports.prepopulate = exports.prepopulate = function (uid, cb) {
                         'Select a category, provide a title and text and save the new notepad.' +  "\n\n" +
                         'The smaller plus signs on the right of each category\'s name will open the same ' +
                         'Add Notepad window with the category preselected.' +  "\n\n" +
-                        'Click on a Notepad on the Dashboard and you will go to the View Notepad window ' +  "\n" +
+                        'Click on a Notepad on the Dashboard and you will go to the View Notepad window ' +
                         'where you can read it, edit it and delete it.' +  "\n\n" +
                         'The categories are managed from their own window where you can go ' +
-                        'by selecting Categories from the left menu(top left top open it).' +  "\n\n" +
+                        'by selecting Categories from the left menu(top left to open it).' +  "\n\n" +
                         'Be careful when deleting a category as this will delete all notepads in it.' + "\n\n",
                 category: categoryRes._id,
                 user: uid
