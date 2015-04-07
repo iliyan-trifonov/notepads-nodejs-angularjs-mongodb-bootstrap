@@ -76,11 +76,11 @@ router.post('/auth', function (req, res) {
                             return res.json(400, {error: 'Could not create new user!'});
                         }
 
-                        return res.json(200, {accessToken: user.accessToken});
+                        return res.status(200).json({accessToken: user.accessToken});
                     });
                 } else {
                     console.log('user exists, returning accessToken', user);
-                    return res.json(200, {accessToken: user.accessToken});
+                    return res.status(200).json({accessToken: user.accessToken});
                 }
             });
 
