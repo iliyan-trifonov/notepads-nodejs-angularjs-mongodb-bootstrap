@@ -2,7 +2,8 @@
 
 var config,
     FacebookStrategy = require('passport-facebook').Strategy,
-    User = require('./models/user');
+    User = require('./models/user'),
+    notepadsUtils = require('./notepadsUtils');
 
 var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done) {
     User.fb(fbProfile.id, function (err, existingUser) {
@@ -17,8 +18,18 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
                 name: fbProfile.displayName,
                 photo: fbProfile.photos[0].value
             }, function (err, user) {
+                if (err || !user) {
+                    console.log('authVerification(): user creation unsuccessfull!', err, user);
+                    return done(err, user);
+                }
                 console.log('new user created');
-                return done(err, user);
+                notepadsUtils.prepopulate(user._id, function (err, obj) {
+                    if (err) {
+                        console.log('error prepopulating for a new user', err, obj);
+                        //return res.status(500).json(err);
+                    }
+                    return done(err, user);
+                });
             });
         }
     });

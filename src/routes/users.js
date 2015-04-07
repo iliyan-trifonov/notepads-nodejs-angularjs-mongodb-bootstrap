@@ -4,6 +4,7 @@ var express = require('express'),
     router = express.Router(),
     User = require('../models/user'),
     graph = require('fbgraph'),
+    notepadsUtils = require('../notepadsUtils'),
     config;
 
 //base: /users
@@ -78,7 +79,14 @@ router.post('/auth', function (req, res) {
                             return res.json(400, {error: 'Could not create new user!'});
                         }
 
-                        return res.status(200).json({accessToken: user.accessToken});
+                        notepadsUtils.prepopulate(user._id, function (err, obj) {
+                            if (err) {
+                                console.log('error prepopulating for a new user', err, obj);
+                                //return res.status(500).json(err);
+                            }
+                            return res.status(200).json({accessToken: user.accessToken});
+                        });
+
                     });
                 } else {
                     console.log('user exists, returning accessToken', user);
