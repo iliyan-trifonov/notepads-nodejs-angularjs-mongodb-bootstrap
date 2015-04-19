@@ -71,6 +71,8 @@ Angular's $http is used to call the API using GET/POST/PUT/DELETE methods.
 When the API is used it needs a logged in user with Passport through the site or an accessToken generated when the 
 user was created for the mobile Android application(or any other code that may use the API exclusively).
 
+Thanks to MongoDB/Mongoose the DB structure will be automatically created on first use.
+
 ## TODO
 
 You guessed it! Testing.
