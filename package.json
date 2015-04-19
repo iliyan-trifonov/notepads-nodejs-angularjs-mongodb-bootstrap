@@ -1,16 +1,15 @@
 {
-  "name": "notepads-node-angular",
-  "description": "Notepads with categories and different users",
-  "version": "1.0.0",
+  "name": "notepads-nodejs-angularjs-mongodb-bootstrap",
+  "description": "Notepads App built with NodeJS, ExpressJS, AngularJS and Bootstrap. Multiuser application that works with multiple Notepads in different Categories",
   "private": true,
-  "homepage": "http://notepads-node-angular.iliyan-trifonov.com",
+  "homepage": "http://notepads.iliyan-trifonov.com",
   "author": {
     "name": "Iliyan Trifonov",
     "email": "iliyan.trifonov@gmail.com"
   },
   "repository": {
     "type": "git",
-    "url": "git:github.com/iliyan-trifonov/notepads-node-angular"
+    "url": "git:github.com/iliyan-trifonov/notepads-nodejs-angularjs"
   },
   "licenses": [
     {
@@ -20,7 +19,7 @@
   ],
   "main": "src",
   "engines": {
-    "node": ">= 0.12.1"
+    "node": ">= 0.10.38"
   },
   "scripts": {
     "start": "node src/app.js",
