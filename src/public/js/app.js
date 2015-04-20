@@ -5,7 +5,8 @@
         'Notepads.controllers',
         'Notepads.services',
         'Notepads.vars',
-        'ngRoute'
+        'ngRoute',
+        'ngSanitize'
     ])
     .config(['$routeProvider', 'USER_CONTEXT', function ($routeProvider, USER_CONTEXT) {
         if (USER_CONTEXT.id) {
