@@ -21,7 +21,7 @@
                     <div ng-if="cat.notepads.length === 0"
                          class="col-md-12">No Notepads</div>
 
-                    <div class="col-md-2" ng-repeat="notepad in cat.notepads | orderBy: '-_id'">
+                    <div class="col-lg-3 col-md-4 col-sm-6 col-xs-12" ng-repeat="notepad in cat.notepads | orderBy: '-_id'">
                         <div class="notepad">
                             <div class="title" ng-bind="notepad.title"></div>
                             <div class="text" ng-bind="notepad.text"></div>

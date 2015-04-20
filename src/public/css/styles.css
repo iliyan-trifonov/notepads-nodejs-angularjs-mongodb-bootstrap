@@ -4,8 +4,8 @@ body {
 
 div.notepad {
     border: 1px dashed #000000;
-    min-height: 200px;
-    max-height: 200px;
+    min-height: 250px;
+    max-height: 250px;
     overflow: hidden;
     margin-top: 10px;
 }
@@ -19,9 +19,11 @@ div.notepad div.title {
 }
 
 div.notepad div.text {
-    min-height: 140px;
-    max-height: 140px;
-    overflow: hidden;
+    min-height: 190px;
+    max-height: 190px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    white-space: pre-wrap;
 }
 
 div.notepad div.buttons {

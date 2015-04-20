@@ -36,9 +36,9 @@ Notepad called "Read me". You can delete them now or later.
 
 Every Notepad shows its date of creation on the bottom as well as 2 buttons for edit and delete.
 
-For now I "compress" the Notepads' text when on the Dashboard. That means if you have a Notepad with a lot of text, 
-you can press Edit and will see it in the way you saved it. In the mobile Android version of the 
-application(see the link on the top) you see the Notepad without having to click edit.
+On the Dashboard the Notepads are "compressed" in small rectangles. This is usually enough for the most cases.
+But if you have a Notepad with a lot of text, you can press Edit and will see it in the way you saved it. 
+In the mobile Android version of the application(see the link on the top) you see the Notepad without having to click edit.
 
 Also the names Notepads and Notepad are used intentionally to differentiate this app from many others with the name Notepad/Notes etc.
 Think of the Notepad as a note and the Category as a notepad.
