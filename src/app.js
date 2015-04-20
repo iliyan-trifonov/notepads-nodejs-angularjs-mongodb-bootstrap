@@ -1,6 +1,6 @@
 'use strict';
 
-var config,
+var config = require('../config/app.conf.json'), //TODO: use path.join
     express = require('express'),
     routes = require('./routes'),
     session = require('express-session'),
@@ -14,14 +14,10 @@ var config,
 
 var app = express();
 
-//TODO: make the config handling better - one config file with dev/prod keys?
 //export NODE_ENV=development npm start
 if ('development' === app.get('env')) {
     console.log('development environment detected');
 }
-
-//TODO: use path.join
-config = require('../config/app.conf.json');
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
@@ -32,7 +28,7 @@ app.use(session({
     resave: true,
     saveUninitialized: true,
     //TODO: use the app.conf.js config file for this
-    secret: 'SECRET'
+    secret: config.sessionSecret
 }));
 FacebookAuth.setAppConfig(config);
 FacebookAuth.call(null, passport);
