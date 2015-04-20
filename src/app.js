@@ -18,11 +18,10 @@ var app = express();
 //export NODE_ENV=development npm start
 if ('development' === app.get('env')) {
     console.log('development environment detected');
-    //TODO: use path.join
-    config = require('../config/app.conf.dev.json');
-} else {
-    config = require('../config/app.conf.json');
 }
+
+//TODO: use path.join
+config = require('../config/app.conf.json');
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
