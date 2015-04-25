@@ -1,4 +1,4 @@
-## Notepads App built with NodeJS, ExpressJS, MongoDB, AngularJS and Bootstrap. Multiuser application that works with multiple Notepads in different Categories.
+### Notepads App built with NodeJS, ExpressJS, MongoDB, AngularJS and Bootstrap. Multiuser application that works with multiple Notepads in different Categories.
 
 [![Dependency Status](https://www.versioneye.com/user/projects/553a42bb1d2989cb7800010c/badge.svg?style=flat)](https://www.versioneye.com/user/projects/553a42bb1d2989cb7800010c)
 [![Dependency Status](https://www.versioneye.com/user/projects/553a42b71d2989bdd500009a/badge.svg?style=flat)](https://www.versioneye.com/user/projects/553a42b71d2989bdd500009a)
