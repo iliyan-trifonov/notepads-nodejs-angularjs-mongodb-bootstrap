@@ -1,5 +1,8 @@
 ## Notepads App built with NodeJS, ExpressJS, MongoDB, AngularJS and Bootstrap. Multiuser application that works with multiple Notepads in different Categories.
 
+[![Dependency Status](https://www.versioneye.com/user/projects/553a42bb1d2989cb7800010c/badge.svg?style=flat)](https://www.versioneye.com/user/projects/553a42bb1d2989cb7800010c)
+[![Dependency Status](https://www.versioneye.com/user/projects/553a42b71d2989bdd500009a/badge.svg?style=flat)](https://www.versioneye.com/user/projects/553a42b71d2989bdd500009a)
+
 [See it in action here](https://notepads.iliyan-trifonov.com "Notepads by Iliyan Trifonov"). This is the official application domain. It is used also by the [mobile Android app](https://play.google.com/store/apps/details?id=com.iliyan_trifonov.notepads "Notepads Mobile") (built with Ionic/AngularJS) too.
 
 ## Install
