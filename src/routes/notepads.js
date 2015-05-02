@@ -164,21 +164,41 @@ router.post('/', function (req, res) {
 
 // PUT /notepads/1
 router.put('/:id', function (req, res) {
+    console.log('updating a Notepad');
     //TODO: check id and notepad props validity, belongs to user, etc.
     //TODO: check if cat belongs to the user: create a common function for that
-    Notepad.findOneAndUpdate(
-        { _id: req.params.id, user: req.user.id },
-        {$set: {
-            title: req.body.title,
-            text: req.body.text,
-            category: req.body.category
-        }},
-        {},
-        function (err, notepad) {
-            //TODO: check err / notepad === null
-            return res.status(200).json(notepad);
-        }
-    );
+    Notepad.getByIdForUser(req.params.id, req.user.id, function (err, notepad) {
+        //TODO: check err/null notepad and return empty res status
+        console.log('found a notepad for user', req.params.id, notepad, req.user.id);
+        var oldCat = notepad.category;
+        var newCat = req.body.category;
+        Notepad.findOneAndUpdate(
+            { _id: notepad._id },
+            {$set: {
+                title: req.body.title,
+                text: req.body.text,
+                category: req.body.category
+            }},
+            {},
+            function (err, notepadNew) {
+                //TODO: check err / notepad === null
+                console.log('Notepad updated', notepadNew);
+                if (String(newCat) !== String(oldCat)) {
+                    Category.decreaseNotepadsCountById(oldCat, function (err, catOld) {
+                        //TODO: if err / category === null
+                        console.log('category Notepads count decreased', catOld);
+                        Category.increaseNotepadsCountById(newCat, function (err, catNew) {
+                            //TODO: if err / category === null
+                            console.log('category Notepads count increased', catNew);
+                            return res.status(200).json(notepadNew);
+                        });
+                    });
+                } else {
+                    return res.status(200).json(notepadNew);
+                }
+            }
+        );
+    });
 });
 
 // DELETE /notepads/1
@@ -190,12 +210,13 @@ router.delete('/:id', function (req, res) {
             return res.status(500).json(err);
         }
         if (!notepad) {
+            //TODO: return the proper status code
             return res.status(500).json('Notepad not found!');
         }
 
         Notepad.findByIdAndRemove(req.params.id, function (err, notepad) {
-            console.log('notepad removed:', notepad);
             //TODO: check if err / notepad === null - missing
+            console.log('notepad removed:', notepad);
             //finds user by notepad._id looking into user.notepads[]
             User.findOneAndUpdate({ notepads: req.params.id }, {
                 $pull: { notepads: req.params.id }

@@ -20,6 +20,8 @@ module.exports.prepopulate = exports.prepopulate = function (uid, cb) {
             'user': uid
         });
 
+        //TODO: delete the notepad/category on any error / transaction?
+
         category.save(function (categoryErr, categoryRes) {
 
             if (categoryErr || !categoryRes) {
@@ -59,7 +61,6 @@ module.exports.prepopulate = exports.prepopulate = function (uid, cb) {
 
                     Category.increaseNotepadsCountById(notepadRes.category, function (incrCount, incrCountRes) {
                         if (incrCount || !incrCountRes) {
-                            //TODO: delete the notepad from above on this error
                             return cb(incrCount, incrCountRes);
                         }
 
