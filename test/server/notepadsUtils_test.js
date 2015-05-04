@@ -3,7 +3,9 @@
 var notepadsUtils = require('../../src/notepadsUtils'),
     assert = require('assert'),
     connection = require('../db_common'),
-    User = require('../../src/models/user');
+    User = require('../../src/models/user'),
+    Category = require('../../src/models/category'),
+    Notepad = require('../../src/models/notepad');
 
 describe('notepadsUtils', function () {
 
@@ -13,8 +15,15 @@ describe('notepadsUtils', function () {
         db = connection();
     });
 
-    after(function () {
-        db.close();
+    after(function (done) {
+        User.remove({}, function () {
+            Category.remove({}, function () {
+                Notepad.remove({}, function () {
+                    db.close();
+                    done();
+                });
+            });
+        });
     });
 
     it("should create a new 'Sample Category' and a new Notepad 'Read me' for a given user id", function (done) {
