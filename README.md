@@ -1,7 +1,7 @@
 ### Notepads App built with NodeJS, ExpressJS, MongoDB, AngularJS and Bootstrap. Multiuser application that works with multiple Notepads in different Categories.
 
 [![Build Status](https://travis-ci.org/iliyan-trifonov/notepads-nodejs-angularjs-mongodb-bootstrap.svg)](https://travis-ci.org/iliyan-trifonov/notepads-nodejs-angularjs-mongodb-bootstrap)
-[![Coverage Status](https://coveralls.io/repos/iliyan-trifonov/notepads-nodejs-angularjs-mongodb-bootstrap/badge.svg)](https://coveralls.io/r/iliyan-trifonov/notepads-nodejs-angularjs-mongodb-bootstrap)
+[![Coverage Status](https://coveralls.io/repos/iliyan-trifonov/notepads-nodejs-angularjs-mongodb-bootstrap/badge.svg?branch=master)](https://coveralls.io/r/iliyan-trifonov/notepads-nodejs-angularjs-mongodb-bootstrap?branch=master)
 
 [![Dependency Status](https://www.versioneye.com/user/projects/553a42bb1d2989cb7800010c/badge.svg?style=flat)](https://www.versioneye.com/user/projects/553a42bb1d2989cb7800010c)
 [![Dependency Status](https://www.versioneye.com/user/projects/553a42b71d2989bdd500009a/badge.svg?style=flat)](https://www.versioneye.com/user/projects/553a42b71d2989bdd500009a)
