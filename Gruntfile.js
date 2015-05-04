@@ -9,7 +9,8 @@ module.exports = function (grunt) {
                 reporter: 'spec',
                 bail: true,
                 timeout: 12000,
-                recursive: true
+                recursive: true,
+                coverage: true
             }
         },
         specCheck: {
@@ -25,9 +26,19 @@ module.exports = function (grunt) {
         }
     });
 
+    grunt.event.on('coverage', function(lcov, done){
+        require('coveralls').handleInput(lcov, function(err){
+            if (err) {
+                return done(err);
+            }
+            done();
+        });
+    });
+
     grunt.loadNpmTasks('grunt-mocha-istanbul');
     grunt.loadNpmTasks('grunt-spec-check');
 
-    grunt.registerTask('default', ['mocha_istanbul', 'specCheck']);
+    grunt.registerTask('test', ['mocha_istanbul', 'specCheck']);
+    grunt.registerTask('default', 'test');
 
 };

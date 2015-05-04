@@ -82,3 +82,6 @@ src/public/vendor
 
 #the config file
 config/app.conf.json
+
+#only for private stuff
+.coveralls.yml
