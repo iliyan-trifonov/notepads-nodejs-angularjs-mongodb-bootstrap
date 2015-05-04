@@ -2,17 +2,28 @@
 
 var assert = require('assert'),
     connection = require('../db_common'),
-    FacebookAuth = require('../../src/FacebookAuth'),
     User = require('../../src/models/user'),
     Category = require('../../src/models/category'),
-    Notepad = require('../../src/models/notepad');
+    Notepad = require('../../src/models/notepad'),
+    proxyquire = require('proxyquire'),
+    mongoose = require('mongoose'),
+    FacebookAuth;
 
 describe('FacebookAuth', function () {
 
-    var db;
+    var db, notepadsUtilsMock;
 
     before(function () {
         db = connection();
+        notepadsUtilsMock = {
+            prepopulate: function (uid, cb) {
+                assert.ok(uid);
+                assert.ok('function' === typeof cb);
+                //assert.ok(uid instanceof mongoose.Schema.ObjectId);
+                cb(null, {});
+            }
+        };
+        FacebookAuth = proxyquire('../../src/FacebookAuth', { './notepadsUtils': notepadsUtilsMock });
     });
 
     after(function (done) {
@@ -30,10 +41,10 @@ describe('FacebookAuth', function () {
         it('should return an existing user when existing uid is given', function (done) {
             User.create({ facebookId: +new Date() }, function (err, user) {
                 assert.ifError(err);
-                assert.ok(user !== null);
+                assert.notStrictEqual(user, null);
                 FacebookAuth.authVerification(null, null, { id: user.facebookId }, function (err, result) {
                     assert.ifError(err);
-                    assert(result !== null);
+                    assert.notStrictEqual(result, null);
                     assert.ok(result.equals(user));
                     done();
                 });
@@ -42,16 +53,16 @@ describe('FacebookAuth', function () {
 
         it('should create a new user for not existing uid', function (done) {
             var fbProfile = {
-                id: +new Date(),
+                id: String(+new Date()),
                 displayName: 'Iliyan Trifonov',
                 photos: [{ value:'' }]
             };
             FacebookAuth.authVerification(null, null, fbProfile, function (err, result) {
                 assert.ifError(err);
-                assert(result !== null);
-                assert.equal(result.facebookId, fbProfile.id);
-                assert.equal(result.name, fbProfile.displayName);
-                assert.equal(result.photo, fbProfile.photos[0].value);
+                assert.notStrictEqual(result, null);
+                assert.strictEqual(result.facebookId, fbProfile.id);
+                assert.strictEqual(result.name, fbProfile.displayName);
+                assert.strictEqual(result.photo, fbProfile.photos[0].value);
                 done();
             });
         });

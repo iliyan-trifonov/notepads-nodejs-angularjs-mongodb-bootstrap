@@ -23,6 +23,8 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
                     return done(err, user);
                 }
                 console.log('new user created');
+
+                //prepopulate onlt for just created users
                 notepadsUtils.prepopulate(user._id, function (err, obj) {
                     if (err) {
                         console.log('error prepopulating for a new user', err, obj);
@@ -30,6 +32,7 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
                     }
                     return done(err, user);
                 });
+
             });
         }
     });

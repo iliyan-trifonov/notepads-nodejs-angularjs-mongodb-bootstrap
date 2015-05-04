@@ -18,7 +18,7 @@ describe('notepadsUtils', function () {
     });
 
     it("should create a new 'Sample Category' and a new Notepad 'Read me' for a given user id", function (done) {
-        var fbId = +new Date(),
+        var fbId = String(+new Date()),
             name = 'Iliyan Trifonov',
             photo = 'photourl';
         User.create({
@@ -27,13 +27,13 @@ describe('notepadsUtils', function () {
             photo: photo
         }, function (err, user) {
             assert.ifError(err);
-            assert.equal(user.facebookId, fbId);
-            assert.equal(user.name, name);
-            assert.equal(user.photo, photo);
+            assert.strictEqual(user.facebookId, fbId);
+            assert.strictEqual(user.name, name);
+            assert.strictEqual(user.photo, photo);
             notepadsUtils.prepopulate(user._id, function (err, result) {
                 assert.ifError(err);
                 assert.deepEqual(result, {});
-                //check if the category and notepad exist in db and their texts
+                //check if the category and notepad exist in db and their texts are as expected
                 //...
                 done();
             });
