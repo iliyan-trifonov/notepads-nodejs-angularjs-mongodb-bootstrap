@@ -58,6 +58,13 @@ module.exports = exports = function (passport) {
     passport.deserializeUser(authDeserialize);
 };
 
+//export the private functions for tests
+if (process.argv[1].match(/_mocha$/)) {
+    module.exports.authVerification = exports.authVerification = authVerification;
+    module.exports.authSerialize = exports.authSerialize = authSerialize;
+    module.exports.authDeserialize = exports.authDeserialize = authDeserialize;
+}
+
 module.exports.login = exports.login = function (req, res) {
     return res.redirect('/');
 };
