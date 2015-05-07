@@ -6,4 +6,7 @@ node_js:
 services:
   - mongodb
 before_install: npm install -g grunt-cli
-install: npm install
+install:
+  - npm install
+  - npm install codecov.io
+after_success: cat ./coverage/coverage.json | ./node_modules/codecov.io/bin/codecov.io.js
