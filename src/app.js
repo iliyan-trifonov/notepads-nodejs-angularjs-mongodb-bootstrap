@@ -17,6 +17,10 @@ var app = express();
 //export NODE_ENV=development npm start
 if ('development' === app.get('env')) {
     console.log('development environment detected');
+} else if ('production' === app.get('env')) {
+    console.log('production environment detected');
+} else {
+    console.log('unrecgnized environment detected', app.get('env'));
 }
 
 app.set('port', process.env.PORT || 3000);
@@ -96,7 +100,7 @@ if ('development' === app.get('env')) {
 }
 
 //server
-if (module === require.main) {
+if (module === require.main) { //outside tests
     var connection = require('./db');
     connection.setAppConfig(config);
     connection().on('connected', function (err) {
@@ -109,4 +113,6 @@ if (module === require.main) {
     app.listen(app.get('port'), function () {
         console.log('Express server listening on port ' + app.get('port'));
     });
+} else {
+    module.exports = exports = app;
 }

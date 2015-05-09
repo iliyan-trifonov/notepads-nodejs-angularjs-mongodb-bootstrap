@@ -49,4 +49,20 @@ describe('notepadsUtils', function () {
         });
     });
 
+    it('should return Error Invalid user id on missing uid param', function () {
+        notepadsUtils.prepopulate(null, function (err) {
+            assert.ok(err);
+            assert.ok(err instanceof Error);
+        });
+    });
+
+    it('should return Error on not existing user with the given uid', function (done) {
+        notepadsUtils.prepopulate(+new Date(), function (err, user) {
+            assert.ok(err);
+            assert.ok(err instanceof Error);
+            assert.deepEqual(user, null);
+            done();
+        });
+    });
+
 });
