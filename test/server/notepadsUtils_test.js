@@ -60,7 +60,11 @@ describe('notepadsUtils', function () {
         notepadsUtils.prepopulate(+new Date(), function (err, user) {
             assert.ok(err);
             assert.ok(err instanceof Error);
-            assert.deepEqual(user, null);
+            if (/0\.10/.test(process.version)) {
+                assert.deepEqual(user, undefined);
+            } else {
+                assert.deepEqual(user, null);
+            }
             done();
         });
     });
