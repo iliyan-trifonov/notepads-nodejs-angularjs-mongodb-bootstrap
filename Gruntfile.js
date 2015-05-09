@@ -23,6 +23,11 @@ module.exports = function (grunt) {
             files: {
                 src: ['src/**/*.js', '!src/public/**/*.js', '!src/db.js']
             }
+        },
+        env: {
+            test: {
+                NODE_ENV: 'test'
+            }
         }
     });
 
@@ -35,10 +40,11 @@ module.exports = function (grunt) {
         });
     });
 
+    grunt.loadNpmTasks('grunt-env');
     grunt.loadNpmTasks('grunt-mocha-istanbul');
     grunt.loadNpmTasks('grunt-spec-check');
 
-    grunt.registerTask('test', ['mocha_istanbul', 'specCheck']);
+    grunt.registerTask('test', ['env:test', 'mocha_istanbul', 'specCheck']);
     grunt.registerTask('default', 'test');
 
 };

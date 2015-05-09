@@ -33,6 +33,7 @@
     "express": "^4.12.3",
     "express-session": "^1.10.4",
     "fbgraph": "^0.3.0",
+    "grunt-env": "^0.4.4",
     "hat": "0.0.3",
     "moment": "^2.9.0",
     "mongoose": "^4.0.0",
