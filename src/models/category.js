@@ -14,27 +14,22 @@ categorySchema.static('getByUserId', function (uid, cb) {
     return this.find({ user: uid }, 'name notepadsCount', cb);
 });
 
-categorySchema.static('getByIdForUser', function (id, uid, cb) {
-    return this.findOne({ _id: id, user: uid }, 'name', cb);
+categorySchema.static('getByIdForUser', function (catId, uid, cb) {
+    return this.findOne({ _id: catId, user: uid }, 'name', cb);
 });
 
-categorySchema.static('increaseNotepadsCountById', function (id, cb) {
-    return this.findOneAndUpdate({ _id: id }, {
-        $inc: { notepadsCount: 1 }
-    }, cb);
+categorySchema.static('increaseNotepadsCountById', function (catId, cb) {
+    return this.findOneAndUpdate({ _id: catId },
+        { $inc: { notepadsCount: 1 } },
+        { 'new': true },
+        cb);
 });
 
-categorySchema.static('decreaseNotepadsCountById', function (id, cb) {
-    return this.findOneAndUpdate({ _id: id }, {
-        $inc: { notepadsCount: -1 }
-    }, cb);
-});
-
-//not a real bulk insert - check mongoose docs
-//it's possible to call mongo directly for the real thing
-//cb will receive as many args as the array's len + err
-categorySchema.static('insertMany', function (cats, cb) {
-    return this.create(cats, cb);
+categorySchema.static('decreaseNotepadsCountById', function (catId, cb) {
+    return this.findOneAndUpdate({ _id: catId },
+        { $inc: { notepadsCount: -1 } },
+        { 'new': true },
+        cb);
 });
 
 var Category = mongoose.model('Category', categorySchema);
