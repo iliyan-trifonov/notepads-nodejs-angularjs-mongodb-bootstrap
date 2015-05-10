@@ -101,4 +101,32 @@ describe('Category Model', function () {
         });
     });
 
+    describe('increaseNotepadsCountById', function () {
+        it('should increase notepadsCount of a cat with 1 given cat id', function (done) {
+            Category.increaseNotepadsCountById(testCats[0]._id, function (err, category) {
+                assert.ifError(err);
+                assert.ok(category !== null);
+                assert.ok(category instanceof Category);
+                assert.ok(category._id.equals(testCats[0]._id));
+                assert.strictEqual(category.notepadsCount, testCats[0].notepadsCount + 1);
+                testCats[0] = category;
+                done();
+            });
+        });
+    });
+
+    describe('decreaseNotepadsCountById', function () {
+        it('should decrease notepadsCount of a cat with 1 given cat id', function (done) {
+            Category.decreaseNotepadsCountById(testCats[0]._id, function (err, category) {
+                assert.ifError(err);
+                assert.ok(category !== null);
+                assert.ok(category instanceof Category);
+                assert.ok(category._id.equals(testCats[0]._id));
+                assert.strictEqual(category.notepadsCount, testCats[0].notepadsCount - 1);
+                testCats[0] = category;
+                done();
+            });
+        });
+    });
+
 });
