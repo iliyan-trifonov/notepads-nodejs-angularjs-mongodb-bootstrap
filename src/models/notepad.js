@@ -9,8 +9,8 @@ var notepadSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
 });
 
-notepadSchema.static('getByIdForUser', function (id, uid, cb) {
-    return this.findOne({ _id: id, user: uid }, 'title text category', cb);
+notepadSchema.static('getByIdForUser', function (notepadId, uid, cb) {
+    return this.findOne({ _id: notepadId, user: uid }, 'title text category', cb);
 });
 
 notepadSchema.static('getByUserId', function (uid, cb) {
