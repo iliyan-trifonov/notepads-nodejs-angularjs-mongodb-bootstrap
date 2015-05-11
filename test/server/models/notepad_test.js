@@ -3,8 +3,7 @@
 var Notepad = require('../../../src/models/notepad'),
     Category = require('../../../src/models/category'),
     User = require('../../../src/models/user'),
-    assert = require('assert'),
-    util = require('util');
+    assert = require('assert');
 
 describe('Notepad Model', function () {
 
@@ -39,7 +38,6 @@ describe('Notepad Model', function () {
                     assert.ifError(err);
                     notepads.push(notepad);
                     if (notepads.length === notepadsNum) {
-                        console.log(util.inspect(notepads));
                         return done();
                     }
                 };
