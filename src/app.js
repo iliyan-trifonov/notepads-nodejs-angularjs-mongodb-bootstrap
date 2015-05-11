@@ -84,10 +84,13 @@ app.use(function (req, res, next) {
         var User = require('./models/user');
         User.getByAccessToken(accessToken, function (err, user) {
             if (!err && user) {
-                console.log('setting user', user);
+                console.log('setting req.user from token', user);
                 req.user = user;
                 next();
             } else {
+                if (err) {
+                    console.error(err);
+                }
                 return res.status(403).send('Forbidden');
             }
         });
@@ -95,6 +98,8 @@ app.use(function (req, res, next) {
         next();
     }
 });
+
+//API routes
 if (app.get('env') !== 'test') {
     usersRouter.setAppConfig(config);
     app.use(config.apiBase + '/users', usersRouter);
@@ -104,12 +109,13 @@ if (app.get('env') !== 'test') {
 
 //dev env
 if ('development' === app.get('env')) {
+    //app.use(express.logger('dev')); TODO: check exp4 way
     var errorHandler = require('errorhandler');
     app.use(errorHandler());
 }
 
 //server
-if (module === require.main) { //outside tests
+if (module === require.main) { //started with node app.js
     var connection = require('./db');
     connection.setAppConfig(config);
     connection().on('connected', function (err) {
@@ -122,6 +128,6 @@ if (module === require.main) { //outside tests
     app.listen(app.get('port'), function () {
         console.log('Express server listening on port ' + app.get('port'));
     });
-} else {
+} else { //for the tests
     module.exports = exports = app;
 }
