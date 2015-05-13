@@ -1,13 +1,14 @@
 'use strict';
 
-var Notepad = require('../../../src/models/notepad'),
+var connection = require('../../db_common'),
+    Notepad = require('../../../src/models/notepad'),
     Category = require('../../../src/models/category'),
     User = require('../../../src/models/user'),
     assert = require('assert');
 
 describe('Notepad Model', function () {
 
-    var notepads = [], cat, user, notepadsNum = 10;
+    var db, notepads = [], cat, user, notepadsNum = 10;
 
     var createNotepad = function (done) {
         var unique = +new Date();
@@ -22,6 +23,8 @@ describe('Notepad Model', function () {
     };
 
     before(function (done) {
+        //TODO: use callback
+        db = connection();
         User.create({name: 'Iliyan Trifonov'}, function (err, doc) {
             assert.ifError(err);
             assert.ok(doc !== null);
@@ -47,6 +50,10 @@ describe('Notepad Model', function () {
                 }
             });
         });
+    });
+
+    after(function () {
+        db.close();
     });
 
     it('should create and save a new Notepad', function (done) {
