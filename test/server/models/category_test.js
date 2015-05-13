@@ -10,8 +10,8 @@ describe('Category Model', function () {
     var db, testUser, testCats = [];
 
     before(function (done) {
+        //TODO: use callback
         db = connection();
-
         //add some testing data
         User.create({
             facebookId: +new Date(),
@@ -50,6 +50,7 @@ describe('Category Model', function () {
     after(function (done) {
         Category.remove({}, function () {
             User.remove({}, function () {
+                db.close();
                 done();
             });
         });
