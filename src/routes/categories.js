@@ -1,30 +1,38 @@
 'use strict';
 
 var express = require('express'),
+    app = express(),
     router = express.Router(),
     FacebookAuth = require('../FacebookAuth'),
     User = require('../models/user'),
     Category = require('../models/category'),
-    Notepad = require('../models/notepad');
+    Notepad = require('../models/notepad'),
+    HttpStatus = require('http-status');
 
 //protect this resource to the logged in user
-//TODO: return API error not redirect to the home page!!!
+//TODO: return API error, not redirecting to the home page!!!
+//TODO: like: if GET token/or req.user, skip this:
 router.use(FacebookAuth.verifyAuth);
 
-//base: /categories
-
-// GET /categories
-router.get('/', function (req, res) {
+//handlers start
+var getHandler = function (req, res) {
     //get the categories by user id
+    //TODO: check if req.user._id/req.user.id exists
     Category.getByUserId(req.user._id, function (err, categories) {
-        //TODO: if err / categories === null
-        //TODO: empty status
-        res.json(categories);
+        if (err) {
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .json('Cannot get category by user id!');
+        }
+        if (!categories) {
+            return res.status(HttpStatus.NO_CONTENT)
+                .json({});
+        }
+        return res.status(HttpStatus.OK)
+            .json(categories);
     });
-});
+};
 
-// POST /categories
-router.post('/', function (req, res) {
+var postHandler = function (req, res) {
     //TODO: check if name is given and is clean
     var category = new Category({
         name: req.body.name,
@@ -34,20 +42,20 @@ router.post('/', function (req, res) {
         //TODO: if err / category === null
         User.addCategory(req.user._id, category._id, function (err, user) {
             //TODO: if err / user === null
-            res.json(category);
+            return res.status(HttpStatus.OK).json(category);
         });
     });
-});
+};
 
-router.get('/:id', function (req, res) {
+var getIdHandler = function (req, res) {
     //TODO: check for valid id, belongs to the current user, etc.
     Category.getByIdForUser(req.params.id, req.user.id, function (err, category) {
         //TODO: check for error, !category
-        return res.status(200).json(category);
+        return res.status(HttpStatus.OK).json(category);
     });
-});
+};
 
-router.put('/:id', function (req, res) {
+var putIdHandler = function (req, res) {
     //TODO: check id, name allowed chars, etc.
     //TODO: use a model function for this: Category.updateCategory(id, uid, newName)
     Category.findOneAndUpdate(
@@ -56,51 +64,73 @@ router.put('/:id', function (req, res) {
         {},
         function (err, category) {
             //TODO: if err / category === null
-            return res.status(200).json(category);
+            return res.status(HttpStatus.OK).json(category);
         }
     );
-});
+};
 
-// DELETE /categories/1
-router.delete('/:id', function (req, res) {
+var deleteIdHandler = function (req, res) {
     //TODO: check for valid id and belonging to the current user
     Category.getByIdForUser(req.params.id, req.user.id, function (err, category) {
 
         if (err) {
-            return res.status(500).json(err);
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
         }
 
         if (!category) {
-            return res.status(500).json('Could not find category!');
+            return res.status(HttpStatus.NO_CONTENT).json('Could not find category!');
         }
 
-        //TODO: it should be better if used only one call including the cat id and user id
+        //TODO: it should be better if used only one call including the cat id and user id: if possible
         Category.findByIdAndRemove(req.params.id, function (err, category) {
             if (err) {
-                return res.status(500).json(err);
+                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
             }
             if (!category) {
-                return res.status(500).json('Category not found!');
+                return res.status(HttpStatus.NO_CONTENT).json('Category not found!');
             }
             //finds user by category._id looking into user.categories[]
             User.findOneAndUpdate({ categories: req.params.id }, {
                 $pull: { categories: req.params.id }
             }, function (err, user) {
                 if (err) {
-                    return res.status(500).json(err);
+                    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
                 }
                 if (!user) {
-                    return res.status(500).json('Category not found for user!');
+                    return res.status(HttpStatus.NO_CONTENT).json('Category not found for user!');
                 }
                 //delete all orphaned notepads belonging to the deleted category
                 Notepad.remove({ category: req.params.id }, function (err, data) {
                     //TODO: check if err / data === null - missing/not found?
-                    return res.status(200).json(category);
+                    return res.status(HttpStatus.OK).json(category);
                 });
             });
         });
 
     });
-});
+};
+//handlers end
+
+//base: /categories
+
+// GET /categories
+router.get('/', getHandler);
+
+// POST /categories
+router.post('/', postHandler);
+
+// GET /categories/1234
+router.get('/:id', getIdHandler);
+
+// PUT /categories/1234
+router.put('/:id', putIdHandler);
+
+// DELETE /categories/1
+router.delete('/:id', deleteIdHandler);
 
 module.exports = exports = router;
+
+if (app.get('env') === 'test') {
+    console.log('exporting the handlers');
+    module.exports.getHandler = exports.getHandler = getHandler;
+}
