@@ -39,9 +39,15 @@ var postHandler = function (req, res) {
         user: req.user._id
     });
     category.save(function (err, category) {
-        //TODO: if err / category === null
+        if (err || !category) {
+            console.error(err);
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json('Could not save category!');
+        }
         User.addCategory(req.user._id, category._id, function (err, user) {
-            //TODO: if err / user === null
+            if (err || !user) {
+                console.error(err);
+                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json('Could not assign category to user!');
+            }
             return res.status(HttpStatus.OK).json(category);
         });
     });
@@ -133,4 +139,8 @@ module.exports = exports = router;
 if (app.get('env') === 'test') {
     console.log('exporting the handlers');
     module.exports.getHandler = exports.getHandler = getHandler;
+    module.exports.postHandler = exports.postHandler = postHandler;
+    module.exports.getIdHandler = exports.getIdHandler = getIdHandler;
+    module.exports.putIdHandler = exports.putIdHandler = putIdHandler;
+    module.exports.deleteIdHandler = exports.deleteIdHandler = deleteIdHandler;
 }
