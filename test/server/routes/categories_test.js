@@ -41,12 +41,11 @@ describe('Categories Routes', function () {
 
     beforeEach(function () {
         req = res = {};
+        req.user = user;
     });
 
     describe('GET /categories', function () {
         it('should return status 200 and response type json with categories body', function (done) {
-            req.user = user;
-
             res.status = function (status) {
                 assert.strictEqual(status, HttpStatus.OK);
                 return this;
@@ -62,6 +61,32 @@ describe('Categories Routes', function () {
             };
 
             categoriesRouter.getHandler(req, res);
+        });
+    });
+
+    describe('POST /categories', function () {
+        it('should add new Category and assign it to the user', function (done) {
+            var testCat = { name: 'Test cat ' + (+new Date()) };
+
+            req.body = { name: testCat.name };
+
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.OK);
+                return this;
+            };
+
+            res.json = function (cat) {
+                assert.ok(cat);
+                assert.strictEqual(cat.name, testCat.name);
+                User.find({ category: cat._id }, function (err, user) {
+                    assert.ifError(err);
+                    assert.ok(user !== null);
+
+                    done();
+                });
+            };
+
+            categoriesRouter.postHandler(req, res);
         });
     });
 
