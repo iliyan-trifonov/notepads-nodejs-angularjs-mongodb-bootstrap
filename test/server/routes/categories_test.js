@@ -5,7 +5,8 @@ var categoriesRouter = require('../../../src/routes/categories'),
     connection = require('../../db_common'),
     User = require('../../../src/models/user'),
     Category = require('../../../src/models/category'),
-    HttpStatus = require('http-status');
+    HttpStatus = require('http-status'),
+    mongoose = require('mongoose');
 
 describe('Categories Routes', function () {
 
@@ -87,6 +88,71 @@ describe('Categories Routes', function () {
             };
 
             categoriesRouter.postHandler(req, res);
+        });
+    });
+
+    describe('GET /categories/:id', function () {
+        it('should return status 200 and the required Category', function (done) {
+            req = {
+                params : { id: category._id },
+                user: { id: user._id }
+            };
+
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.OK);
+                return this;
+            };
+
+            res.json = function (cat) {
+                assert.ok(cat._id.equals(category._id));
+                assert.strictEqual(cat.name, category.name);
+
+                done();
+            };
+
+            categoriesRouter.getIdHandler(req, res);
+        });
+
+        it('should return status 204 and an empty object result for a given non-existent id', function (done) {
+            req = {
+                params : { id: mongoose.Schema.ObjectId() },
+                user: { id: user._id }
+            };
+
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.NO_CONTENT);
+                return this;
+            };
+
+            res.json = function (cat) {
+                assert.deepEqual(cat, {});
+
+                done();
+            };
+
+            categoriesRouter.getIdHandler(req, res);
+        });
+
+        it('should return status 500 and a json error object result for a wrong cat id format given', function (done) {
+            req = {
+                params : { id: 123 },
+                user: { id: user._id }
+            };
+
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.INTERNAL_SERVER_ERROR);
+                return this;
+            };
+
+            res.json = function (err) {
+                assert.strictEqual(err.name, 'CastError');
+                assert.strictEqual(err.kind, 'ObjectId');
+                assert.strictEqual(err.path, '_id');
+
+                done();
+            };
+
+            categoriesRouter.getIdHandler(req, res);
         });
     });
 
