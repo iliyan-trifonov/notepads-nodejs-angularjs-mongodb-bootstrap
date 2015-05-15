@@ -54,9 +54,17 @@ var postHandler = function (req, res) {
 };
 
 var getIdHandler = function (req, res) {
-    //TODO: check for valid id, belongs to the current user, etc.
+    //TODO: check for valid id, etc.
+    console.log('req', req);
     Category.getByIdForUser(req.params.id, req.user.id, function (err, category) {
-        //TODO: check for error, !category
+        if (err) {
+            console.error(err);
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
+        }
+        if (!category) {
+            console.error('getIdHandler(): Category not found!');
+            return res.status(HttpStatus.NO_CONTENT).json({});
+        }
         return res.status(HttpStatus.OK).json(category);
     });
 };
