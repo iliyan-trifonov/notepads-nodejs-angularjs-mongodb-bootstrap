@@ -54,8 +54,6 @@ var postHandler = function (req, res) {
 };
 
 var getIdHandler = function (req, res) {
-    //TODO: check for valid id, etc.
-    console.log('req', req);
     Category.getByIdForUser(req.params.id, req.user.id, function (err, category) {
         if (err) {
             console.error(err);
