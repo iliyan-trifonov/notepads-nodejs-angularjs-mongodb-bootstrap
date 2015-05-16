@@ -156,4 +156,29 @@ describe('Categories Routes', function () {
         });
     });
 
+    describe('PUT /categories/:id', function () {
+        it('should update a Category\'s name given its id, uid and name', function (done) {
+            var newCatName = 'New Cat Name';
+            req = {
+                params: { id: category._id },
+                user: { id: user._id },
+                body: { name: newCatName }
+            };
+            res = {
+                status: function (status) {
+                    assert.strictEqual(status, HttpStatus.OK);
+                    return this;
+                },
+                json: function (cat) {
+                    assert.strictEqual(cat.name, newCatName);
+                    category = cat;
+                    done();
+                }
+            };
+            categoriesRouter.putIdHandler(req, res);
+        });
+
+        it('should not update given a non-existent cat id');
+    });
+
 });
