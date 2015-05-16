@@ -73,9 +73,14 @@ var putIdHandler = function (req, res) {
     Category.findOneAndUpdate(
         { _id: req.params.id, user: req.user.id },
         {$set: {name: req.body.name}},
-        {},
+        { 'new': true },
         function (err, category) {
-            //TODO: if err / category === null
+            if (err) {
+                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json('putIdHandler(): Could not update Category!');
+            }
+            if (!category) {
+                return res.status(HttpStatus.NO_CONTENT).json('putIdHandler(): Category not found!');
+            }
             return res.status(HttpStatus.OK).json(category);
         }
     );
