@@ -178,7 +178,24 @@ describe('Categories Routes', function () {
             categoriesRouter.putIdHandler(req, res);
         });
 
-        it('should not update given a non-existent cat id');
+        it('should not update given a non-existent cat id', function (done) {
+            req = {
+                params: { id: mongoose.Schema.ObjectId(123123123123) },
+                user: { id: user._id },
+                body: { name: 'asdasdasd' }
+            };
+            res = {
+                status: function (status) {
+                    assert.strictEqual(status, HttpStatus.NO_CONTENT);
+                    return this;
+                },
+                json: function (cat) {
+                    assert.deepEqual(cat, {});
+                    done();
+                }
+            };
+            categoriesRouter.putIdHandler(req, res);
+        });
     });
 
 });
