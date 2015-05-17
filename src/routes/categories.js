@@ -79,7 +79,7 @@ var putIdHandler = function (req, res) {
                 return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json('putIdHandler(): Could not update Category!');
             }
             if (!category) {
-                return res.status(HttpStatus.NO_CONTENT).json('putIdHandler(): Category not found!');
+                return res.status(HttpStatus.NO_CONTENT).json({});
             }
             return res.status(HttpStatus.OK).json(category);
         }
