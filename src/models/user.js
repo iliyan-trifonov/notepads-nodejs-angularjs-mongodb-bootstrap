@@ -56,9 +56,10 @@ userSchema.static('addNotepad', function (userId, notepadId, cb) {
 });
 
 userSchema.static('removeCategory', function (userId, categoryId, cb) {
-    return this.findOneAndUpdate({ _id: userId }, {
-        $pull: { categories: categoryId }
-    }, cb);
+    return this.findOneAndUpdate({ _id: userId },
+        {$pull: { categories: categoryId }},
+        {'new': true},
+        cb);
 });
 
 userSchema.static('removeNotepad', function (userId, notepadId, cb) {
