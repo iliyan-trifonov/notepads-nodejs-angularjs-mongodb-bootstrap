@@ -7,7 +7,8 @@ var express = require('express'),
     User = require('../models/user'),
     Category = require('../models/category'),
     Notepad = require('../models/notepad'),
-    HttpStatus = require('http-status');
+    HttpStatus = require('http-status'),
+    _ = require('lodash');
 
 //protect this resource to the logged in user
 //TODO: return API error, not redirecting to the home page!!!
@@ -87,43 +88,73 @@ var putIdHandler = function (req, res) {
 };
 
 var deleteIdHandler = function (req, res) {
-    //TODO: check for valid id and belonging to the current user
     Category.getByIdForUser(req.params.id, req.user.id, function (err, category) {
-
         if (err) {
+            console.error(err);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
         }
 
         if (!category) {
+            console.error('Category not found for user!');
             return res.status(HttpStatus.NO_CONTENT).json({});
         }
 
-        //TODO: it should be better if used only one call including the cat id and user id: if possible
         Category.findByIdAndRemove(req.params.id, function (err, category) {
             if (err) {
+                console.error(err);
                 return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
             }
             if (!category) {
-                return res.status(HttpStatus.NO_CONTENT).json('Category not found!');
+                console.error('Category not found!');
+                return res.status(HttpStatus.NO_CONTENT).json({});
             }
-            //finds user by category._id looking into user.categories[]
-            User.findOneAndUpdate({ categories: req.params.id }, {
-                $pull: { categories: req.params.id }
-            }, function (err, user) {
+
+            User.removeCategory(req.user.id, req.params.id, function (err, user) {
                 if (err) {
-                    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
+                    console.error(err);
+                    return res.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                .json('Could not remove category from user!');
                 }
                 if (!user) {
-                    return res.status(HttpStatus.NO_CONTENT).json('Category not found for user!');
+                    console.error('User with that category not found!');
+                    return res.status(HttpStatus.NO_CONTENT).json({});
                 }
-                //delete all orphaned notepads belonging to the deleted category
-                Notepad.remove({ category: req.params.id }, function (err, data) {
-                    //TODO: check if err / data === null - missing/not found?
-                    return res.status(HttpStatus.OK).json(category);
+
+                //delete all orphaned notepads(if any) belonging to the deleted category
+                //TODO: put the notepads in Uncategorized category instead
+                //TODO: check if Notepad.remove() returns the removed documents to use it directly
+                Notepad.find({ user: req.user.id, category: req.params.id }, function (err, notepads) {
+                    if (err) {
+                        return res.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                    .json('Could not find notepads of category to remove!');
+                    }
+                    if (notepads) {
+                        var ns = _.pluck(notepads, '_id');
+                        Notepad.remove({
+                            _id: { $in: ns }
+                        }, function (err) {
+                            if (err) {
+                                return res.status(500).json('Could not remove notepads of a deleted category!');
+                            }
+
+                            //remove the notepads' ids from User.notepads too
+                            User.findOneAndUpdate({ _id: user._id },
+                                { $pull: { notepads: { $in: ns } } },
+                                function (err/*, user*/) {
+                                    if (err) {
+                                        console.error(err);
+                                        return res.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                                            .json('Could not remove notepads\'s ids from user for a deleted category!');
+                                    }
+                                    return res.status(HttpStatus.OK).json(category);
+                                });
+                        });
+                    } else {
+                        return res.status(HttpStatus.OK).json(category);
+                    }
                 });
             });
         });
-
     });
 };
 //handlers end
