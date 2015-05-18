@@ -198,4 +198,9 @@ describe('Categories Routes', function () {
         });
     });
 
+    describe('DELETE /categories/:id', function () {
+        it('should return NO CONTENT given a non-existent category id');
+        it('should delete a category, update categories in user and delete all notepads belonging to that category');
+    });
+
 });
