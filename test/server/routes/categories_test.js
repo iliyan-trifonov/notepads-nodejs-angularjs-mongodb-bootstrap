@@ -5,6 +5,7 @@ var categoriesRouter = require('../../../src/routes/categories'),
     connection = require('../../db_common'),
     User = require('../../../src/models/user'),
     Category = require('../../../src/models/category'),
+    Notepad = require('../../../src/models/notepad'),
     HttpStatus = require('http-status'),
     mongoose = require('mongoose');
 
@@ -20,8 +21,6 @@ describe('Categories Routes', function () {
             assert.ifError(err);
             assert.ok(doc !== null);
 
-            user = doc;
-
             Category.create({
                 name: 'Sample Category',
                 user: doc._id
@@ -31,7 +30,14 @@ describe('Categories Routes', function () {
 
                 category = cat;
 
-                done();
+                User.addCategory(doc._id, cat._id, function (err, doc) {
+                    assert.ifError(err);
+                    assert.notStrictEqual(user, null);
+
+                    user = doc;
+
+                    done();
+                });
             });
         });
     });
@@ -115,7 +121,7 @@ describe('Categories Routes', function () {
 
         it('should return status 204 and an empty object result for a given non-existent id', function (done) {
             req = {
-                params : { id: mongoose.Schema.ObjectId() },
+                params : { id: mongoose.Types.ObjectId() },
                 user: { id: user._id }
             };
 
@@ -180,7 +186,7 @@ describe('Categories Routes', function () {
 
         it('should not update given a non-existent cat id', function (done) {
             req = {
-                params: { id: mongoose.Schema.ObjectId(123123123123) },
+                params: { id: mongoose.Types.ObjectId() },
                 user: { id: user._id },
                 body: { name: 'asdasdasd' }
             };
@@ -199,8 +205,84 @@ describe('Categories Routes', function () {
     });
 
     describe('DELETE /categories/:id', function () {
-        it('should return NO CONTENT given a non-existent category id');
-        it('should delete a category, update categories in user and delete all notepads belonging to that category');
+        it('should not delete and return NO CONTENT given a non-existent category id', function (done) {
+            req = {
+                params: { id: mongoose.Types.ObjectId() },
+                user: { id: user._id }
+            };
+            res = {
+                status: function (status) {
+                    assert.strictEqual(status, HttpStatus.NO_CONTENT);
+                    return this;
+                },
+                json: function (cat) {
+                    assert.deepEqual(cat, {});
+                    done();
+                }
+            };
+            categoriesRouter.deleteIdHandler(req, res);
+        });
+        it('should delete a category, update categories in user and delete all notepads belonging to that category', function (done) {
+            //create a new category
+            Category.create({ user: user._id }, function (err, category) {
+                assert.ifError(err);
+                assert.notStrictEqual(category, null);
+
+                //add it to the user's categories array
+                User.addCategory(user._id, category._id, function (err, user) {
+                    assert.ifError(err);
+                    assert.notStrictEqual(user, null);
+
+                    //create a new notepad for that category and user
+                    Notepad.create({ category: category._id, user: user._id }, function (err, notepad) {
+                        assert.ifError(err);
+                        assert.ok(notepad !== null);
+
+                        //add the notepad to the user's notepads array
+                        User.addNotepad(user._id, notepad._id, function (err, user) {
+                            assert.ifError(err);
+                            assert.notStrictEqual(user, null);
+
+                            //prepare the test params
+                            req = {
+                                params: { id: category._id },
+                                user: { id: user._id }
+                            };
+                            res = {
+                                status: function (status) {
+                                    assert.strictEqual(status, HttpStatus.OK);
+                                    return this;
+                                },
+                                json: function (cat) {
+                                    assert.ok(cat._id.equals(category._id));
+                                    //category doesn't exist
+                                    Category.findOne({ id: cat._id }, function (err, doc) {
+                                        assert.ifError(err);
+                                        assert.strictEqual(doc, null);
+
+                                        //user with that category doesn't exist
+                                        User.findOne({ categories: cat._id }, function (err, doc) {
+                                            assert.ifError(err);
+                                            assert.strictEqual(doc, null);
+
+                                            Notepad.find({ category: cat._id }, function (err, doc) {
+                                                assert.ifError(err);
+                                                assert.deepEqual(doc, []);
+
+                                                done();
+                                            });
+                                        });
+                                    });
+                                }
+                            };
+
+                            //execute
+                            categoriesRouter.deleteIdHandler(req, res);
+                        });
+                    });
+                });
+            });
+        });
     });
 
 });
