@@ -109,6 +109,8 @@ var deleteIdHandler = function (req, res) {
                 return res.status(HttpStatus.NO_CONTENT).json({});
             }
 
+            console.log('deleteIdHandler(): deleted category', category);
+
             User.removeCategory(req.user.id, req.params.id, function (err, user) {
                 if (err) {
                     console.error(err);
@@ -120,6 +122,8 @@ var deleteIdHandler = function (req, res) {
                     return res.status(HttpStatus.NO_CONTENT).json({});
                 }
 
+                console.log('deleteIdHandler(): user with category removed', user);
+
                 //delete all orphaned notepads(if any) belonging to the deleted category
                 //TODO: put the notepads in Uncategorized category instead
                 //TODO: check if Notepad.remove() returns the removed documents to use it directly
@@ -130,6 +134,7 @@ var deleteIdHandler = function (req, res) {
                     }
                     if (notepads) {
                         var ns = _.pluck(notepads, '_id');
+                        console.log('deleteIdHandler(): notepads to be deleted for category', ns);
                         Notepad.remove({
                             _id: { $in: ns }
                         }, function (err) {
@@ -140,12 +145,14 @@ var deleteIdHandler = function (req, res) {
                             //remove the notepads' ids from User.notepads too
                             User.findOneAndUpdate({ _id: user._id },
                                 { $pull: { notepads: { $in: ns } } },
-                                function (err/*, user*/) {
+                                { 'new': true },
+                                function (err, user) {
                                     if (err) {
                                         console.error(err);
                                         return res.status(HttpStatus.INTERNAL_SERVER_ERROR)
                                             .json('Could not remove notepads\'s ids from user for a deleted category!');
                                     }
+                                    console.log('deleteIdHandler(): user with removed notepads for category', user);
                                     return res.status(HttpStatus.OK).json(category);
                                 });
                         });

@@ -19,6 +19,8 @@ if ('development' === app.get('env')) {
     console.log('development environment detected');
 } else if ('production' === app.get('env')) {
     console.log('production environment detected');
+} else if ('test' === app.get('env')) {
+    console.log('test environment detected');
 } else {
     console.log('unrecognized environment detected', app.get('env'));
 }
@@ -78,7 +80,7 @@ if (app.get('env') !== 'test') {
 //authorize if valid accesstoken is given
 app.use(function (req, res, next) {
     var accessToken = req.query.token;
-    console.log('req.query', req.query);
+    //console.log('req.query', req.query);
     if (accessToken) {
         console.log('using accessToken for auth', accessToken);
         var User = require('./models/user');
