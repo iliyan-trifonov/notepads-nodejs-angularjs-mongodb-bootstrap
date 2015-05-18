@@ -95,7 +95,7 @@ var deleteIdHandler = function (req, res) {
         }
 
         if (!category) {
-            return res.status(HttpStatus.NO_CONTENT).json('Could not find category!');
+            return res.status(HttpStatus.NO_CONTENT).json({});
         }
 
         //TODO: it should be better if used only one call including the cat id and user id: if possible
