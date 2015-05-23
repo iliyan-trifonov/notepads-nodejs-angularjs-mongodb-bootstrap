@@ -143,9 +143,7 @@ var deleteIdHandler = function (req, res) {
                             }
 
                             //remove the notepads' ids from User.notepads too
-                            User.findOneAndUpdate({ _id: user._id },
-                                { $pull: { notepads: { $in: ns } } },
-                                { 'new': true },
+                            User.removeNotepads(user._id, ns,
                                 function (err, user) {
                                     if (err) {
                                         console.error(err);

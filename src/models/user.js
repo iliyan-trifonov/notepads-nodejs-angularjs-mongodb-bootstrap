@@ -67,6 +67,14 @@ userSchema.static('removeNotepad', function (userId, notepadId, cb) {
     }, cb);
 });
 
+userSchema.static('removeNotepads', function (userId, notepadsIds, cb) {
+    return this.findOneAndUpdate(
+        { _id: userId },
+        { $pull: { notepads: { $in: notepadsIds } } },
+        { 'new': true },
+    cb);
+});
+
 var User = mongoose.model('User', userSchema);
 
 module.exports = exports = User;
