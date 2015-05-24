@@ -1,7 +1,9 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-    hat = require('hat');
+    //TODO: replace hat with something more specific for API tokens
+    hat = require('hat'),
+    Promise = require('bluebird');
 
 //TODO: add required to the fields
 var userSchema = new mongoose.Schema({
@@ -13,6 +15,10 @@ var userSchema = new mongoose.Schema({
     notepads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notepad' }]
 });
 
+//TODO: remove the callbacks after promises are used 100%
+
+//override create
+//works with callbacks and promises for compatibility - for now - cb will be removed
 userSchema.static('create', function (data, cb) {
     var user = new User({
         facebookId: data.facebookId,
@@ -20,16 +26,28 @@ userSchema.static('create', function (data, cb) {
         name: data.name,
         photo: data.photo
     });
-    return user.save(cb);
+    return user.saveAsync().then(function () {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 //returns only _id
 userSchema.static('getByAccessToken', function (accessToken, cb) {
-    return this.findOne({ accessToken: accessToken }, null, null, cb);
+    return this.findOneAsync({ accessToken: accessToken }).then(function (user) {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 userSchema.static('fb', function (fbId, cb) {
-    return this.findOne({ facebookId: fbId }, 'facebookId accessToken name photo', null, cb);
+    return this.findOneAsync({ facebookId: fbId }, 'facebookId accessToken name photo').then(function (user) {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 userSchema.static('getCategories', function (uid, cb) {
@@ -76,5 +94,8 @@ userSchema.static('removeNotepads', function (userId, notepadsIds, cb) {
 });
 
 var User = mongoose.model('User', userSchema);
+
+Promise.promisifyAll(User);
+Promise.promisifyAll(User.prototype);
 
 module.exports = exports = User;
