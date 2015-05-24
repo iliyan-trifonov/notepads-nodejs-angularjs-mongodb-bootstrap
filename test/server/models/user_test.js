@@ -11,12 +11,11 @@ describe('User model', function () {
 
     before(function (done) {
         db = connection();
-        User.create({
+        User.createAsync({
             facebookId: +new Date(),
             name: 'Iliyan Trifonov',
             photo: 'photourl'
-        }, function (err, user) {
-            assert.ifError(err);
+        }).then(function (user) {
             assert.notStrictEqual(user, null);
 
             user.categories = [
@@ -36,6 +35,8 @@ describe('User model', function () {
                 done();
             });
 
+        }).catch(function (err) {
+            assert.ifError(err);
         });
     });
 
@@ -47,10 +48,13 @@ describe('User model', function () {
         });
     });
 
+    it('createAsync should exist', function () {
+        assert.ok(User.createAsync);
+    });
+
     it('should create and save a new User object', function (done) {
-        var user = { name: 'Iliyan Trifonov' };
-        User.create(user, function (err, doc) {
-            assert.ifError(err);
+        var user = { name: 'Iliyan Trifonov ' +new Date() };
+        User.createAsync(user).then(function (doc) {
             assert.notStrictEqual(doc, null);
             assert.deepEqual(doc.name, user.name);
             done();
@@ -59,8 +63,7 @@ describe('User model', function () {
 
     describe('getByAccessToken', function () {
         it('should return a User object by given existing accessToken', function (done) {
-            User.getByAccessToken(testUser.accessToken, function (err, doc) {
-                assert.ifError(err);
+            User.getByAccessTokenAsync(testUser.accessToken).then(function (doc) {
                 assert.notStrictEqual(doc, null);
 
                 assert.ok(doc._id.equals(testUser._id));
@@ -72,8 +75,7 @@ describe('User model', function () {
 
     describe('fb', function () {
         it('should return a User object with facebookId, accessToken, name and photo', function (done) {
-            User.fb(testUser.facebookId, function (err, user) {
-                assert.ifError(err);
+            User.fbAsync(testUser.facebookId).then(function (user) {
                 assert.notStrictEqual(user, null);
 
                 assert.ok(user._id.equals(testUser._id));
