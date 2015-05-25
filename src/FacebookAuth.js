@@ -6,36 +6,41 @@ var config,
     notepadsUtils = require('./notepadsUtils');
 
 var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done) {
-    User.fb(fbProfile.id, function (err, existingUser) {
+    var p = User.fbAsync(fbProfile.id).then(function (existingUser) {
         if (existingUser) {
-            console.log('user already in DB');
-            return done(null, existingUser);
+            console.info('user already in DB', existingUser);
+            done(null, existingUser);
+            //break the promises chain here:
+            return p.cancel();
         } else {
-            console.log('creating new user');
-            console.log('fb profile', fbProfile);
-            User.create({
+            console.info('creating new user', fbProfile);
+            return User.createAsync({
                 facebookId: fbProfile.id,
                 name: fbProfile.displayName,
                 photo: fbProfile.photos[0].value
-            }, function (err, user) {
-                if (err || !user) {
-                    console.log('authVerification(): user creation unsuccessfull!', err, user);
-                    return done(err, user);
-                }
-                console.log('new user created');
-
-                //prepopulate onlt for just created users
-                notepadsUtils.prepopulate(user._id, function (err, obj) {
-                    if (err) {
-                        console.log('error prepopulating for a new user', err, obj);
-                        //return res.status(500).json(err);
-                    }
-                    return done(err, user);
-                });
-
             });
         }
-    });
+    }).then(function (newUser) {
+        console.info('newUser', newUser);
+        if (!newUser) {
+            var err = new Error('authVerification(): user creation unsuccessful!');
+            console.error(err, { newUser: newUser });
+            return done(err, newUser);
+        }
+        console.info('new user created');
+        //pre-populate some data for just created users
+        notepadsUtils.prepopulate(newUser._id, function (err/*, result*/) {
+            if (err) {
+                console.error('error pre-populating for a new user', err);
+                return done(err);
+            }
+            //return the new user object
+            done(null, newUser);
+        });
+    }).catch(function (err) {
+        console.error('authVerification(): error', err);
+        return done(err);
+    })/*.cancelable()*/;
 };
 
 var authSerialize = function (user, done) {
