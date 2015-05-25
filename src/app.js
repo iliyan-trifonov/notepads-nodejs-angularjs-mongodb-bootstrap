@@ -15,14 +15,11 @@ var config,
 var app = express();
 
 //export NODE_ENV=development npm start
-if ('development' === app.get('env')) {
-    console.log('development environment detected');
-} else if ('production' === app.get('env')) {
-    console.log('production environment detected');
-} else if ('test' === app.get('env')) {
-    console.log('test environment detected');
+var envs = ['development', 'production', 'test'];
+if (envs.indexOf(app.get('env')) !== -1) {
+    console.info(app.get('env') + ' environment detected');
 } else {
-    console.log('unrecognized environment detected', app.get('env'));
+    console.warn('unrecognized environment detected', app.get('env'));
 }
 
 if (app.get('env') !== 'test') {
