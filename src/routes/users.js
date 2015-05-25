@@ -63,16 +63,12 @@ router.post('/auth', function (req, res) {
                         name: graphUser.name,
                         photo: graphUser.picture.data.url
                     });
-                    User.create({
+                    User.createAsync({
                         facebookId: graphUser.id,
                         name: graphUser.name,
                         photo: graphUser.picture.data.url
-                    }, function (err, user) {
-                        console.log('new user created results', err, user);
-                        if (err) {
-                            console.log('API: error creating new user, err = ', err);
-                            return res.json(400, err);
-                        }
+                    }).then(function (user) {
+                        console.log('new user created results', user);
 
                         if (!user) {
                             console.log('API: error creating new user, user = ', user);
@@ -87,6 +83,9 @@ router.post('/auth', function (req, res) {
                             return res.status(200).json({accessToken: user.accessToken});
                         });
 
+                    }).catch(function (err) {
+                        console.log('API: error creating new user, err = ', err);
+                        return res.json(400, err);
                     });
                 } else {
                     console.log('user exists, returning accessToken', user);
