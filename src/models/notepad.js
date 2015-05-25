@@ -1,6 +1,7 @@
 'use strict';
 
-var mongoose = require('mongoose');
+var mongoose = require('mongoose'),
+    Promise = require('bluebird');
 
 var notepadSchema = new mongoose.Schema({
     title: String,
@@ -18,5 +19,8 @@ notepadSchema.static('getByUserId', function (uid, cb) {
 });
 
 var Notepad = mongoose.model('Notepad', notepadSchema);
+
+Promise.promisifyAll(Notepad);
+Promise.promisifyAll(Notepad.prototype);
 
 module.exports = exports = Notepad;
