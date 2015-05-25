@@ -7,30 +7,20 @@ var mongoose = require('mongoose'),
 
 //TODO: add required to the fields
 var userSchema = new mongoose.Schema({
-    facebookId: String,
-    accessToken: String,
-    name: String,
-    photo: String,
+    facebookId: { type: String, required: true, unique: true },
+    accessToken: { type: String, required: true, unique: true },
+    name: { type: String, required: true },
+    photo: { type: String, required: true },
     categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
     notepads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notepad' }]
 });
 
 //TODO: remove the callbacks after promises are used 100%
 
-//override create
-//works with callbacks and promises for compatibility - for now - cb will be removed
-userSchema.static('create', function (data, cb) {
-    var user = new User({
-        facebookId: data.facebookId,
-        accessToken: hat(),
-        name: data.name,
-        photo: data.photo
-    });
-    return user.saveAsync().then(function () {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+//auto create the accessToken
+userSchema.pre('validate', function (next) {
+    this.accessToken = this.accessToken || hat();
+    next();
 });
 
 //returns only _id
