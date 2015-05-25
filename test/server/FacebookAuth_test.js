@@ -27,35 +27,41 @@ describe('FacebookAuth', function () {
     });
 
     after(function (done) {
-        User.remove({}, function () {
-            Category.remove({}, function () {
-                Notepad.remove({}, function () {
-                    db.close();
-                    done();
-                });
-            });
+        User.removeAsync({}).then(function () {
+            return Category.removeAsync({});
+        }).then(function () {
+            return Notepad.removeAsync({});
+        }).then(function () {
+            db.close();
+            done();
         });
     });
 
     describe('authVerification', function () {
         it('should return an existing user when existing uid is given', function (done) {
-            User.create({ facebookId: +new Date() }, function (err, user) {
-                assert.ifError(err);
+            User.createAsync({
+                facebookId: +new Date(),
+                name: 'Iliyan Trifonov',
+                photo: 'photourl'
+            }).then(function (user) {
                 assert.notStrictEqual(user, null);
-                FacebookAuth.authVerification(null, null, { id: user.facebookId }, function (err, result) {
+                FacebookAuth.authVerification(null, null, {id: user.facebookId}, function (err, result) {
                     assert.ifError(err);
                     assert.notStrictEqual(result, null);
                     assert.ok(result.equals(user));
                     done();
                 });
+            }).catch(function (err) {
+                assert.ifError(err);
+                done();
             });
         });
 
         it('should create a new user for not existing uid', function (done) {
             var fbProfile = {
-                id: String(+new Date()),
-                displayName: 'Iliyan Trifonov',
-                photos: [{ value:'' }]
+                id: String(+new Date().getTime()),
+                displayName: 'Iliyan Trifonov ' +new Date().getTime(),
+                photos: [{ value: 'photourl' }]
             };
             FacebookAuth.authVerification(null, null, fbProfile, function (err, result) {
                 assert.ifError(err);
@@ -80,7 +86,11 @@ describe('FacebookAuth', function () {
 
     describe('authDeserialize', function () {
         it('should return a user from a given facebookId', function (done) {
-            User.create({ facebookId: +new Date() }, function (err, user) {
+            User.create({
+                facebookId: +new Date(),
+                name: 'Iliyan Trifonov',
+                photo: 'photourl'
+            }, function (err, user) {
                 assert.ifError(err);
                 assert.ok(user);
                 FacebookAuth.authDeserialize(user.facebookId, function (err, doc) {

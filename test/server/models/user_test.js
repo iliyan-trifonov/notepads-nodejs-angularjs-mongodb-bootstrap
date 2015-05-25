@@ -41,22 +41,21 @@ describe('User model', function () {
     });
 
     after(function (done) {
-        User.remove({}, function (err) {
-            assert.ifError(err);
+        User.removeAsync({}).then(function () {
             db.close();
             done();
         });
     });
 
-    it('createAsync should exist', function () {
-        assert.ok(User.createAsync);
-    });
-
     it('should create and save a new User object', function (done) {
-        var user = { name: 'Iliyan Trifonov ' +new Date() };
+        var user = {
+            facebookId: +new Date(),
+            name: 'Iliyan Trifonov ' +new Date().getTime(),
+            photo: 'photourl'
+        };
         User.createAsync(user).then(function (doc) {
             assert.notStrictEqual(doc, null);
-            assert.deepEqual(doc.name, user.name);
+            assert.strictEqual(doc.name, user.name);
             done();
         });
     });

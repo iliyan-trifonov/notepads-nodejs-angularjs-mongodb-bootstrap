@@ -25,7 +25,11 @@ describe('Notepad Model', function () {
     before(function (done) {
         //TODO: use callback
         db = connection();
-        User.create({name: 'Iliyan Trifonov'}, function (err, doc) {
+        User.create({
+            facebookId: +new Date(),
+            name: 'Iliyan Trifonov',
+            photo: 'photourl'
+        }, function (err, doc) {
             assert.ifError(err);
             assert.ok(doc !== null);
 

@@ -15,7 +15,8 @@ describe('Category Model', function () {
         //add some testing data
         User.create({
             facebookId: +new Date(),
-            name: 'Iliyan Trifonov'
+            name: 'Iliyan Trifonov',
+            photo: 'photourl'
         }, function (err, user) {
             assert.ifError(err);
             assert.ok(user !== null);

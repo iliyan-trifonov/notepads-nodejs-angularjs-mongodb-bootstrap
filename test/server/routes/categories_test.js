@@ -17,7 +17,11 @@ describe('Categories Routes', function () {
         //TODO: use callback
         db = connection();
 
-        User.create({ name: 'Iliyan Trifonov' }, function (err, doc) {
+        User.create({
+            facebookId: +new Date(),
+            name: 'Iliyan Trifonov',
+            photo: 'photourl'
+        }, function (err, doc) {
             assert.ifError(err);
             assert.ok(doc !== null);
 
@@ -43,7 +47,11 @@ describe('Categories Routes', function () {
     });
 
     after(function () {
-        db.close();
+        User.removeAsync({}).then(function () {
+            return Category.removeAsync({});
+        }).then(function () {
+            db.close();
+        });
     });
 
     beforeEach(function () {
