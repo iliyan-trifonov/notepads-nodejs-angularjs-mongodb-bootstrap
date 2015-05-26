@@ -25,7 +25,9 @@ userSchema.pre('validate', function (next) {
 
 //returns only _id
 userSchema.static('getByAccessToken', function (accessToken, cb) {
-    return this.findOneAsync({ accessToken: accessToken }).then(function (user) {
+    return this.findOneAsync(
+        { accessToken: accessToken }
+    ).then(function (user) {
         return cb(null, user);
     }).catch(function (err) {
         return cb(err);
@@ -44,7 +46,10 @@ userSchema.static('fb', function (fbId, cb) {
 });
 
 userSchema.static('getCategories', function (uid, cb) {
-    return this.findOneAsync({ _id: uid }, 'categories').then(function (user) {
+    return this.findOneAsync(
+        { _id: uid },
+        'categories'
+    ).then(function (user) {
         return cb(null, user);
     }).catch(function (err) {
         return cb(err);
@@ -52,7 +57,10 @@ userSchema.static('getCategories', function (uid, cb) {
 });
 
 userSchema.static('getNotepads', function (uid, cb) {
-    return this.findOneAsync({ _id: uid }, 'notepads').then(function (user) {
+    return this.findOneAsync(
+        { _id: uid },
+        'notepads'
+    ).then(function (user) {
         return cb(null, user);
     }).catch(function (err) {
         return cb(err);
@@ -60,44 +68,63 @@ userSchema.static('getNotepads', function (uid, cb) {
 });
 
 userSchema.static('addCategory', function (userId, categoryId, cb) {
-    return this.findOneAndUpdateAsync({ _id: userId },
+    return this.findOneAndUpdateAsync(
+        { _id: userId },
         { $addToSet: { categories: categoryId } },
-        { 'new': true }).then(function (user) {
-            return cb(null, user);
-        }).catch(function (err) {
-            return cb(err);
-        });
+        { 'new': true }
+    ).then(function (user) {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 userSchema.static('addNotepad', function (userId, notepadId, cb) {
-    return this.findOneAndUpdate({ _id: userId },
+    return this.findOneAndUpdateAsync(
+        { _id: userId },
         { $addToSet: { notepads: notepadId } },
-        { 'new': true }).then(function (user) {
-            return cb(null, user);
-        }).catch(function (err) {
-            return cb(err);
-        });
+        { 'new': true }
+    ).then(function (user) {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 userSchema.static('removeCategory', function (userId, categoryId, cb) {
-    return this.findOneAndUpdate({ _id: userId },
+    return this.findOneAndUpdateAsync(
+        { _id: userId },
         { $pull: { categories: categoryId } },
-        { 'new': true },
-        cb);
+        { 'new': true }
+    ).then(function (user) {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 userSchema.static('removeNotepad', function (userId, notepadId, cb) {
-    return this.findOneAndUpdate({ _id: userId }, {
-        $pull: { notepads: notepadId }
-    }, cb);
+    return this.findOneAndUpdateAsync(
+        { _id: userId },
+        { $pull: { notepads: notepadId } },
+        { 'new': true }
+    ).then(function (user) {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 userSchema.static('removeNotepads', function (userId, notepadsIds, cb) {
-    return this.findOneAndUpdate(
+    return this.findOneAndUpdateAsync(
         { _id: userId },
         { $pull: { notepads: { $in: notepadsIds } } },
-        { 'new': true },
-    cb);
+        { 'new': true }
+    ).then(function (user) {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 var User = mongoose.model('User', userSchema);

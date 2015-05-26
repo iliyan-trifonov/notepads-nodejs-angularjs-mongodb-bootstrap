@@ -3,7 +3,8 @@
 var User = require('../../../src/models/user'),
     assert = require('assert'),
     connection = require('../../db_common'),
-    mongoose = require('mongoose');
+    mongoose = require('mongoose'),
+    Promise = require('bluebird');
 
 describe('User model', function () {
 
@@ -131,6 +132,62 @@ describe('User model', function () {
                 assert.notStrictEqual(user.notepads.indexOf(notepadId), -1);
 
                 testUser = user;
+
+                done();
+            });
+        });
+    });
+
+    describe('removeNotepad', function () {
+        it('should remove an existing Notepad given notepad Id', function (done) {
+            var nId = mongoose.Types.ObjectId();
+            User.addNotepadAsync(
+                testUser._id,
+                nId
+            ).then(function (user) {
+                assert.notStrictEqual(user, null);
+                assert.notStrictEqual(user.notepads.indexOf(nId), -1);
+            }).then(function () {
+                return User.removeNotepadAsync(
+                    testUser._id,
+                    nId
+                );
+            }).then(function (user) {
+                assert.notStrictEqual(user, null);
+                assert.strictEqual(user.notepads.indexOf(nId), -1);
+
+                done();
+            });
+        });
+    });
+
+    describe('removeNotepads', function () {
+        it('should remove 0 or more existing Notepads given notepad Ids', function (done) {
+            var nIds = [
+                mongoose.Types.ObjectId(),
+                mongoose.Types.ObjectId(),
+                mongoose.Types.ObjectId()
+            ];
+            Promise.map(nIds, function (id) {
+                return User.addNotepadAsync(testUser._id, id);
+            }).then(function (users) {
+                //get the last user result with all ids inserted
+                var user = users[2];
+                console.info('user', user);
+                assert.notStrictEqual(user, null);
+                assert.ok(nIds.every(function (id) {
+                    return user.notepads.indexOf(id) !== -1;
+                }));
+            }).then(function () {
+                return User.removeNotepadsAsync(
+                    testUser._id,
+                    nIds
+                );
+            }).then(function (user) {
+                assert.notStrictEqual(user, null);
+                assert.ok(nIds.every(function (id) {
+                    return user.notepads.indexOf(id) === -1;
+                }));
 
                 done();
             });
