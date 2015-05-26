@@ -33,7 +33,10 @@ userSchema.static('getByAccessToken', function (accessToken, cb) {
 });
 
 userSchema.static('fb', function (fbId, cb) {
-    return this.findOneAsync({ facebookId: fbId }, 'facebookId accessToken name photo').then(function (user) {
+    return this.findOneAsync(
+        { facebookId: fbId },
+        'facebookId accessToken name photo'
+    ).then(function (user) {
         return cb(null, user);
     }).catch(function (err) {
         return cb(err);
@@ -41,25 +44,39 @@ userSchema.static('fb', function (fbId, cb) {
 });
 
 userSchema.static('getCategories', function (uid, cb) {
-    return this.findOne({ _id: uid }, 'categories', null, cb);
+    return this.findOneAsync({ _id: uid }, 'categories').then(function (user) {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 userSchema.static('getNotepads', function (uid, cb) {
-    return this.findOne({ _id: uid }, 'notepads', null, cb);
+    return this.findOneAsync({ _id: uid }, 'notepads').then(function (user) {
+        return cb(null, user);
+    }).catch(function (err) {
+        return cb(err);
+    });
 });
 
 userSchema.static('addCategory', function (userId, categoryId, cb) {
-    return this.findOneAndUpdate({ _id: userId },
+    return this.findOneAndUpdateAsync({ _id: userId },
         { $addToSet: { categories: categoryId } },
-        { 'new': true },
-        cb);
+        { 'new': true }).then(function (user) {
+            return cb(null, user);
+        }).catch(function (err) {
+            return cb(err);
+        });
 });
 
 userSchema.static('addNotepad', function (userId, notepadId, cb) {
     return this.findOneAndUpdate({ _id: userId },
         { $addToSet: { notepads: notepadId } },
-        { 'new': true },
-        cb);
+        { 'new': true }).then(function (user) {
+            return cb(null, user);
+        }).catch(function (err) {
+            return cb(err);
+        });
 });
 
 userSchema.static('removeCategory', function (userId, categoryId, cb) {

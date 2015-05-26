@@ -90,12 +90,9 @@ describe('User model', function () {
 
     describe('getCategories', function () {
         it('should return a User object with an array of 0 or more Category ids', function (done) {
-            User.getCategories(testUser._id, function (err, user) {
-                assert.ifError(err);
+            User.getCategoriesAsync(testUser._id).then(function (user) {
                 assert.notStrictEqual(user, null);
-
                 assert.strictEqual(user.categories.length, testUser.categories.length);
-
                 done();
             });
         });
@@ -103,10 +100,8 @@ describe('User model', function () {
 
     describe('getNotepads', function () {
         it('should return a User object with an array of 0 or more Notepad ids', function (done) {
-            User.getNotepads(testUser._id, function (err, user) {
-                assert.ifError(err);
+            User.getNotepadsAsync(testUser._id).then(function (user) {
                 assert.notStrictEqual(user, null);
-
                 assert.strictEqual(user.notepads.length, testUser.notepads.length);
 
                 done();
@@ -117,10 +112,8 @@ describe('User model', function () {
     describe('addCategory', function () {
         it('should add one new Category id', function (done) {
             var catId = mongoose.Types.ObjectId();
-            User.addCategory(testUser._id, catId, function (err, user) {
-                assert.ifError(err);
+            User.addCategoryAsync(testUser._id, catId).then(function (user) {
                 assert.notStrictEqual(user, null);
-
                 assert.notStrictEqual(user.categories.indexOf(catId), -1);
 
                 testUser = user;
@@ -133,10 +126,8 @@ describe('User model', function () {
     describe('addNotepad', function () {
         it('should add one new Notepad id', function (done) {
             var notepadId = mongoose.Types.ObjectId();
-            User.addNotepad(testUser._id, notepadId, function (err, user) {
-                assert.ifError(err);
+            User.addNotepadAsync(testUser._id, notepadId).then(function (user) {
                 assert.notStrictEqual(user, null);
-
                 assert.notStrictEqual(user.notepads.indexOf(notepadId), -1);
 
                 testUser = user;
