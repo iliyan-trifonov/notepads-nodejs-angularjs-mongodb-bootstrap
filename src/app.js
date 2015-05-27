@@ -74,24 +74,27 @@ if (app.get('env') !== 'test') {
         next();
     });
 }
-//authorize if valid accesstoken is given
+//authorize if valid access token is given
 app.use(function (req, res, next) {
+    var blockUser = function blockUser (err) {
+        console.error(err);
+        return res.status(403).send('Forbidden');
+    };
     var accessToken = req.query.token;
-    //console.log('req.query', req.query);
     if (accessToken) {
-        console.log('using accessToken for auth', accessToken);
+        console.info('using accessToken for auth', accessToken);
+        //this require is used often, may be put on top:
         var User = require('./models/user');
-        User.getByAccessToken(accessToken, function (err, user) {
-            if (!err && user) {
-                console.log('setting req.user from token', user);
+        User.getByAccessTokenAsync(accessToken).then(function (user) {
+            if (user) {
+                console.info('setting req.user from token', user);
                 req.user = user;
                 next();
             } else {
-                if (err) {
-                    console.error(err);
-                }
-                return res.status(403).send('Forbidden');
+                blockUser('Invalid access token!');
             }
+        }).catch(function (err) {
+            blockUser(err);
         });
     } else {
         next();
