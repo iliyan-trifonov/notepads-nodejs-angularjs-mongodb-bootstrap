@@ -22,20 +22,20 @@ router.post('/auth', function (req, res) {
     }
 
     if (accessToken) {
-        User.getByAccessToken(accessToken, function (err, user) {
-            if (err) {
-                //user does not exist
-                console.log('user with accessToken ' + accessToken + ' does not exist!');
-                return res.json(500, err);
-            }
-
+        var blockUser = function blockUser () {
+            var err = 'Invalid Access Token!';
+            console.error(err);
+            return res.status(500).json(err);
+        };
+        User.getByAccessTokenAsync(accessToken).then(function (user) {
             if (!user) {
-                console.log('Invalid Access Token!', accessToken);
-                return res.status(500).json('Invalid Access Token!');
+                blockUser();
             }
+        }).catch(function (/*err*/) {
+            blockUser();
         });
     } else {
-        console.log('graph: set appsecret to: ' + config.facebook.app.secret);
+        console.log('graph: set app secret to: ' + config.facebook.app.secret);
         graph.setAppSecret(config.facebook.app.secret);
         graph.setAccessToken(fbAccessToken);
 
