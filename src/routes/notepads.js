@@ -5,7 +5,8 @@ var express = require('express'),
     User = require('../models/user'),
     Category = require('../models/category'),
     Notepad = require('../models/notepad'),
-    moment = require('moment');
+    moment = require('moment'),
+    HttpStatus = require('http-status');
 
 //TODO: put this in FacebookAuth
 //TODO: or make it connected somehow
@@ -153,7 +154,12 @@ router.post('/', function (req, res) {
                     return res.status(500).json('Error assigning the notepad to the user!');
                 }
                 Category.increaseNotepadsCountById(notepad.category, function (err, category) {
-                    //TODO: if err / category === null
+                    if (err) {
+                        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+                    }
+                    if (!category) {
+                        return res.status(HttpStatus.NO_CONTENT).json({});
+                    }
                     return res.json(notepad);
                 });
             });
@@ -221,11 +227,21 @@ router.delete('/:id', function (req, res) {
             User.findOneAndUpdate({ notepads: req.params.id }, {
                 $pull: { notepads: req.params.id }
             }, function (err, user) {
-                console.log('notepad removed from the user');
-                //TODO: check if err / user === null, etc.
+                if (err) {
+                    return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+                }
+                if (!user) {
+                    return res.status(HttpStatus.NO_CONTENT).json({});
+                }
+                console.info('notepad removed from the user');
                 Category.decreaseNotepadsCountById(notepad.category, function (err, category) {
+                    if (err) {
+                        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+                    }
+                    if (!category) {
+                        return res.status(HttpStatus.NO_CONTENT).json({});
+                    }
                     console.log('category notepadsCount decreased');
-                    //TODO: check if err / category === null - not found?
                     return res.status(200).json(notepad);
                 });
             });
