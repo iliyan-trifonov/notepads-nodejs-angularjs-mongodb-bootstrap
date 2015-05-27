@@ -184,8 +184,8 @@
     ])
 
     .controller('CategoryCtrl', [
-        '$scope', 'Api', '$location', '$routeParams',
-        function ($scope, Api, $location, $routeParams) {
+        '$scope', 'Api', '$location', '$routeParams', 'flash',
+        function ($scope, Api, $location, $routeParams, flash) {
 
             var catId = $routeParams.id;
 
