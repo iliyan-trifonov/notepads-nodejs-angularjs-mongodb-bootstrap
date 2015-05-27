@@ -62,11 +62,19 @@ describe('User model', function () {
     });
 
     describe('getByAccessToken', function () {
-        it('should return a User object by given existing accessToken', function (done) {
+        it('should return a User object given existing accessToken', function (done) {
             User.getByAccessTokenAsync(testUser.accessToken).then(function (doc) {
                 assert.notStrictEqual(doc, null);
 
                 assert.ok(doc._id.equals(testUser._id));
+
+                done();
+            });
+        });
+
+        it('should return a null given non-existent accessToken', function (done) {
+            User.getByAccessTokenAsync('0a9s7d0as97d0asd0as7d09').then(function (doc) {
+                assert.strictEqual(doc, null);
 
                 done();
             });
