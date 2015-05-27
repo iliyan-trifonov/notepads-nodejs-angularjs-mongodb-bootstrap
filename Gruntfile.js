@@ -3,6 +3,20 @@
 module.exports = function (grunt) {
 
     grunt.initConfig({
+        jshint: {
+            options: {
+                jshintrc: '.jshintrc'
+            },
+            gruntfile: {
+                src: 'Gruntfile.js'
+            },
+            app: {
+                src: ['src/**/*.js', "!src/public/vendor/**/*.js"]
+            },
+            test: {
+                src: ['test/**/*.js']
+            }
+        },
         mocha_istanbul: {
             src: 'test/server/',
             options: {
@@ -40,11 +54,13 @@ module.exports = function (grunt) {
         });
     });
 
+
     grunt.loadNpmTasks('grunt-env');
+    grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-mocha-istanbul');
     grunt.loadNpmTasks('grunt-spec-check');
 
-    grunt.registerTask('test', ['env:test', 'mocha_istanbul', 'specCheck']);
+    grunt.registerTask('test', ['env:test', 'jshint:app', 'mocha_istanbul', 'specCheck']);
     grunt.registerTask('default', 'test');
 
 };
