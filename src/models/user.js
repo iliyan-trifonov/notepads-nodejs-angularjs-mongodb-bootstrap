@@ -1,9 +1,9 @@
 'use strict';
 
-var mongoose = require('mongoose'),
+var Promise = require('bluebird'),
+    mongoose = Promise.promisifyAll(require('mongoose')),
     //TODO: replace hat with something more specific for API tokens
-    hat = require('hat'),
-    Promise = require('bluebird');
+    hat = require('hat');
 
 //TODO: add required to the fields
 var userSchema = new mongoose.Schema({
@@ -24,112 +24,73 @@ userSchema.pre('validate', function (next) {
 });
 
 //returns only _id
-userSchema.static('getByAccessToken', function (accessToken, cb) {
+userSchema.static('getByAccessToken', function (accessToken) {
     return this.findOneAsync(
         { accessToken: accessToken }
-    ).then(function (user) {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+    );
 });
 
-userSchema.static('fb', function (fbId, cb) {
+userSchema.static('fb', function (fbId) {
     return this.findOneAsync(
         { facebookId: fbId },
         'facebookId accessToken name photo'
-    ).then(function (user) {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+    );
 });
 
-userSchema.static('getCategories', function (uid, cb) {
+userSchema.static('getCategories', function (uid) {
     return this.findOneAsync(
         { _id: uid },
         'categories'
-    ).then(function (user) {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+    );
 });
 
-userSchema.static('getNotepads', function (uid, cb) {
+userSchema.static('getNotepads', function (uid) {
     return this.findOneAsync(
         { _id: uid },
         'notepads'
-    ).then(function (user) {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+    );
 });
 
-userSchema.static('addCategory', function (userId, categoryId, cb) {
+userSchema.static('addCategory', function (userId, categoryId) {
     return this.findOneAndUpdateAsync(
         { _id: userId },
         { $addToSet: { categories: categoryId } },
         { 'new': true }
-    ).then(function (user) {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+    );
 });
 
-userSchema.static('addNotepad', function (userId, notepadId, cb) {
+userSchema.static('addNotepad', function (userId, notepadId) {
     return this.findOneAndUpdateAsync(
         { _id: userId },
         { $addToSet: { notepads: notepadId } },
         { 'new': true }
-    ).then(function (user) {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+    );
 });
 
-userSchema.static('removeCategory', function (userId, categoryId, cb) {
+userSchema.static('removeCategory', function (userId, categoryId) {
     return this.findOneAndUpdateAsync(
         { _id: userId },
         { $pull: { categories: categoryId } },
         { 'new': true }
-    ).then(function (user) {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+    );
 });
 
-userSchema.static('removeNotepad', function (userId, notepadId, cb) {
+userSchema.static('removeNotepad', function (userId, notepadId) {
     return this.findOneAndUpdateAsync(
         { _id: userId },
         { $pull: { notepads: notepadId } },
         { 'new': true }
-    ).then(function (user) {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+    );
 });
 
-userSchema.static('removeNotepads', function (userId, notepadsIds, cb) {
+userSchema.static('removeNotepads', function (userId, notepadsIds) {
     return this.findOneAndUpdateAsync(
         { _id: userId },
         { $pull: { notepads: { $in: notepadsIds } } },
         { 'new': true }
-    ).then(function (user) {
-        return cb(null, user);
-    }).catch(function (err) {
-        return cb(err);
-    });
+    );
 });
 
 var User = mongoose.model('User', userSchema);
-
-Promise.promisifyAll(User);
-Promise.promisifyAll(User.prototype);
 
 module.exports = exports = User;
