@@ -13,7 +13,7 @@ module.exports = function () {
     var db = mongoose.connect(uri, options);
 
     db.connection.on('error', function (err) {
-        assert.ok(err);
+        assert.ifError(err);
     });
 
     return db.connection;
