@@ -85,7 +85,7 @@ app.use(function (req, res, next) {
         console.info('using accessToken for auth', accessToken);
         //this require is used often, may be put on top:
         var User = require('./models/user');
-        User.getByAccessTokenAsync(accessToken).then(function (user) {
+        User.getByAccessToken(accessToken).then(function (user) {
             if (user) {
                 console.info('setting req.user from token', user);
                 req.user = user;

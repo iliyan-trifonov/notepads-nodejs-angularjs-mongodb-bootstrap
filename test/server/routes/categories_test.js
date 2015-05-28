@@ -14,48 +14,44 @@ describe('Categories Routes', function () {
     var db, user, category, req, res;
 
     before(function (done) {
-        //TODO: use callback
+        //TODO: use callback/promise
         db = connection();
 
-        User.create({
+        User.createAsync({
             facebookId: +new Date(),
             name: 'Iliyan Trifonov',
             photo: 'photourl'
-        }, function (err, doc) {
-            assert.ifError(err);
+        }).then(function (doc) {
             assert.ok(doc !== null);
-
-            Category.create({
+            user = doc;
+            return Category.createAsync({
                 name: 'Sample Category',
-                user: doc._id
-            }, function (err, cat) {
-                assert.ifError(err);
-                assert.ok(cat !== null);
-
-                category = cat;
-
-                User.addCategory(doc._id, cat._id, function (err, doc) {
-                    assert.ifError(err);
-                    assert.notStrictEqual(user, null);
-
-                    user = doc;
-
-                    done();
-                });
+                user: user._id
             });
-        });
+        }).then(function (cat) {
+            assert.ok(cat !== null);
+            category = cat;
+            return User.addCategory(user._id, cat._id);
+        }).then(function (updatedUser) {
+            assert.notStrictEqual(updatedUser, null);
+            user = updatedUser;
+        }).then(done);
     });
 
-    after(function () {
+    after(function (done) {
         User.removeAsync({}).then(function () {
             return Category.removeAsync({});
-        }).then(function () {
+        })
+        //TODO: try with then(db.close)
+        .then(function () {
             db.close();
-        });
+        })
+        .then(done);
     });
 
     beforeEach(function () {
         req = res = {};
+        //TODO: possible to put in before() instead:
         req.user = user;
     });
 
@@ -81,9 +77,9 @@ describe('Categories Routes', function () {
 
     describe('POST /categories', function () {
         it('should add new Category and assign it to the user', function (done) {
-            var testCat = { name: 'Test cat ' + (+new Date()) };
+            var testCatName = 'Test cat ' + (+new Date());
 
-            req.body = { name: testCat.name };
+            req.body = { name: testCatName };
 
             res.status = function (status) {
                 assert.strictEqual(status, HttpStatus.OK);
@@ -92,13 +88,12 @@ describe('Categories Routes', function () {
 
             res.json = function (cat) {
                 assert.ok(cat);
-                assert.strictEqual(cat.name, testCat.name);
-                User.find({ category: cat._id }, function (err, user) {
-                    assert.ifError(err);
-                    assert.ok(user !== null);
-
-                    done();
-                });
+                assert.strictEqual(cat.name, testCatName);
+                User.findAsync({ category: cat._id })
+                    .then(function (user) {
+                        assert.notStrictEqual(user, null);
+                    })
+                    .then(done);
             };
 
             categoriesRouter.postHandler(req, res);
@@ -147,7 +142,7 @@ describe('Categories Routes', function () {
             categoriesRouter.getIdHandler(req, res);
         });
 
-        it('should return status 500 and a json error object result for a wrong cat id format given', function (done) {
+        it('should return status 500 and an empty json error object for a wrong cat id format given', function (done) {
             req = {
                 params : { id: 123 },
                 user: { id: user._id }
@@ -159,9 +154,7 @@ describe('Categories Routes', function () {
             };
 
             res.json = function (err) {
-                assert.strictEqual(err.name, 'CastError');
-                assert.strictEqual(err.kind, 'ObjectId');
-                assert.strictEqual(err.path, '_id');
+                assert.deepEqual(err, {});
 
                 done();
             };
@@ -230,65 +223,55 @@ describe('Categories Routes', function () {
             };
             categoriesRouter.deleteIdHandler(req, res);
         });
+
         it('should delete a category, update categories in user and delete all notepads belonging to that category', function (done) {
             //create a new category
-            Category.create({ user: user._id }, function (err, category) {
-                assert.ifError(err);
+            Category.createAsync({ name: 'Test cat to delete', user: user._id }).then(function (category) {
                 assert.notStrictEqual(category, null);
-
                 //add it to the user's categories array
-                User.addCategory(user._id, category._id, function (err, user) {
-                    assert.ifError(err);
-                    assert.notStrictEqual(user, null);
+                return User.addCategory(user._id, category._id);
+            }).then(function (user) {
+                assert.notStrictEqual(user, null);
+                //create a new notepad for that category and user
+                return Notepad.create({ category: category._id, user: user._id });
+            }).then(function (notepad) {
+                assert.ok(notepad !== null);
+                //add the notepad to the user's notepads array
+                return User.addNotepad(user._id, notepad._id);
+            }).then(function (user) {
+                assert.notStrictEqual(user, null);
 
-                    //create a new notepad for that category and user
-                    Notepad.create({ category: category._id, user: user._id }, function (err, notepad) {
-                        assert.ifError(err);
-                        assert.ok(notepad !== null);
+                //prepare the test params
+                req = {
+                    params: { id: category._id },
+                    user: { id: user._id }
+                };
 
-                        //add the notepad to the user's notepads array
-                        User.addNotepad(user._id, notepad._id, function (err, user) {
-                            assert.ifError(err);
-                            assert.notStrictEqual(user, null);
+                res = {
+                    status: function (status) {
+                        assert.strictEqual(status, HttpStatus.OK);
+                        return this;
+                    },
+                    json: function (cat) {
+                        assert.ok(cat._id.equals(category._id));
+                        //category doesn't exist
+                        Category.findOneAsync({ id: cat._id }).then(function (doc) {
+                            assert.strictEqual(doc, null);
 
-                            //prepare the test params
-                            req = {
-                                params: { id: category._id },
-                                user: { id: user._id }
-                            };
-                            res = {
-                                status: function (status) {
-                                    assert.strictEqual(status, HttpStatus.OK);
-                                    return this;
-                                },
-                                json: function (cat) {
-                                    assert.ok(cat._id.equals(category._id));
-                                    //category doesn't exist
-                                    Category.findOne({ id: cat._id }, function (err, doc) {
-                                        assert.ifError(err);
-                                        assert.strictEqual(doc, null);
+                            //user with that category doesn't exist
+                            return User.findOneAsync({ categories: cat._id });
+                        }).then(function (doc) {
+                            assert.strictEqual(doc, null);
 
-                                        //user with that category doesn't exist
-                                        User.findOne({ categories: cat._id }, function (err, doc) {
-                                            assert.ifError(err);
-                                            assert.strictEqual(doc, null);
+                            return Notepad.find({ category: cat._id }).then(function (doc) {
+                                assert.deepEqual(doc, []);
+                            });
+                        }).then(done);
+                    }
+                };
 
-                                            Notepad.find({ category: cat._id }, function (err, doc) {
-                                                assert.ifError(err);
-                                                assert.deepEqual(doc, []);
-
-                                                done();
-                                            });
-                                        });
-                                    });
-                                }
-                            };
-
-                            //execute
-                            categoriesRouter.deleteIdHandler(req, res);
-                        });
-                    });
-                });
+                //execute
+                categoriesRouter.deleteIdHandler(req, res);
             });
         });
     });

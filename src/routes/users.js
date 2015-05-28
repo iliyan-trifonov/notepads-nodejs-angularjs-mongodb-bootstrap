@@ -27,7 +27,7 @@ router.post('/auth', function (req, res) {
             console.error(err);
             return res.status(500).json(err);
         };
-        User.getByAccessTokenAsync(accessToken).then(function (user) {
+        User.getByAccessToken(accessToken).then(function (user) {
             if (!user) {
                 blockUser();
             }

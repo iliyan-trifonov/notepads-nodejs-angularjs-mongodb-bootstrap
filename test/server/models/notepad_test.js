@@ -35,7 +35,7 @@ describe('Notepad Model', function () {
 
             user = doc;
 
-            Category.create({}, function (err, doc) {
+            Category.create({ name: 'Test cat', user: user._id }, function (err, doc) {
                 assert.ifError(err);
                 assert.ok(doc !== null);
 

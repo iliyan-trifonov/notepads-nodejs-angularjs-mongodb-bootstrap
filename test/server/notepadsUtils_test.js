@@ -12,30 +12,33 @@ describe('notepadsUtils', function () {
     var db;
 
     before(function () {
+        //TODO: use callback/promise:
         db = connection();
     });
 
     after(function (done) {
-        User.remove({}, function () {
-            Category.remove({}, function () {
-                Notepad.remove({}, function () {
-                    db.close();
-                    done();
-                });
-            });
-        });
+        User.removeAsync({})
+            .then(function () {
+                return Category.remove({});
+            })
+            .then(function () {
+                return Notepad.remove({});
+            })
+            .then(function () {
+                db.close();
+            })
+            .then(done);
     });
 
     it("should create a new 'Sample Category' and a new Notepad 'Read me' for a given user id", function (done) {
         var fbId = String(+new Date()),
             name = 'Iliyan Trifonov',
             photo = 'photourl';
-        User.create({
+        User.createAsync({
             facebookId: fbId,
             name: name,
             photo: photo
-        }, function (err, user) {
-            assert.ifError(err);
+        }).then(function (user) {
             assert.strictEqual(user.facebookId, fbId);
             assert.strictEqual(user.name, name);
             assert.strictEqual(user.photo, photo);
@@ -44,9 +47,8 @@ describe('notepadsUtils', function () {
                 assert.deepEqual(result, {});
                 //check if the category and notepad exist in db and their texts are as expected
                 //...
-                done();
             });
-        });
+        }).then(done);
     });
 
     it('should return Error Invalid user id on missing uid param', function () {

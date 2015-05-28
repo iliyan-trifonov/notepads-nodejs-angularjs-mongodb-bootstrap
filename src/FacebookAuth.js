@@ -6,7 +6,7 @@ var config,
     notepadsUtils = require('./notepadsUtils');
 
 var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done) {
-    var p = User.fbAsync(fbProfile.id).then(function (existingUser) {
+    var p = User.fb(fbProfile.id).then(function (existingUser) {
         if (existingUser) {
             console.info('user already in DB', existingUser);
             done(null, existingUser);
@@ -48,7 +48,11 @@ var authSerialize = function (user, done) {
 };
 
 var authDeserialize = function (fbId, done) {
-    User.fb(fbId, done);
+    User.fb(fbId).then(function (user) {
+        done(null, user);
+    }).catch(function (err) {
+        done(err);
+    });
 };
 
 module.exports = exports = function (passport) {

@@ -19,53 +19,52 @@ router.use(FacebookAuth.verifyAuth);
 var getHandler = function (req, res) {
     //get the categories by user id
     //TODO: check if req.user._id/req.user.id exists
-    Category.getByUserId(req.user._id, function (err, categories) {
-        if (err) {
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .json('Cannot get category by user id!');
-        }
-        if (!categories) {
-            return res.status(HttpStatus.NO_CONTENT)
-                .json({});
-        }
-        return res.status(HttpStatus.OK)
-            .json(categories);
-    });
+    Category.getByUserId(req.user._id)
+        .then(function (categories) {
+            if (!categories) {
+                var msg = 'Categories not found!';
+                throw new Error(msg);
+            }
+            res.status(HttpStatus.OK).json(categories);
+        }).catch(function (err) {
+            console.error(err);
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+        });
 };
 
 var postHandler = function (req, res) {
-    //TODO: check if name is given and is clean
+    //TODO: check if name param is given and is clean
     var category = new Category({
         name: req.body.name,
         user: req.user._id
     });
-    category.save(function (err, category) {
-        if (err || !category) {
+    var savedCat;
+    category.saveAsync()
+        .then(function (params) {
+            savedCat = params[0];
+            return User.addCategory(req.user._id, savedCat._id);
+        }).then(function (/*user*/) {
+            res.status(HttpStatus.OK).json(savedCat);
+        }).catch(function (err) {
             console.error(err);
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json('Could not save category!');
-        }
-        User.addCategory(req.user._id, category._id, function (err, user) {
-            if (err || !user) {
-                console.error(err);
-                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json('Could not assign category to user!');
-            }
-            return res.status(HttpStatus.OK).json(category);
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
-    });
 };
 
 var getIdHandler = function (req, res) {
-    Category.getByIdForUser(req.params.id, req.user.id, function (err, category) {
-        if (err) {
+    Category.getByIdForUser(req.params.id, req.user.id)
+        .then(function (category) {
+            if (!category) {
+                var msg = 'getIdHandler(): Category not found!';
+                console.error(msg);
+                //throw new Error(msg);
+                return res.status(HttpStatus.NO_CONTENT).json({});
+            }
+            res.status(HttpStatus.OK).json(category);
+        }).catch(function (err) {
             console.error(err);
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
-        }
-        if (!category) {
-            console.error('getIdHandler(): Category not found!');
-            return res.status(HttpStatus.NO_CONTENT).json({});
-        }
-        return res.status(HttpStatus.OK).json(category);
-    });
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+        });
 };
 
 var putIdHandler = function (req, res) {
@@ -88,79 +87,61 @@ var putIdHandler = function (req, res) {
 };
 
 var deleteIdHandler = function (req, res) {
-    Category.getByIdForUser(req.params.id, req.user.id, function (err, category) {
-        if (err) {
-            console.error(err);
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
-        }
-
-        if (!category) {
-            console.error('Category not found for user!');
-            return res.status(HttpStatus.NO_CONTENT).json({});
-        }
-
-        Category.findByIdAndRemove(req.params.id, function (err, category) {
-            if (err) {
-                console.error(err);
-                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json(err);
+    var ns, category;
+    //check if the current user has that Category
+    var p = Category.getByIdForUser(req.params.id, req.user.id)
+        .then(function (cat) {
+            if (!cat) {
+                console.error('Category not found for user!');
+                res.status(HttpStatus.NO_CONTENT).json({});
+                return p.cancel();
             }
-            if (!category) {
+            category = cat;
+            return Category.findByIdAndRemoveAsync(category._id);
+        })/*.cancelable()*/
+        .then(function (cat) {
+            if (!cat) {
                 console.error('Category not found!');
                 return res.status(HttpStatus.NO_CONTENT).json({});
             }
 
-            console.log('deleteIdHandler(): deleted category', category);
+            console.log('deleteIdHandler(): deleted category', cat);
 
-            User.removeCategory(req.user.id, req.params.id, function (err, user) {
-                if (err) {
-                    console.error(err);
-                    return res.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                .json('Could not remove category from user!');
-                }
-                if (!user) {
-                    console.error('User with that category not found!');
-                    return res.status(HttpStatus.NO_CONTENT).json({});
-                }
+            return User.removeCategory(req.user.id, category._id);
+        })
+        .then(function (user) {
+            if (!user) {
+                console.error('User with that category not found!');
+                return res.status(HttpStatus.NO_CONTENT).json({});
+            }
 
-                console.log('deleteIdHandler(): user with category removed', user);
+            console.log('deleteIdHandler(): user doc with the specified category removed', user);
 
-                //delete all orphaned notepads(if any) belonging to the deleted category
-                //TODO: put the notepads in Uncategorized category instead
-                //TODO: check if Notepad.remove() returns the removed documents to use it directly
-                Notepad.find({ user: req.user.id, category: req.params.id }, function (err, notepads) {
-                    if (err) {
-                        return res.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                    .json('Could not find notepads of category to remove!');
-                    }
-                    if (notepads) {
-                        var ns = _.pluck(notepads, '_id');
-                        console.log('deleteIdHandler(): notepads to be deleted for category', ns);
-                        Notepad.remove({
-                            _id: { $in: ns }
-                        }, function (err) {
-                            if (err) {
-                                return res.status(500).json('Could not remove notepads of a deleted category!');
-                            }
-
-                            //remove the notepads' ids from User.notepads too
-                            User.removeNotepads(user._id, ns,
-                                function (err, user) {
-                                    if (err) {
-                                        console.error(err);
-                                        return res.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                                            .json('Could not remove notepads\'s ids from user for a deleted category!');
-                                    }
-                                    console.log('deleteIdHandler(): user with removed notepads for category', user);
-                                    return res.status(HttpStatus.OK).json(category);
-                                });
-                        });
-                    } else {
-                        return res.status(HttpStatus.OK).json(category);
-                    }
-                });
-            });
+            //delete all orphaned notepads(if any) belonging to the deleted category
+            //TODO: put the notepads in Uncategorized category instead
+            //TODO: check if Notepad.remove() returns the removed documents to use it directly
+            return Notepad.findAsync({ user: req.user.id, category: category._id });
+        })
+        .then(function (notepads) {
+            if (notepads) {
+                ns = _.pluck(notepads, '_id');
+                return Notepad.removeAsync({ _id: { $in: ns } });
+            }
+        })
+        .then(function () {
+            if (ns) {
+                //remove the notepads' ids from User.notepads too
+                return User.removeNotepads(req.user.id, ns);
+            }
+        })
+        .then(function (user) {
+            console.log('deleteIdHandler(): user doc with removed notepads for the specified category', user);
+            return res.status(HttpStatus.OK).json(category);
+        })
+        .catch(function (err) {
+            console.error(err);
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
-    });
 };
 //handlers end
 

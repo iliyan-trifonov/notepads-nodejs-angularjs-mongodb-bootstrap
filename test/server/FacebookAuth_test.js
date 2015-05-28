@@ -86,13 +86,12 @@ describe('FacebookAuth', function () {
 
     describe('authDeserialize', function () {
         it('should return a user from a given facebookId', function (done) {
-            User.create({
+            User.createAsync({
                 facebookId: +new Date(),
                 name: 'Iliyan Trifonov',
                 photo: 'photourl'
-            }, function (err, user) {
-                assert.ifError(err);
-                assert.ok(user);
+            }).then(function (user) {
+                assert.notStrictEqual(user, null);
                 FacebookAuth.authDeserialize(user.facebookId, function (err, doc) {
                     assert.ifError(err);
                     assert.deepEqual(doc.facebookId, user.facebookId);
