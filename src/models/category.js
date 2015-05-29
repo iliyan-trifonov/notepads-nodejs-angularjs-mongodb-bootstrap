@@ -19,6 +19,21 @@ categorySchema.static('getByIdForUser', function (catId, uid) {
     return this.findOneAsync({ _id: catId, user: uid }, 'name');
 });
 
+categorySchema.static('add', function (catName, uid) {
+    return this.createAsync({
+        name: catName,
+        user: uid
+    });
+});
+
+categorySchema.static('update', function (catId, uid, name) {
+    return Category.findOneAndUpdateAsync(
+        { _id: catId, user: uid },
+        {$set: {name: name}},
+        { 'new': true }
+    );
+});
+
 categorySchema.static('increaseNotepadsCountById', function (catId) {
     return this.findOneAndUpdateAsync(
         { _id: catId },

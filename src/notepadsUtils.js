@@ -2,80 +2,74 @@
 
 var User = require('./models/user'),
     Category = require('./models/category'),
-    Notepad = require('./models/notepad');
+    Notepad = require('./models/notepad'),
+    Promise = require('bluebird');
 
-module.exports.prepopulate = exports.prepopulate = function (uid, cb) {
+module.exports.prepopulate = exports.prepopulate = function (uid) {
 
     if (!uid) {
-        return cb(new Error('Invalid user id!'));
+        return Promise.reject(new Error('Invalid user id!'));
     }
 
-    User.find({ _id: uid }, function (err, user) {
-        if (err || !user) {
-            return cb(err, user);
-        }
+    //TODO: delete the notepad/category on any error / transaction?
 
-        var category = new Category({
-            'name': 'Sample category',
-            'user': uid
-        });
+    var user, category, notepad;
 
-        //TODO: delete the notepad/category on any error / transaction?
-
-        category.save(function (categoryErr, categoryRes) {
-
-            if (categoryErr || !categoryRes) {
-                console.log('error creating a new category!', categoryErr, categoryRes);
-                return cb(categoryErr, categoryRes);
+    return User.findOneAsync({ _id: uid })
+        .then(function (foundUser) {
+            if (!foundUser) {
+                var msg = 'User not found!';
+                console.error(msg);
+                return Promise.reject(new Error(msg));
             }
-
-            User.addCategory(uid, categoryRes._id, function (userErr, userRes) {
-                if (userErr || !userRes) {
-                    console.log('error adding category to user!', userErr, userRes);
-                    return cb(userErr, userRes);
-                }
-
-                var notepad = new Notepad({
-                    title: 'Read me',
-                    text: 'Use the menu on the top left to create your own categories ' +
-                    'and then add notepads to them.' + "\n\n" +
-                    'On the top right of the Dashboard there is a plus sign inside a circle.' +  "\n" +
-                    'Tapping on it will open the Add Notepad window.' +  "\n" +
-                    'Select a category, provide a title and text and save the new notepad.' +  "\n\n" +
-                    'The smaller plus signs on the right of each category\'s name will open the same ' +
-                    'Add Notepad window with the category preselected.' +  "\n\n" +
-                    'Click on a Notepad on the Dashboard and you will go to the View Notepad window ' +
-                    'where you can read it, edit it and delete it.' +  "\n\n" +
-                    'The categories are managed from their own window where you can go ' +
-                    'by selecting Categories from the left menu(top left to open it).' +  "\n\n" +
-                    'Be careful when deleting a category as this will delete all notepads in it.' + "\n\n",
-                    category: categoryRes._id,
-                    user: uid
-                });
-
-                notepad.save(function (notepadErr, notepadRes) {
-                    if (notepadErr || !notepadRes) {
-                        console.log('error creating a new notepad!', notepadErr, notepadRes);
-                        return cb(notepadErr, notepadRes);
-                    }
-
-                    Category.increaseNotepadsCountById(notepadRes.category, function (incrCount, incrCountRes) {
-                        if (incrCount || !incrCountRes) {
-                            return cb(incrCount, incrCountRes);
-                        }
-
-                        User.addNotepad(uid, notepadRes._id, function (err, user) {
-                            if (err || !user) {
-                                console.log('error adding notepad to a user!', err, user);
-                                return cb(err, user);
-                            }
-
-                            return cb(null, {});
-                        });
-                    });
-                });
+            user = foundUser;
+            return Category.createAsync({
+                'name': 'Sample category',
+                'user': uid
             });
-
+        })
+        .then(function (cat) {
+            category = cat;
+            return User.addCategory(user._id, cat._id);
+        })
+        .then(function (updatedUser) {
+            return Notepad.createAsync({
+                title: 'Read me',
+                text: 'Use the menu on the top left to create your own categories ' +
+                'and then add notepads to them.' + "\n\n" +
+                'On the top right of the Dashboard there is a plus sign inside a circle.' +  "\n" +
+                'Tapping on it will open the Add Notepad window.' +  "\n" +
+                'Select a category, provide a title and text and save the new notepad.' +  "\n\n" +
+                'The smaller plus signs on the right of each category\'s name will open the same ' +
+                'Add Notepad window with the category preselected.' +  "\n\n" +
+                'Click on a Notepad on the Dashboard and you will go to the View Notepad window ' +
+                'where you can read it, edit it and delete it.' +  "\n\n" +
+                'The categories are managed from their own window where you can go ' +
+                'by selecting Categories from the left menu(top left to open it).' +  "\n\n" +
+                'Be careful when deleting a category as this will delete all notepads in it.' + "\n\n",
+                category: category._id,
+                user: updatedUser._id
+            });
+        })
+        .then(function (notepadCreated) {
+            notepad = notepadCreated;
+            return User.addNotepad(user._id, notepadCreated._id);
+        })
+        .then(function (updatedUser) {
+            user = updatedUser;
+            return Category.increaseNotepadsCountById(category._id);
+        })
+        .then(function (cat) {
+            return {
+                user: user,
+                category: cat,
+                notepad: notepad
+            };
+        })
+        //catch may be skipped here and errors caught later on code calling prepopulate()
+        .catch(function (err) {
+            console.error(err);
+            //reject again for other catch()-es on the chain
+            return Promise.reject(err);
         });
-    });
 };

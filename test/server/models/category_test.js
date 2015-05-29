@@ -50,7 +50,7 @@ describe('Category Model', function () {
                 return User.removeAsync({});
             })
             .then(function () {
-                    db.close();
+                db.close();
             })
             .then(done);
     });
@@ -96,13 +96,13 @@ describe('Category Model', function () {
 
     describe('increaseNotepadsCountById', function () {
         it('should increase notepadsCount of a cat with 1 given cat id', function (done) {
-            Category.increaseNotepadsCountById(testCats[0]._id).then(function (category) {
-                assert.ok(category !== null);
-                assert.ok(category instanceof Category);
-                assert.ok(category._id.equals(testCats[0]._id));
-                assert.strictEqual(category.notepadsCount, testCats[0].notepadsCount + 1);
-                testCats[0] = category;
-            }).then(done);
+            Category.increaseNotepadsCountById(testCats[0]._id)
+                .then(function (category) {
+                    assert.ok(category !== null);
+                    assert.ok(category._id.equals(testCats[0]._id));
+                    assert.strictEqual(category.notepadsCount, testCats[0].notepadsCount + 1);
+                    testCats[0] = category;
+                }).then(done);
         });
     });
 

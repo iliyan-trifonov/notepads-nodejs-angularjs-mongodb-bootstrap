@@ -6,15 +6,16 @@ var express = require('express'),
     Category = require('../models/category'),
     Notepad = require('../models/notepad'),
     moment = require('moment'),
-    HttpStatus = require('http-status');
+    HttpStatus = require('http-status'),
+    Promise = require('bluebird');
 
 //TODO: put this in FacebookAuth
 //TODO: or make it connected somehow
 //TODO: with the Facebook authentication process
 function checkAuth(req, res, next) {
     if (!req.isAuthenticated()) {
-        console.log('API cats: checkAuth(), not authenticated!');
-        res.status(403).send('Unauthorized');
+        console.error('API cats: checkAuth(), not authenticated!');
+        res.status(HttpStatus.UNAUTHORIZED).json({});
     } else {
         next();
     }
@@ -48,53 +49,58 @@ function insidecatsFromQueryString() {
 //router.param('range', /^(\w+)\.\.(\w+)?$/);
 
 // GET /notepads(?insidecats=1)?
-//TODO: make it with less DB calls!!!
 router.get('/', insidecatsFromQueryString(), function (req, res) {
     //if (req.params.insidecats) {
-            //get the categories
-            Category.getByUserId(req.user._id, function (err, cats) {
-                var categories = [];
-                //TODO: if err / cats === null , empty
-                cats.forEach(function (cat) {
-                    categories.push({
-                        _id: cat._id,
-                        name: cat.name,
-                        notepadsCount: cat.notepadsCount,
-                        notepads: []
-                    });
-                });
+        //get the categories
+    var categories = [];
+    var catsCache = {};
 
-                //TODO: catsCache[] instead:
-                var catsCache = {};
-                function findCat(cats, id) {
-                    if ("undefined" !== typeof catsCache[id]) {
-                        return catsCache[id];
-                    }
-                    cats.forEach(function (cat) {
-                        if (cat._id.toString() === id.toString()) {
-                            catsCache[id] = cat;
-                            return false;
-                        }
-                    });
-                    return catsCache[id];
-                }
+    function findCat(cats, id) {
+        if ("undefined" !== typeof catsCache[id]) {
+            return catsCache[id];
+        }
+        cats.forEach(function (cat) {
+            if (cat._id.toString() === id.toString()) {
+                catsCache[id] = cat;
+                return false;
+            }
+        });
+        return catsCache[id];
+    }
 
-                Notepad.getByUserId(req.user._id, function (err, notepads) {
-                    //TODO: if err / notepads === null
-                    var curCat;
-                    notepads.forEach(function (notepad) {
-                        curCat = findCat(categories, notepad.category);
-                        curCat.notepads.push({
-                            _id: notepad._id,
-                            title: notepad.title,
-                            text: notepad.text,
-                            created: moment(
-                                notepad._id.getTimestamp())
-                                    .format('YYYY/MM/DD HH:mm:ss')
-                        });
-                    });
-                    return res.json(categories);
+    Category.getByUserId(req.user._id)
+        .then(function (cats) {
+            //TODO: if err / cats === null , empty
+            cats.forEach(function (cat) {
+                categories.push({
+                    _id: cat._id,
+                    name: cat.name,
+                    notepadsCount: cat.notepadsCount,
+                    notepads: []
                 });
+            });
+
+            return Notepad.getByUserId(req.user._id);
+        })
+        .then(function (notepads) {
+            //TODO: if err / notepads === null
+            var curCat;
+            notepads.forEach(function (notepad) {
+                curCat = findCat(categories, notepad.category);
+                curCat.notepads.push({
+                    _id: notepad._id,
+                    title: notepad.title,
+                    text: notepad.text,
+                    created: moment(
+                        notepad._id.getTimestamp())
+                            .format('YYYY/MM/DD HH:mm:ss')
+                });
+            });
+            res.status(HttpStatus.OK).json(categories);
+        })
+        .catch(function (err) {
+            console.error(err);
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
     /*} else {
         //get user's notepads' ObjectIds
@@ -113,69 +119,63 @@ router.get('/', insidecatsFromQueryString(), function (req, res) {
 // GET /notepads/1
 router.get('/:id', function (req, res) {
     //TODO: check id validity, belongs to the current user, etc.
-    Notepad.getByIdForUser(req.params.id, req.user.id, function (err, notepad) {
-        if (err) {
-            return res.status(500).json(err);
-        }
-        if (!notepad) {
-            //TODO: return empty set status
-            return res.status(500).json({});
-        }
-        return res.json(notepad);
-    });
+    Notepad.getByIdForUser(req.params.id, req.user.id)
+        .then(function (notepad) {
+            if (!notepad) {
+                //TODO: return empty set status
+                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+            }
+            res.status(HttpStatus.OK).json(notepad);
+        })
+        .catch(function (err) {
+            console.error(err);
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+        });
 });
 
 // POST /notepads
 router.post('/', function (req, res) {
-    //TODO: check for empty or invalid values
-    //TODO: create a common checkCatBelongsTo() function to use everywhere here
-    Category.getByIdForUser(req.body.category, req.user.id, function (err, category) {
+    //TODO: check for empty or invalid values: req.body.title/text/category
+    var notepad;
+    Category.getByIdForUser(req.body.category, req.user.id)
+        .then(function (category) {
+            if (!category) {
+                res.status(HttpStatus.NO_CONTENT).json({});
+                return Promise.reject(new Error('Category not found!'));
+            }
 
-        if (err) {
-            return res.status(500).json(err);
-        }
-        if (!category) {
-            return res.status(500).json('Unknown category!');
-        }
-
-        var notepad = new Notepad({
-            category: req.body.category,
-            title: req.body.title,
-            text: req.body.text,
-            user: req.user.id
-        });
-
-        notepad.save(function (err, notepad) {
-            User.addNotepad(req.user.id, notepad, function (err, user) {
-                if (err) {
-                    return res.status(500).json(err);
-                }
-                if (!user) {
-                    return res.status(500).json('Error assigning the notepad to the user!');
-                }
-                Category.increaseNotepadsCountById(notepad.category, function (err, category) {
-                    if (err) {
-                        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
-                    }
-                    if (!category) {
-                        return res.status(HttpStatus.NO_CONTENT).json({});
-                    }
-                    return res.json(notepad);
-                });
+            return Notepad.createAsync({
+                category: req.body.category,
+                title: req.body.title,
+                text: req.body.text,
+                user: req.user.id
             });
+        })
+        .then(function (note) {
+            //TODO: check if note is valid
+            notepad = note;
+            return Category.increaseNotepadsCountById(notepad.category);
+        })
+        .then(function (/*category*/) {
+            //TODO: check if category is valid
+            return User.addNotepad(req.user.id, notepad._id);
+        })
+        .then(function (/*user*/) {
+            //TODO: check if user is valid
+            return res.status(HttpStatus.OK).json(notepad);
+        })
+        .catch(function (err) {
+            console.error(err);
+            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
-
-    });
 });
 
 // PUT /notepads/1
 router.put('/:id', function (req, res) {
-    console.log('updating a Notepad');
     //TODO: check id and notepad props validity, belongs to user, etc.
     //TODO: check if cat belongs to the user: create a common function for that
     Notepad.getByIdForUser(req.params.id, req.user.id, function (err, notepad) {
         //TODO: check err/null notepad and return empty res status
-        console.log('found a notepad for user', req.params.id, notepad, req.user.id);
         var oldCat = notepad.category;
         var newCat = req.body.category;
         Notepad.findOneAndUpdate(
@@ -188,14 +188,11 @@ router.put('/:id', function (req, res) {
             {},
             function (err, notepadNew) {
                 //TODO: check err / notepad === null
-                console.log('Notepad updated', notepadNew);
                 if (String(newCat) !== String(oldCat)) {
-                    Category.decreaseNotepadsCountById(oldCat, function (err, catOld) {
+                    Category.decreaseNotepadsCountById(oldCat, function (/*err, catOld*/) {
                         //TODO: if err / category === null
-                        console.log('category Notepads count decreased', catOld);
-                        Category.increaseNotepadsCountById(newCat, function (err, catNew) {
+                        Category.increaseNotepadsCountById(newCat, function (/*err, catNew*/) {
                             //TODO: if err / category === null
-                            console.log('category Notepads count increased', catNew);
                             return res.status(200).json(notepadNew);
                         });
                     });
@@ -222,7 +219,6 @@ router.delete('/:id', function (req, res) {
 
         Notepad.findByIdAndRemove(req.params.id, function (err, notepad) {
             //TODO: check if err / notepad === null - missing
-            console.log('notepad removed:', notepad);
             //finds user by notepad._id looking into user.notepads[]
             User.findOneAndUpdate({ notepads: req.params.id }, {
                 $pull: { notepads: req.params.id }
@@ -233,7 +229,6 @@ router.delete('/:id', function (req, res) {
                 if (!user) {
                     return res.status(HttpStatus.NO_CONTENT).json({});
                 }
-                console.info('notepad removed from the user');
                 Category.decreaseNotepadsCountById(notepad.category, function (err, category) {
                     if (err) {
                         return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
@@ -241,7 +236,6 @@ router.delete('/:id', function (req, res) {
                     if (!category) {
                         return res.status(HttpStatus.NO_CONTENT).json({});
                     }
-                    console.log('category notepadsCount decreased');
                     return res.status(200).json(notepad);
                 });
             });

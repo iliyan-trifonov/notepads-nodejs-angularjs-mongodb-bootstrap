@@ -17,26 +17,19 @@ describe('User model', function () {
         User.createAsync({
             facebookId: +new Date(),
             name: 'Iliyan Trifonov',
-            photo: 'photourl'
+            photo: 'photourl',
+            categories: [
+                mongoose.Types.ObjectId(),
+                mongoose.Types.ObjectId(),
+                mongoose.Types.ObjectId()
+            ],
+            notepads: [
+                mongoose.Types.ObjectId(),
+                mongoose.Types.ObjectId()
+            ]
         }).then(function (user) {
             assert.notStrictEqual(user, null);
-
-            user.categories = [
-                mongoose.Types.ObjectId(),
-                mongoose.Types.ObjectId(),
-                mongoose.Types.ObjectId()
-            ];
-
-            user.notepads = [
-                mongoose.Types.ObjectId(),
-                mongoose.Types.ObjectId()
-            ];
-
-            return user.saveAsync().then(function (params) {
-                assert.notStrictEqual(params[0], null);
-                assert.strictEqual(params[1], 1);
-                testUser = params[0];
-            });
+            testUser = user;
         }).then(done);
     });
 
@@ -65,7 +58,6 @@ describe('User model', function () {
 
     describe('getByAccessToken', function () {
         it('should return a User object given existing accessToken', function (done) {
-            console.info('it() testUser', testUser);
             User.getByAccessToken(testUser.accessToken).then(function (doc) {
                 assert.notStrictEqual(doc, null);
                 assert.ok(doc._id.equals(testUser._id));
@@ -166,7 +158,7 @@ describe('User model', function () {
     });
 
     describe('removeNotepads', function () {
-        it('should remove 0 or more existing Notepads given notepad Ids', function (done) {
+        it('should remove some existing Notepads given these notepads\'s Ids', function (done) {
             var nIds = [
                 mongoose.Types.ObjectId(),
                 mongoose.Types.ObjectId(),
@@ -177,7 +169,6 @@ describe('User model', function () {
             }).then(function (users) {
                 //get the last user result with all ids inserted
                 var user = users[2];
-                console.info('user', user);
                 assert.notStrictEqual(user, null);
                 assert.ok(nIds.every(function (id) {
                     return user.notepads.indexOf(id) !== -1;

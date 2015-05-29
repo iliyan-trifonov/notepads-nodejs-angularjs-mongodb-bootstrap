@@ -51,17 +51,17 @@ userSchema.static('getNotepads', function (uid) {
     );
 });
 
-userSchema.static('addCategory', function (userId, categoryId) {
+userSchema.static('addCategory', function (uid, catId) {
     return this.findOneAndUpdateAsync(
-        { _id: userId },
-        { $addToSet: { categories: categoryId } },
+        { _id: uid },
+        { $addToSet: { categories: catId } },
         { 'new': true }
     );
 });
 
-userSchema.static('addNotepad', function (userId, notepadId) {
+userSchema.static('addNotepad', function (uid, notepadId) {
     return this.findOneAndUpdateAsync(
-        { _id: userId },
+        { _id: uid },
         { $addToSet: { notepads: notepadId } },
         { 'new': true }
     );
