@@ -7,6 +7,7 @@ var express = require('express'),
     graph = require('fbgraph'),
     notepadsUtils = require('../notepadsUtils'),
     Promise = require('bluebird'),
+    HttpStatus = require('http-status'),
     config;
 
 Promise.promisify(graph.get);
@@ -20,21 +21,22 @@ var postAuthHandler = function (req, res) {
 
     if (!fbUserId || (!fbAccessToken && !accessToken)) {
         console.error('API /auth: not enough params!', fbUserId, fbAccessToken, accessToken);
-        return res.status(500).send("Not enough data!");
+        return res.status(HttpStatus.BAD_REQUEST).json({});
     }
 
     if (accessToken) {
         var blockUser = function blockUser () {
             var err = 'Invalid Access Token!';
             console.error(err);
-            return res.status(500).json({ error: err });
+            return res.status(HttpStatus.FORBIDDEN).json({});
         };
         User.getByAccessToken(accessToken)
             .then(function (user) {
                 if (!user) {
                     blockUser();
                 }
-            }).catch(function (/*err*/) {
+            }).catch(function (err) {
+                console.error(err);
                 blockUser();
             });
     } else {
@@ -47,7 +49,7 @@ var postAuthHandler = function (req, res) {
                 if (graphUser.id !== fbUserId) {
                     var msg = "User ID and AccessToken don't match!";
                     console.error(msg);
-                    res.status(400).json({ error: msg });
+                    res.status(HttpStatus.FORBIDDEN).json({});
                     return p.cancel();
                 }
 
@@ -57,7 +59,9 @@ var postAuthHandler = function (req, res) {
             })
             .then(function (user) {
                 if (user) {
-                    res.status(200).json({accessToken: user.accessToken});
+                    res.status(HttpStatus.OK).json({accessToken: user.accessToken});
+                    //stop here
+                    //TODO: try return Promise.reject() instead:
                     return p.cancel();
                 }
                 else {
@@ -75,11 +79,11 @@ var postAuthHandler = function (req, res) {
             })
             .then(function (user) {
                 //success
-                res.status(200).json({accessToken: user.accessToken});
+                res.status(HttpStatus.OK).json({accessToken: user.accessToken});
             })
             .catch(function (err) {
                 console.error('API: /auth error', err);
-                return res.status(400).json({ error: err });
+                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
             });
     }
 };
