@@ -35,7 +35,7 @@
     "fbgraph": "^1.0.0",
     "hat": "0.0.3",
     "http-status": "^0.1.8",
-    "lodash": "^3.8.0",
+    "lodash": "^3.1.0",
     "moment": "^2.9.0",
     "mongoose": "^4.0.0",
     "passport": "^0.2.1",
