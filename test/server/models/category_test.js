@@ -55,66 +55,66 @@ describe('Category Model', function () {
             .then(done);
     });
 
-    it('should create and save a new Category', function (done) {
+    it('should create and save a new Category', function () {
         var cat = {
             name: 'Testcat',
             notepadsCount: 0,
             user: null
         };
-        Category.createAsync(cat).then(function (category) {
+        return Category.createAsync(cat).then(function (category) {
             assert.ok(category !== null);
             assert.strictEqual(category.name, cat.name);
             assert.strictEqual(category.notepadsCount, cat.notepadsCount);
             assert.strictEqual(category.user, cat.user);
-        }).then(done);
+        });
     });
 
     describe('getByUserId', function () {
-        it('should return categories by uid', function (done) {
-            Category.getByUserId(testUser._id).then(function (cats) {
+        it('should return categories by uid', function () {
+            return Category.getByUserId(testUser._id).then(function (cats) {
                 assert.ok(cats !== null);
                 assert.ok(cats instanceof Array);
                 assert.ok(cats.length === 2);
                 assert.strictEqual(cats[0].name, testCats[0].name);
                 assert.strictEqual(cats[1].name, testCats[1].name);
-            }).then(done);
+            });
         });
     });
 
     describe('getByIdForUser', function () {
-        it('should return a category id and name by given cat Id and uid', function (done) {
-            Category.getByIdForUser(testCats[0]._id, testUser._id).then(function (category) {
+        it('should return a category id and name by given cat Id and uid', function () {
+            return Category.getByIdForUser(testCats[0]._id, testUser._id).then(function (category) {
                 assert.ok(category !== null);
                 assert.ok(category instanceof Category);
                 assert.ok(category._id.equals(testCats[0]._id));
                 assert.strictEqual(category.name, testCats[0].name);
                 assert.ok(!category.user);
                 assert.ok(!category.notepadsCount);
-            }).then(done);
+            });
         });
     });
 
     describe('increaseNotepadsCountById', function () {
-        it('should increase notepadsCount of a cat with 1 given cat id', function (done) {
-            Category.increaseNotepadsCountById(testCats[0]._id)
+        it('should increase notepadsCount of a cat with 1 given cat id', function () {
+            return Category.increaseNotepadsCountById(testCats[0]._id)
                 .then(function (category) {
                     assert.ok(category !== null);
                     assert.ok(category._id.equals(testCats[0]._id));
                     assert.strictEqual(category.notepadsCount, testCats[0].notepadsCount + 1);
                     testCats[0] = category;
-                }).then(done);
+                });
         });
     });
 
     describe('decreaseNotepadsCountById', function () {
-        it('should decrease notepadsCount of a cat with 1 given cat id', function (done) {
-            Category.decreaseNotepadsCountById(testCats[0]._id).then(function (category) {
+        it('should decrease notepadsCount of a cat with 1 given cat id', function () {
+            return Category.decreaseNotepadsCountById(testCats[0]._id).then(function (category) {
                 assert.ok(category !== null);
                 assert.ok(category instanceof Category);
                 assert.ok(category._id.equals(testCats[0]._id));
                 assert.strictEqual(category.notepadsCount, testCats[0].notepadsCount - 1);
                 testCats[0] = category;
-            }).then(done);
+            });
         });
     });
 
