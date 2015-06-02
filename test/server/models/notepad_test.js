@@ -60,47 +60,42 @@ describe('Notepad Model', function () {
         db.close();
     });
 
-    it('should create and save a new Notepad', function (done) {
+    it('should create and save a new Notepad', function () {
         var notepad = {
             title: 'Test notepad',
             text: 'Test text',
             category: null,
             user: null
         };
-        Notepad.create(notepad, function (err, doc) {
+        return Notepad.create(notepad, function (err, doc) {
             assert.ifError(err);
             assert.ok(doc !== null);
             assert.ok(doc instanceof Notepad);
             assert.strictEqual(doc.title, notepad.title);
             assert.strictEqual(doc.text, notepad.text);
-            done();
         });
     });
 
     describe('getByIdForUser', function () {
-        it('should return a Notepad with title, text and category by given notepadId and uid', function (done) {
+        it('should return a Notepad with title, text and category by given notepadId and uid', function () {
             var n = notepads[0];
-            Notepad.getByIdForUser(n._id, user._id, function (err, notepad) {
+            return Notepad.getByIdForUser(n._id, user._id, function (err, notepad) {
                 assert.ifError(err);
                 assert.ok(notepad !== null);
-
                 assert.ok(notepad._id.equals(n._id));
                 assert.strictEqual(notepad.title, n.title);
                 assert.strictEqual(notepad.text, n.text);
                 assert.ok(notepad.category.equals(n.category));
-
-                done();
             });
         });
     });
 
     describe('getByUserId', function () {
-        it('should return a collection of Notepad objects given uid', function (done) {
-            Notepad.getByUserId(user._id, function (err, docs) {
+        it('should return a collection of Notepad objects given uid', function () {
+            return Notepad.getByUserId(user._id, function (err, docs) {
                 assert.ifError(err);
                 assert.ok(docs !== null);
                 assert.strictEqual(docs.length, notepadsNum);
-                done();
             });
         });
     });
