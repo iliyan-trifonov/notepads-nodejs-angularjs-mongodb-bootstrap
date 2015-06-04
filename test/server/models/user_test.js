@@ -10,11 +10,11 @@ describe('User model', function () {
 
     var db, testUser;
 
-    before(function (done) {
+    before(function () {
         //TODO: use callback/promise
         db = connection();
 
-        User.createAsync({
+        return User.createAsync({
             facebookId: +new Date(),
             name: 'Iliyan Trifonov',
             photo: 'photourl',
@@ -30,52 +30,49 @@ describe('User model', function () {
         }).then(function (user) {
             assert.notStrictEqual(user, null);
             testUser = user;
-        }).then(done);
+        });
     });
 
-    after(function (done) {
-        User.removeAsync({})
+    after(function () {
+        return User.removeAsync({})
             //TODO: try .then(db...bind(db)) instead:
             .then(function () {
                 db.close();
-            })
-            .then(done);
+            });
     });
 
-    it('should create and save a new User object', function (done) {
+    it('should create and save a new User object', function () {
         var user = {
             facebookId: +new Date(),
             name: 'Iliyan Trifonov ' +new Date().getTime(),
             photo: 'photourl'
         };
-        User.createAsync(user).then(function (doc) {
+        return User.createAsync(user).then(function (doc) {
             assert.notStrictEqual(doc, null);
             assert.strictEqual(doc.name, user.name);
         }).then(function () {
             return User.findOneAndRemoveAsync({ _id: user._id });
-        }).then(done);
+        });
     });
 
     describe('getByAccessToken', function () {
-        it('should return a User object given existing accessToken', function (done) {
-            User.getByAccessToken(testUser.accessToken).then(function (doc) {
+        it('should return a User object given existing accessToken', function () {
+            return User.getByAccessToken(testUser.accessToken).then(function (doc) {
                 assert.notStrictEqual(doc, null);
                 assert.ok(doc._id.equals(testUser._id));
-                done();
             });
         });
 
-        it('should return a null given non-existent accessToken', function (done) {
-            User.getByAccessToken('0a9s7d0as97d0asd0as7d09').then(function (doc) {
+        it('should return a null given non-existent accessToken', function () {
+            return User.getByAccessToken('0a9s7d0as97d0asd0as7d09').then(function (doc) {
                 assert.strictEqual(doc, null);
-            })
-            .then(done);
+            });
         });
     });
 
     describe('fb', function () {
-        it('should return a User object with facebookId, accessToken, name and photo', function (done) {
-            User.fb(testUser.facebookId)
+        it('should return a User object with facebookId, accessToken, name and photo', function () {
+            return User.fb(testUser.facebookId)
                 .then(function (user) {
                     assert.notStrictEqual(user, null);
                     assert.ok(user._id.equals(testUser._id));
@@ -83,64 +80,60 @@ describe('User model', function () {
                     assert.strictEqual(user.accessToken, testUser.accessToken);
                     assert.strictEqual(user.name, testUser.name);
                     assert.strictEqual(user.photo, testUser.photo);
-                })
-                .then(done);
+                });
         });
     });
 
     describe('getCategories', function () {
-        it('should return a User object with an array of 0 or more Category ids', function (done) {
-            User.getCategories(testUser._id)
+        it('should return a User object with an array of 0 or more Category ids', function () {
+            return User.getCategories(testUser._id)
                 .then(function (user) {
                     assert.notStrictEqual(user, null);
                     assert.strictEqual(user.categories.length, testUser.categories.length);
-                }).then(done);
+                });
         });
     });
 
     describe('getNotepads', function () {
-        it('should return a User object with an array of 0 or more Notepad ids', function (done) {
-            User.getNotepads(testUser._id)
+        it('should return a User object with an array of 0 or more Notepad ids', function () {
+            return User.getNotepads(testUser._id)
                 .then(function (user) {
                     assert.notStrictEqual(user, null);
                     assert.strictEqual(user.notepads.length, testUser.notepads.length);
-                })
-                .then(done);
+                });
         });
     });
 
     describe('addCategory', function () {
-        it('should add one new Category id', function (done) {
+        it('should add one new Category id', function () {
             var catId = mongoose.Types.ObjectId();
-            User.addCategory(testUser._id, catId)
+            return User.addCategory(testUser._id, catId)
                 .then(function (user) {
                     assert.notStrictEqual(user, null);
                     assert.notStrictEqual(user.categories.indexOf(catId), -1);
 
                     testUser = user;
-                })
-                .then(done);
+                });
         });
     });
 
     describe('addNotepad', function () {
-        it('should add one new Notepad id', function (done) {
+        it('should add one new Notepad id', function () {
             var notepadId = mongoose.Types.ObjectId();
-            User.addNotepad(testUser._id, notepadId)
+            return User.addNotepad(testUser._id, notepadId)
                 .then(function (user) {
                     assert.notStrictEqual(user, null);
                     assert.notStrictEqual(user.notepads.indexOf(notepadId), -1);
 
                     testUser = user;
-                })
-                .then(done);
+                });
         });
     });
 
     describe('removeNotepad', function () {
-        it('should remove an existing Notepad given notepad Id', function (done) {
+        it('should remove an existing Notepad given notepad Id', function () {
             var nId = mongoose.Types.ObjectId();
-            User.addNotepad(testUser._id, nId)
+            return User.addNotepad(testUser._id, nId)
                 .then(function (user) {
                     assert.notStrictEqual(user, null);
                     assert.notStrictEqual(user.notepads.indexOf(nId), -1);
@@ -152,19 +145,18 @@ describe('User model', function () {
                 }).then(function (user) {
                     assert.notStrictEqual(user, null);
                     assert.strictEqual(user.notepads.indexOf(nId), -1);
-                })
-                .then(done);
+                });
         });
     });
 
     describe('removeNotepads', function () {
-        it('should remove some existing Notepads given these notepads\'s Ids', function (done) {
+        it('should remove some existing Notepads given these notepads\'s Ids', function () {
             var nIds = [
                 mongoose.Types.ObjectId(),
                 mongoose.Types.ObjectId(),
                 mongoose.Types.ObjectId()
             ];
-            Promise.map(nIds, function (id) {
+            return Promise.map(nIds, function (id) {
                 return User.addNotepad(testUser._id, id);
             }).then(function (users) {
                 //get the last user result with all ids inserted
@@ -183,7 +175,7 @@ describe('User model', function () {
                 assert.ok(nIds.every(function (id) {
                     return user.notepads.indexOf(id) === -1;
                 }));
-            }).then(done);
+            });
         });
     });
 
