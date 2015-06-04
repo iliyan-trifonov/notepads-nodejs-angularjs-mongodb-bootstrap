@@ -91,13 +91,13 @@ app.use(function (req, res, next) {
                 req.user = user;
                 next();
             } else {
-                blockUser('Invalid access token!');
+                return blockUser('Invalid access token!');
             }
         }).catch(function (err) {
-            blockUser(err);
+            return blockUser(err);
         });
     } else {
-        next();
+        return next();
     }
 });
 
