@@ -8,12 +8,10 @@ var config,
 var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done) {
     var p = User.fb(fbProfile.id).then(function (existingUser) {
         if (existingUser) {
-            console.info('user already in DB', existingUser);
             done(null, existingUser);
             //break the promises chain here:
             return p.cancel();
         } else {
-            console.info('creating new user', fbProfile);
             return User.createAsync({
                 facebookId: fbProfile.id,
                 name: fbProfile.displayName,
@@ -21,13 +19,11 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
             });
         }
     }).then(function (newUser) {
-        console.info('newUser', newUser);
         if (!newUser) {
             var err = new Error('authVerification(): user creation unsuccessful!');
             console.error(err, { newUser: newUser });
             return done(err, newUser);
         }
-        console.info('new user created');
         //pre-populate some data for just created users
         notepadsUtils.prepopulate(newUser._id, function (err/*, result*/) {
             if (err) {
