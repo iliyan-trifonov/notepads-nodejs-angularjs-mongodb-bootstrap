@@ -1,3 +1,5 @@
+'use strict';
+
 var indexRoute = require('../../../src/routes/index'),
     assert = require('assert');
 
