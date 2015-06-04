@@ -30,14 +30,15 @@ var postAuthHandler = function (req, res) {
             console.error(err);
             return res.status(HttpStatus.FORBIDDEN).json({});
         };
-        User.getByAccessToken(accessToken)
+        return User.getByAccessToken(accessToken)
             .then(function (user) {
                 if (!user) {
-                    blockUser();
+                    return blockUser();
                 }
+                return res.status(HttpStatus.OK).json(user);
             }).catch(function (err) {
                 console.error(err);
-                blockUser();
+                return blockUser();
             });
     } else {
         graph.setAppSecret(config.facebook.app.secret);
@@ -45,15 +46,14 @@ var postAuthHandler = function (req, res) {
 
         var graphUser;
         var p = graph.getAsync('me?fields=id,name,picture')
-            .then(function (user) {
-                if (graphUser.id !== fbUserId) {
-                    var msg = "User ID and AccessToken don't match!";
-                    console.error(msg);
+            .then(function (fbGraphUser) {
+                if (!fbGraphUser || fbGraphUser.id !== fbUserId) {
+                    console.error("Invalid user from fbAccessToken!");
                     res.status(HttpStatus.FORBIDDEN).json({});
                     return p.cancel();
                 }
 
-                graphUser = user;
+                graphUser = fbGraphUser;
 
                 return User.fb(fbUserId);
             })
@@ -65,13 +65,11 @@ var postAuthHandler = function (req, res) {
                     return p.cancel();
                 }
                 else {
-                    //TODO: use var obj = {...} to avoid repeated code for log
-                    var newUser = {
+                    return User.createAsync({
                         facebookId: graphUser.id,
                         name: graphUser.name,
                         photo: graphUser.picture.data.url
-                    };
-                    return User.createAsync(newUser);
+                    });
                 }
             })
             .then(function (user) {
