@@ -13,11 +13,11 @@ describe('Categories Routes', function () {
 
     var db, user, category, req, res;
 
-    before(function (done) {
+    before(function () {
         //TODO: use callback/promise
         db = connection();
 
-        User.createAsync({
+        return User.createAsync({
             facebookId: +new Date(),
             name: 'Iliyan Trifonov',
             photo: 'photourl'
@@ -35,18 +35,17 @@ describe('Categories Routes', function () {
         }).then(function (updatedUser) {
             assert.notStrictEqual(updatedUser, null);
             user = updatedUser;
-        }).then(done);
+        });
     });
 
-    after(function (done) {
-        User.removeAsync({}).then(function () {
+    after(function () {
+        return User.removeAsync({}).then(function () {
             return Category.removeAsync({});
         })
         //TODO: try with then(db.close)
         .then(function () {
             db.close();
-        })
-        .then(done);
+        });
     });
 
     beforeEach(function () {
@@ -253,6 +252,7 @@ describe('Categories Routes', function () {
                         return this;
                     },
                     json: function (cat) {
+                        assert.ok(cat._id);
                         assert.ok(cat._id.equals(category._id));
                         //category doesn't exist
                         Category.findOneAsync({ id: cat._id }).then(function (doc) {
