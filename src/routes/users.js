@@ -19,11 +19,13 @@ var postAuthHandler = function (req, res) {
         fbAccessToken = req.body.fbAccessToken,
         accessToken = req.body.accessToken;
 
-    if (!fbUserId || (!fbAccessToken && !accessToken)) {
+    //check if all required params are given
+    if (!accessToken && (!fbUserId || !fbAccessToken)) {
         console.error('API /auth: not enough params!', fbUserId, fbAccessToken, accessToken);
         return res.status(HttpStatus.BAD_REQUEST).json({});
     }
 
+    //find a user by his accessToken
     if (accessToken) {
         var blockUser = function blockUser () {
             var err = 'Invalid Access Token!';
@@ -41,12 +43,14 @@ var postAuthHandler = function (req, res) {
                 return blockUser();
             });
     } else {
+        //find a user by his FB access token
         graph.setAppSecret(config.facebook.app.secret);
         graph.setAccessToken(fbAccessToken);
 
         var graphUser;
         var p = graph.getAsync('me?fields=id,name,picture')
             .then(function (fbGraphUser) {
+                //when the given fb id and token mismatch:
                 if (!fbGraphUser || fbGraphUser.id !== fbUserId) {
                     console.error("Invalid user from fbAccessToken!");
                     res.status(HttpStatus.FORBIDDEN).json({});
@@ -59,12 +63,14 @@ var postAuthHandler = function (req, res) {
             })
             .then(function (user) {
                 if (user) {
+                    //user found by his FB access token
                     res.status(HttpStatus.OK).json({accessToken: user.accessToken});
                     //stop here
                     //TODO: try return Promise.reject() instead:
                     return p.cancel();
                 }
                 else {
+                    //create a new user
                     return User.createAsync({
                         facebookId: graphUser.id,
                         name: graphUser.name,
@@ -73,10 +79,11 @@ var postAuthHandler = function (req, res) {
                 }
             })
             .then(function (user) {
+                //pre-populate only for new users
                 return notepadsUtils.prepopulate(user._id);
             })
             .then(function (user) {
-                //success
+                //success, return the accessToken
                 res.status(HttpStatus.OK).json({accessToken: user.accessToken});
             })
             .catch(function (err) {
