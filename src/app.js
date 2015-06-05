@@ -22,25 +22,21 @@ if (envs.indexOf(app.get('env')) !== -1) {
     console.warn('unrecognized environment detected', app.get('env'));
 }
 
-if (app.get('env') !== 'test') {
-    config = require('../config/app.conf.json');
-}
+config = require('../config/app.conf.json');
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 //app.use(favicon(__dirname + '/public/favicon.ico'));
-if (app.get('env') !== 'test') {
-    app.use(session({
-        //TODO: check these properties for their default values
-        resave: true,
-        saveUninitialized: true,
-        //TODO: use the app.conf.js config file for this
-        secret: config.sessionSecret
-    }));
-    FacebookAuth.setAppConfig(config);
-    FacebookAuth.call(null, passport);
-}
+app.use(session({
+    //TODO: check these properties for their default values
+    resave: true,
+    saveUninitialized: true,
+    //TODO: use the app.conf.js config file for this
+    secret: config.sessionSecret
+}));
+FacebookAuth.setAppConfig(config);
+FacebookAuth.call(null, passport);
 app.use(passport.initialize());
 app.use(passport.session());
 //get all data sent to the API inside req.body
@@ -60,20 +56,18 @@ app.get('/auth/facebook/callback',
 );
 app.get('/logout', FacebookAuth.logout);
 
-if (app.get('env') !== 'test') {
 //API URLs
 //allow all locations access to the api urls
-    app.use(config.apiBase, function (req, res, next) {
-        // Website you wish to allow to connect
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        // Request methods you wish to allow
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-        // Request headers you wish to allow
-        res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-        // Pass to next layer of middleware
-        next();
-    });
-}
+app.use(config.apiBase, function (req, res, next) {
+    // Website you wish to allow to connect
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    // Request methods you wish to allow
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+    // Pass to next layer of middleware
+    next();
+});
 //authorize if valid access token is given
 app.use(function (req, res, next) {
     var blockUser = function blockUser (err) {
@@ -102,12 +96,10 @@ app.use(function (req, res, next) {
 });
 
 //API routes
-if (app.get('env') !== 'test') {
-    usersRouter.setAppConfig(config);
-    app.use(config.apiBase + '/users', usersRouter);
-    app.use(config.apiBase + '/notepads', notepadsRouter);
-    app.use(config.apiBase + '/categories', categoriesRouter);
-}
+usersRouter.setAppConfig(config);
+app.use(config.apiBase + '/users', usersRouter);
+app.use(config.apiBase + '/notepads', notepadsRouter);
+app.use(config.apiBase + '/categories', categoriesRouter);
 
 //dev env
 if ('development' === app.get('env')) {
