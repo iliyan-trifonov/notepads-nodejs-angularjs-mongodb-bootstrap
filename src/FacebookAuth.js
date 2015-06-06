@@ -25,11 +25,7 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
             return done(err, newUser);
         }
         //pre-populate some data for just created users
-        notepadsUtils.prepopulate(newUser._id, function (err/*, result*/) {
-            if (err) {
-                console.error('error pre-populating for a new user', err);
-                return done(err);
-            }
+        notepadsUtils.prepopulate(newUser._id).then(function (/*result*/) {
             //return the new user object
             done(null, newUser);
         });
