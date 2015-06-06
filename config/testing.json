@@ -1,0 +1,10 @@
+{
+  "sessionSecret": "SECRET",
+  "facebook": {
+    "app": {
+      "id": "12345",
+      "secret": "secret"
+    }
+  },
+  "apiBase": "/api/v1"
+}

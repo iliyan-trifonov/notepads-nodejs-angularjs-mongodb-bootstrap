@@ -22,15 +22,25 @@ if (envs.indexOf(app.get('env')) !== -1) {
     console.warn('unrecognized environment detected', app.get('env'));
 }
 
-if (app.get('env') !== 'test') {
+try {
     config = require('../config/app.conf.json');
+} catch (err) {
+    if (app.get('env') !== 'test') {
+        //prod / dev env - cannot work without real config values
+        process.stderr.write(err);
+        process.exit();
+    } else {
+        //test env
+        console.error(err);
+        config = require('../config/testing.json');
+    }
 }
 
 app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 //app.use(favicon(__dirname + '/public/favicon.ico'));
-if (app.get('env') !== 'test') {
+if (config) {
     app.use(session({
         //TODO: check these properties for their default values
         resave: true,
@@ -62,7 +72,7 @@ app.get('/logout', FacebookAuth.logout);
 
 //API URLs
 //allow all locations access to the api urls
-if (app.get('env') !== 'test') {
+if (config) {
     app.use(config.apiBase, function (req, res, next) {
         // Website you wish to allow to connect
         res.setHeader('Access-Control-Allow-Origin', '*');
@@ -102,8 +112,8 @@ app.use(function (req, res, next) {
 });
 
 //API routes
-usersRouter.setAppConfig(config);
-if (app.get('env') !== 'test') {
+if (config) {
+    usersRouter.setAppConfig(config);
     app.use(config.apiBase + '/users', usersRouter);
     app.use(config.apiBase + '/notepads', notepadsRouter);
     app.use(config.apiBase + '/categories', categoriesRouter);
