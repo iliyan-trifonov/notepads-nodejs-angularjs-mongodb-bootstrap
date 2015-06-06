@@ -16,7 +16,8 @@ Go to the project's directory and run:
     npm install
     bower install
 
-Copy config/app.conf.json.dist to config/app.conf.json and edit it for your environment (set session SECRET, FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, MONGODB_URI).
+Copy config/app.conf.json.dist to config/app.conf.json and edit it for your environment 
+(set session SECRET, FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, MONGODB_URI).
 
 After that run the app with:
 
@@ -26,9 +27,26 @@ Or for developing:
 
     nodemon src/app.js
 
-The application runs in debug mode by default. That's wahy you need to set the NODE_ENV environment variable while starting it for example in production:
+The application runs in debug mode by default. That's why you need to set the NODE_ENV environment variable while 
+starting it for example in production:
 
     export NODE_ENV=production && forever /myapp/src/app.js
+    
+## Tech
+
+Node.js + Express.js = RESTful API that uses Facebook auth and a custom accessToken after that. The API uses pure JSON
+communication.
+
+The index page is loaded through Express.js and is an ejs template. After that Angular.js is loaded and handles 
+everything else converting the app to a SAP.
+
+Passport us used for Facebook auth through the site and fbgraph is used to handle the same for the API.
+
+The API is used fully from the Notepads Ionic application - see on Google Play.
+
+MongoDB is used as a database. Node.js + Mongoose.js to create the models and connect to it.
+
+Mocha, proxyquire and supertest are used for unit and integration testing. Protractor is used for end to end testing. 
 
 ## What can you do with this app
 
