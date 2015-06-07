@@ -7,6 +7,7 @@ var assert = require('assert'),
     Notepad = require('../../src/models/notepad'),
     proxyquire = require('proxyquire'),
     mongoose = require('mongoose'),
+    Promise = require('bluebird'),
     FacebookAuth;
 
 describe('FacebookAuth', function () {
