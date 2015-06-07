@@ -46,7 +46,7 @@
                         <% if (user) { %>
                         <li><img src="<%= user.photo %>" /></li>
                         <li><a><%= user.name %></a></li>
-                        <li><a href="/logout">Logout</a></li>
+                        <li><a href="/logout" class="logout">Logout</a></li>
                         <% } else { %>
                         <li><a href="/auth/facebook">Login</a></li>
                         <% } %>
