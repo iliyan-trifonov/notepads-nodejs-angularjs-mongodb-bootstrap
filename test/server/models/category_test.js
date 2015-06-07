@@ -22,6 +22,7 @@ describe('Category Model', function () {
 
             testUser = user;
 
+            //TODO: create categories in a loop - avoids repeating code
             return Category.createAsync({
                 name: 'Test cat1',
                 user: user._id
