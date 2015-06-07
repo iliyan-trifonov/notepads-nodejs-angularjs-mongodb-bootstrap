@@ -16,11 +16,9 @@ describe('FacebookAuth', function () {
     before(function () {
         db = connection();
         notepadsUtilsMock = {
-            prepopulate: function (uid, cb) {
+            prepopulate: function (uid) {
                 assert.ok(uid);
-                assert.ok('function' === typeof cb);
-                //assert.ok(uid instanceof mongoose.Schema.ObjectId);
-                cb(null, {});
+                return Promise.resolve({});
             }
         };
         FacebookAuth = proxyquire('../../src/FacebookAuth', { './notepadsUtils': notepadsUtilsMock });
