@@ -1,6 +1,7 @@
 'use strict';
 
 var express = require('express'),
+    app = express(),
     router = express.Router(),
     User = require('../models/user'),
     Category = require('../models/category'),
@@ -48,10 +49,9 @@ function insidecatsFromQueryString() {
 //validation
 //router.param('range', /^(\w+)\.\.(\w+)?$/);
 
-// GET /notepads(?insidecats=1)?
-router.get('/', insidecatsFromQueryString(), function (req, res) {
+var getNotepadsHandler = function (req, res) {
     //if (req.params.insidecats) {
-        //get the categories
+    //get the categories
     var categories = [];
     var catsCache = {};
 
@@ -93,7 +93,7 @@ router.get('/', insidecatsFromQueryString(), function (req, res) {
                     text: notepad.text,
                     created: moment(
                         notepad._id.getTimestamp())
-                            .format('YYYY/MM/DD HH:mm:ss')
+                        .format('YYYY/MM/DD HH:mm:ss')
                 });
             });
             res.status(HttpStatus.OK).json(categories);
@@ -103,21 +103,20 @@ router.get('/', insidecatsFromQueryString(), function (req, res) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
     /*} else {
-        //get user's notepads' ObjectIds
-        User.findOne({ _id: req.user.id }, 'notepads', function (err, user) {
-            //TODO: if err
-            //get the notepads data by these ObjectIds
-            Notepad.find({ _id: { $in: user.notepads }}, function (err, notepads) {
-                //TODO: if err
-                //TODO: empty status
-                res.json(notepads);
-            });
-        });
-    }*/
-});
+     //get user's notepads' ObjectIds
+     User.findOne({ _id: req.user.id }, 'notepads', function (err, user) {
+     //TODO: if err
+     //get the notepads data by these ObjectIds
+     Notepad.find({ _id: { $in: user.notepads }}, function (err, notepads) {
+     //TODO: if err
+     //TODO: empty status
+     res.json(notepads);
+     });
+     });
+     }*/
+};
 
-// GET /notepads/1
-router.get('/:id', function (req, res) {
+var getNotepadByIdHandler = function (req, res) {
     //TODO: check id validity, belongs to the current user, etc.
     Notepad.getByIdForUser(req.params.id, req.user.id)
         .then(function (notepad) {
@@ -131,10 +130,9 @@ router.get('/:id', function (req, res) {
             console.error(err);
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
-});
+};
 
-// POST /notepads
-router.post('/', function (req, res) {
+var postNotepadsHandler = function (req, res) {
     //TODO: check for empty or invalid values: req.body.title/text/category
     var notepad;
     Category.getByIdForUser(req.body.category, req.user.id)
@@ -168,10 +166,9 @@ router.post('/', function (req, res) {
             console.error(err);
             return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
-});
+};
 
-// PUT /notepads/1
-router.put('/:id', function (req, res) {
+var putNotepadsIdHandler = function (req, res) {
     //TODO: check id and notepad props validity: req.body.*
     var oldCat, newCat, notepadNew;
     Notepad.getByIdForUser(req.params.id, req.user.id)
@@ -204,10 +201,9 @@ router.put('/:id', function (req, res) {
             console.error(err);
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
-});
+};
 
-// DELETE /notepads/1
-router.delete('/:id', function (req, res) {
+var deleteNotepadsIdHandler = function (req, res) {
     //TODO: check for valid id: exists/is ObjectID/etc.
     var notepad;
     Notepad.getByIdForUser(req.params.id, req.user.id).then(function (notepad) {
@@ -236,6 +232,29 @@ router.delete('/:id', function (req, res) {
         console.error(err);
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
     });
-});
+};
 
-module.exports = router;
+// GET /notepads(?insidecats=1)?
+router.get('/', insidecatsFromQueryString(), getNotepadsHandler);
+
+// GET /notepads/1
+router.get('/:id', getNotepadByIdHandler);
+
+// POST /notepads
+router.post('/', postNotepadsHandler);
+
+// PUT /notepads/1
+router.put('/:id', putNotepadsIdHandler);
+
+// DELETE /notepads/1
+router.delete('/:id', deleteNotepadsIdHandler);
+
+module.exports = exports = router;
+
+if (app.get('env') === 'test') {
+    module.exports.getNotepadsHandler = exports.getNotepadsHandler = getNotepadsHandler;
+    module.exports.getNotepadByIdHandler = exports.getNotepadByIdHandler = getNotepadByIdHandler;
+    module.exports.postNotepadsHandler = exports.postNotepadsHandler = postNotepadsHandler;
+    module.exports.putNotepadsIdHandler = exports.putNotepadsIdHandler = putNotepadsIdHandler;
+    module.exports.deleteNotepadsIdHandler = exports.deleteNotepadsIdHandler = deleteNotepadsIdHandler;
+}
