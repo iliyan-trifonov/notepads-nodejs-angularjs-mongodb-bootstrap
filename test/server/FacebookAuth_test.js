@@ -6,7 +6,6 @@ var assert = require('assert'),
     Category = require('../../src/models/category'),
     Notepad = require('../../src/models/notepad'),
     proxyquire = require('proxyquire'),
-    mongoose = require('mongoose'),
     Promise = require('bluebird'),
     FacebookAuth;
 
