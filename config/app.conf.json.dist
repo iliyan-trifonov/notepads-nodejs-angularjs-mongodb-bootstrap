@@ -13,5 +13,11 @@
   "defaultData": {
     "cats": [],
     "notepads": []
+  },
+  "testFBUser": {
+    "fbId": "",
+    "email": "",
+    "password": "",
+    "accessToken": ""
   }
 }
