@@ -64,23 +64,21 @@ describe('Notepad Model', function () {
         var notepad = {
             title: 'Test notepad',
             text: 'Test text',
-            category: null,
-            user: null
+            category: cat,
+            user: user
         };
-        return Notepad.create(notepad, function (err, doc) {
-            assert.ifError(err);
+        return Notepad.createAsync(notepad).then(function (doc) {
             assert.ok(doc !== null);
-            assert.ok(doc instanceof Notepad);
             assert.strictEqual(doc.title, notepad.title);
             assert.strictEqual(doc.text, notepad.text);
+            notepadsNum++;
         });
     });
 
     describe('getByIdForUser', function () {
         it('should return a Notepad with title, text and category by given notepadId and uid', function () {
             var n = notepads[0];
-            return Notepad.getByIdForUser(n._id, user._id, function (err, notepad) {
-                assert.ifError(err);
+            return Notepad.getByIdForUser(n._id, user._id).then(function (notepad) {
                 assert.ok(notepad !== null);
                 assert.ok(notepad._id.equals(n._id));
                 assert.strictEqual(notepad.title, n.title);
@@ -92,8 +90,7 @@ describe('Notepad Model', function () {
 
     describe('getByUserId', function () {
         it('should return a collection of Notepad objects given uid', function () {
-            return Notepad.getByUserId(user._id, function (err, docs) {
-                assert.ifError(err);
+            return Notepad.getByUserId(user._id).then(function (docs) {
                 assert.ok(docs !== null);
                 assert.strictEqual(docs.length, notepadsNum);
             });
