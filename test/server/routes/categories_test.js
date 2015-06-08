@@ -232,7 +232,12 @@ describe('Categories Routes', function () {
             }).then(function (user) {
                 assert.notStrictEqual(user, null);
                 //create a new notepad for that category and user
-                return Notepad.create({ category: category._id, user: user._id });
+                return Notepad.createAsync({
+                    title: 'asdas',
+                    text: 'dfgdfg',
+                    category: category._id,
+                    user: user._id
+                });
             }).then(function (notepad) {
                 assert.ok(notepad !== null);
                 //add the notepad to the user's notepads array

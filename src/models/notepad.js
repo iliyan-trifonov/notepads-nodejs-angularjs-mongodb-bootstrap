@@ -4,10 +4,10 @@ var mongoose = require('mongoose'),
     Promise = require('bluebird');
 
 var notepadSchema = new mongoose.Schema({
-    title: String,
-    text: String,
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category' },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    title: { type: String, required: true },
+    text: { type: String, required: true },
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
 notepadSchema.static('getByIdForUser', function (notepadId, uid, cb) {
