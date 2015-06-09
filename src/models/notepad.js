@@ -1,7 +1,7 @@
 'use strict';
 
-var mongoose = require('mongoose'),
-    Promise = require('bluebird');
+var Promise = require('bluebird'),
+    mongoose = Promise.promisifyAll(require('mongoose'));
 
 var notepadSchema = new mongoose.Schema({
     title: { type: String, required: true },
@@ -10,17 +10,14 @@ var notepadSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
-notepadSchema.static('getByIdForUser', function (notepadId, uid, cb) {
-    return this.findOne({ _id: notepadId, user: uid }, 'title text category', cb);
+notepadSchema.static('getByIdForUser', function (notepadId, uid) {
+    return this.findOneAsync({ _id: notepadId, user: uid }, 'title text category');
 });
 
-notepadSchema.static('getByUserId', function (uid, cb) {
-    return this.find({ user: uid }, 'title text category', cb);
+notepadSchema.static('getByUserId', function (uid) {
+    return this.findAsync({ user: uid }, 'title text category');
 });
 
 var Notepad = mongoose.model('Notepad', notepadSchema);
-
-Promise.promisifyAll(Notepad);
-Promise.promisifyAll(Notepad.prototype);
 
 module.exports = exports = Notepad;
