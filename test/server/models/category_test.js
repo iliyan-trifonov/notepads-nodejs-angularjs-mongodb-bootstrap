@@ -59,14 +59,13 @@ describe('Category Model', function () {
 
     it('should create and save a new Category', function () {
         var cat = {
-            name: 'Testcat',
-            notepadsCount: 0,
+            name: 'Test cat',
             user: mongoose.Types.ObjectId()
         };
         return Category.createAsync(cat).then(function (category) {
             assert.ok(category !== null);
             assert.strictEqual(category.name, cat.name);
-            assert.strictEqual(category.notepadsCount, cat.notepadsCount);
+            assert.strictEqual(category.notepadsCount, 0);
             assert.strictEqual(category.user, cat.user);
         });
     });
