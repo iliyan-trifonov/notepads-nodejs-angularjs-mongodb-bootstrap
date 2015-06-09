@@ -3,7 +3,8 @@
 var Category = require('../../../src/models/category'),
     User = require('../../../src/models/user'),
     assert = require('assert'),
-    connection = require('../../db_common');
+    connection = require('../../db_common'),
+    mongoose = require('mongoose');
 
 describe('Category Model', function () {
 
@@ -60,7 +61,7 @@ describe('Category Model', function () {
         var cat = {
             name: 'Testcat',
             notepadsCount: 0,
-            user: null
+            user: mongoose.Types.ObjectId()
         };
         return Category.createAsync(cat).then(function (category) {
             assert.ok(category !== null);
