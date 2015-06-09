@@ -50,8 +50,12 @@ function insidecatsFromQueryString() {
 //router.param('range', /^(\w+)\.\.(\w+)?$/);
 
 var getNotepadsHandler = function (req, res) {
+    if (!req.user || !req.user.id) {
+        return res.status(HttpStatus.FORBIDDEN).json([]);
+    }
+
     //if (req.params.insidecats) {
-    //get the categories
+
     var categories = [];
     var catsCache = {};
 
@@ -68,9 +72,13 @@ var getNotepadsHandler = function (req, res) {
         return catsCache[id];
     }
 
-    Category.getByUserId(req.user._id)
+    //get the categories
+    Category.getByUserId(req.user.id)
         .then(function (cats) {
-            //TODO: if err / cats === null , empty
+            if (!cats) {
+                return Promise.reject(new Error('No categories found!'));
+            }
+
             cats.forEach(function (cat) {
                 categories.push({
                     _id: cat._id,
@@ -80,10 +88,10 @@ var getNotepadsHandler = function (req, res) {
                 });
             });
 
-            return Notepad.getByUserId(req.user._id);
+            //and then get the notepads
+            return Notepad.getByUserId(req.user.id);
         })
         .then(function (notepads) {
-            //TODO: if err / notepads === null
             var curCat;
             notepads.forEach(function (notepad) {
                 curCat = findCat(categories, notepad.category);
@@ -103,16 +111,8 @@ var getNotepadsHandler = function (req, res) {
             res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
     /*} else {
-     //get user's notepads' ObjectIds
-     User.findOne({ _id: req.user.id }, 'notepads', function (err, user) {
-     //TODO: if err
-     //get the notepads data by these ObjectIds
-     Notepad.find({ _id: { $in: user.notepads }}, function (err, notepads) {
-     //TODO: if err
-     //TODO: empty status
+     //get user's notepads
      res.json(notepads);
-     });
-     });
      }*/
 };
 
