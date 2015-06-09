@@ -51,6 +51,7 @@ function insidecatsFromQueryString() {
 
 var getNotepadsHandler = function (req, res) {
     if (!req.user || !req.user.id) {
+        console.error('Invalid params!');
         return res.status(HttpStatus.FORBIDDEN).json([]);
     }
 
@@ -73,10 +74,11 @@ var getNotepadsHandler = function (req, res) {
     }
 
     //get the categories
-    Category.getByUserId(req.user.id)
+    var p = Category.getByUserId(req.user.id)
         .then(function (cats) {
-            if (!cats) {
-                return Promise.reject(new Error('No categories found!'));
+            if (!cats || cats.length === 0) {
+                res.status(HttpStatus.OK).json([]);
+                return p.cancel();
             }
 
             cats.forEach(function (cat) {
