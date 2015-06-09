@@ -8,7 +8,7 @@ var Promise = require('bluebird'),
 var categorySchema = new mongoose.Schema({
     name: { type: String, required: true },
     notepadsCount: { type: Number, default: 0 },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
 categorySchema.static('getByUserId', function (uid) {
