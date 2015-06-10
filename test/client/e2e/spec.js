@@ -9,16 +9,16 @@ describe('Notepads app', function() {
     describe('home', function () {
 
         beforeEach(function () {
-            //browser.get('http://notepadsjs.dev:3000/');
+            //browser.get(config.devUrl);
         });
 
         it('should have a title with specific text', function() {
-            browser.get('http://notepadsjs.dev:3000/');
+            browser.get(config.devUrl);
             expect(browser.getTitle()).toEqual('Notepads by Iliyan Trifonov');
         });
 
         it('should have a jumbotron with specific items/text', function() {
-            browser.get('http://notepadsjs.dev:3000/');
+            browser.get(config.devUrl);
             expect(element(by.css('div.jumbotron>h1'))
                 .getText())
                 .toEqual('Welcome to Nodepads!');
@@ -58,7 +58,7 @@ describe('Notepads app', function() {
         });
 
         it('should be on the Dashboard after logged in', function () {
-            browser.get('http://notepadsjs.dev:3000/');
+            browser.get(config.devUrl);
 
             expect(element(by.css('.dashboard')).waitReady()).toBeTruthy();
 
