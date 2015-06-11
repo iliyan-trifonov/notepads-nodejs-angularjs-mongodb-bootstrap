@@ -83,5 +83,70 @@ describe('API /users', function () {
                 });
         });
 
+        //these tests pass only with a given test fb user - private CI or locally
+        if (config.testFBUser && config.testFBUser.fbId) {
+            /*
+             it('should return FORBIDDEN if no FB user is found by the given fbAccessToken', function (done) {
+             var wrongToken = 'we need a valid FB token that could not find a user';
+             request(app)
+             .post(url)
+             .send({
+             fbId: config.testFBUser.fbId,
+             fbAccessToken: wrongToken
+             })
+             .expect('Content-Type', /json/)
+             .expect(HttpStatus.FORBIDDEN, done);
+             });
+             */
+
+            it('should return FORBIDDEN if FB user is found but has different id', function (done) {
+                request(app)
+                    .post(url)
+                    .send({
+                        fbId: +new Date(),
+                        fbAccessToken: config.testFBUser.fbAccessToken
+                    })
+                    .expect('Content-Type', /json/)
+                    .expect(HttpStatus.FORBIDDEN, done);
+            });
+
+            it('should return a valid accessToken if FB user is found in DB', function (done) {
+                User.createAsync({
+                    name: 'Iliyan Trifonov',
+                    facebookId: config.testFBUser.fbId,
+                    photo: 'photourl'
+                }).then(function (user) {
+                    request(app)
+                        .post(url)
+                        .send({
+                            fbId: config.testFBUser.fbId,
+                            fbAccessToken: config.testFBUser.fbAccessToken
+                        })
+                        .expect('Content-Type', /json/)
+                        .expect(HttpStatus.OK)
+                        .end(function (err, res) {
+                            assert.ifError(err);
+                            assert.strictEqual(res.body.accessToken, user.accessToken);
+                            done();
+                        });
+                });
+            });
+
+            //TODO: check for the prepopulated cat and notepad here too:
+            it('should return a valid accessToken if FB user is created by the given fbAccessToken', function (done) {
+                User.removeAsync({
+                    facebookId: config.testFBUser.fbId
+                }).then(function () {
+                    request(app)
+                        .post(url)
+                        .send({
+                            fbId: config.testFBUser.fbId,
+                            fbAccessToken: config.testFBUser.fbAccessToken
+                        })
+                        .expect('Content-Type', /json/)
+                        .expect(HttpStatus.OK, done);
+                });
+            });
+        }
     });
 });
