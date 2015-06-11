@@ -156,8 +156,8 @@ describe('Notepads Routes', function () {
                 res.jsonChecker = function (obj) {
                     //TODO: change the checks to not depend on the order of the results: [0]/[1]/etc.
                     assert.strictEqual(obj.length, cats.length);
-                    assert.strictEqual(obj[0].name, cats[0].name);
-                    assert.strictEqual(obj[1].name, cats[1].name);
+                    assert.ok(obj[0].name === cats[0].name || obj[0].name === cats[1].name);
+                    assert.ok(obj[1].name === cats[0].name || obj[1].name === cats[1].name);
                     assert.strictEqual(obj[0].notepads.length, 0);
                     assert.strictEqual(obj[1].notepads.length, 0);
                     done();
