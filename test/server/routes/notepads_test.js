@@ -82,18 +82,42 @@ describe('Notepads Routes', function () {
         done();
     });
 
-    describe('getNotepadsHandler', function () {
-        it('should return an error if no valid request params are given', function (done) {
-            delete req.user.id;
-            res.statusExpected = HttpStatus.FORBIDDEN;
-            res.jsonChecker = function (obj) {
-                assert.deepEqual(obj, []);
-                done();
+    describe('checkAuth', function () {
+        it('should return UNAUTHORIZED when user is not authenticated', function () {
+            req.isAuthenticated = function () {
+                return false;
             };
-            notepadsRouter.getNotepadsHandler(req, res);
+            var oldConsoleError = console.error;
+            console.error = function (msg) {
+                assert.strictEqual(msg, 'API notepads: checkAuth(), not authenticated!');
+                console.error = oldConsoleError;
+            };
+            res.statusExpected = HttpStatus.UNAUTHORIZED;
+            res.jsonChecker = function (obj) {
+                assert.deepEqual(obj, {});
+            };
+            notepadsRouter.checkAuth(req, res);
         });
 
-        it('should return an empty array result if user with no notepads and categories is given', function (done) {
+        it('should call next if user is authenticated', function (done) {
+            req.isAuthenticated = function () {
+                return true;
+            };
+            var next = function () {
+                assert.strictEqual(arguments.length, 0);
+                done();
+            };
+            notepadsRouter.checkAuth(req, res, next);
+        });
+    });
+
+    describe('insidecatsFromQueryString', function () {
+        it('should add req.params.insidecats if existing in req.query.insidecats');
+        it('should call next(route) if req.query.insidecats is not set');
+    });
+
+    describe('getNotepadsHandler', function () {
+       it('should return an empty array result if user with no notepads and categories is given', function (done) {
             User.createAsync({
                 facebookId: +new Date(),
                 name: 'Temp User',
@@ -130,6 +154,7 @@ describe('Notepads Routes', function () {
             }).then(function (cats) {
                 res.statusExpected = HttpStatus.OK;
                 res.jsonChecker = function (obj) {
+                    //TODO: change the checks to not depend on the order of the results: [0]/[1]/etc.
                     assert.strictEqual(obj.length, cats.length);
                     assert.strictEqual(obj[0].name, cats[0].name);
                     assert.strictEqual(obj[1].name, cats[1].name);
@@ -153,6 +178,10 @@ describe('Notepads Routes', function () {
             };
             notepadsRouter.getNotepadsHandler(req, res);
         });
+    });
+
+    describe('getNotepadByIdHandler', function () {
+
     });
 
 });
