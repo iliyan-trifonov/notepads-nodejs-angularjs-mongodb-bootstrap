@@ -1,6 +1,8 @@
 'use strict';
 
-var config = require('../../../config/app.conf.json');
+var config = require('../../../config/app.conf.json'),
+    User = require('../../../src/models/user'),
+    connection = require('../../db_common');
 
 require('../waitReady');
 
@@ -9,16 +11,14 @@ describe('Notepads app', function() {
     describe('home', function () {
 
         beforeEach(function () {
-            //browser.get(config.devUrl);
+            browser.get(config.devUrl);
         });
 
         it('should have a title with specific text', function() {
-            browser.get(config.devUrl);
             expect(browser.getTitle()).toEqual('Notepads by Iliyan Trifonov');
         });
 
         it('should have a jumbotron with specific items/text', function() {
-            browser.get(config.devUrl);
             expect(element(by.css('div.jumbotron>h1'))
                 .getText())
                 .toEqual('Welcome to Nodepads!');
@@ -33,6 +33,15 @@ describe('Notepads app', function() {
     });
 
     describe('login/logout', function () {
+        it('should remove the testing user from DB if exists', function (done) {
+            var db = connection();
+            return User.removeAsync({
+                facebookId: config.testFBUser.fbId
+            }).then(function () {
+                db.close();
+            }).then(done);
+        });
+
         it('should redirect to the Facebook\'s login page after login is clicked', function () {
             browser.ignoreSynchronization = true;
 
@@ -54,6 +63,7 @@ describe('Notepads app', function() {
         });
 
         it('setting back the browser.ignoreSynchronization to false', function () {
+            expect(element(by.css('.dashboard')).waitReady()).toBeTruthy();
             browser.ignoreSynchronization = false;
         });
 
