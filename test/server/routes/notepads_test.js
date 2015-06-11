@@ -146,7 +146,7 @@ describe('Notepads Routes', function () {
             }).then(function (user) {
                 req.user.id = user._id;
                 return Promise.map(cats, function (cat) {
-                    return Category.create({
+                    return Category.createAsync({
                         name: cat.name,
                         user: user
                     });
