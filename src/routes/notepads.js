@@ -15,7 +15,7 @@ var express = require('express'),
 //TODO: with the Facebook authentication process
 function checkAuth(req, res, next) {
     if (!req.isAuthenticated()) {
-        console.error('API cats: checkAuth(), not authenticated!');
+        console.error('API notepads: checkAuth(), not authenticated!');
         res.status(HttpStatus.UNAUTHORIZED).json({});
     } else {
         next();
@@ -50,11 +50,6 @@ function insidecatsFromQueryString() {
 //router.param('range', /^(\w+)\.\.(\w+)?$/);
 
 var getNotepadsHandler = function (req, res) {
-    if (!req.user || !req.user.id) {
-        console.error('Invalid params!');
-        return res.status(HttpStatus.FORBIDDEN).json([]);
-    }
-
     //if (req.params.insidecats) {
 
     var categories = [];
@@ -254,6 +249,8 @@ router.delete('/:id', deleteNotepadsIdHandler);
 module.exports = exports = router;
 
 if (app.get('env') === 'test') {
+    module.exports.checkAuth = exports.checkAuth = checkAuth;
+    module.exports.insidecatsFromQueryString = exports.insidecatsFromQueryString = insidecatsFromQueryString;
     module.exports.getNotepadsHandler = exports.getNotepadsHandler = getNotepadsHandler;
     module.exports.getNotepadByIdHandler = exports.getNotepadByIdHandler = getNotepadByIdHandler;
     module.exports.postNotepadsHandler = exports.postNotepadsHandler = postNotepadsHandler;
