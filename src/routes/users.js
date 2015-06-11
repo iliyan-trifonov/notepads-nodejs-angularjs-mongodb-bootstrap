@@ -12,6 +12,11 @@ var express = require('express'),
 
 Promise.promisify(graph.get);
 
+//if the graph.get cannot be promisified the usual way; also helps mocking the object:
+if (!graph.getAsync) {
+    graph.getAsync = Promise.promisify(graph.get);
+}
+
 //base: /users
 
 var postAuthHandler = function (req, res) {
