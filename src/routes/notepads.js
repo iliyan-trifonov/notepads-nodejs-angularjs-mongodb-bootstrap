@@ -38,6 +38,9 @@ function insidecatsFromQueryString() {
     return function (req, res, next) {
         var insidecats = String(req.query.insidecats);
         if (insidecats && "1" === insidecats) {
+            if (!req.params) {
+                req.params = {};
+            }
             req.params.insidecats = insidecats;
             next();
         } else {
@@ -114,12 +117,10 @@ var getNotepadsHandler = function (req, res) {
 };
 
 var getNotepadByIdHandler = function (req, res) {
-    //TODO: check id validity, belongs to the current user, etc.
     Notepad.getByIdForUser(req.params.id, req.user.id)
         .then(function (notepad) {
             if (!notepad) {
-                //TODO: return empty set status
-                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+                return res.status(HttpStatus.NO_CONTENT).json({});
             }
             res.status(HttpStatus.OK).json(notepad);
         })
