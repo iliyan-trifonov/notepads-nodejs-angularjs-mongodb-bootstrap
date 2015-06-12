@@ -112,8 +112,24 @@ describe('Notepads Routes', function () {
     });
 
     describe('insidecatsFromQueryString', function () {
-        it('should add req.params.insidecats if existing in req.query.insidecats');
-        it('should call next(route) if req.query.insidecats is not set');
+        it('should add req.params.insidecats if existing in req.query.insidecats', function (done) {
+            req.query = { insidecats: 1 };
+            var next = function () {
+                assert.strictEqual(arguments.length, 0);
+                assert.strictEqual(req.params.insidecats, "1");
+                done();
+            };
+            notepadsRouter.insidecatsFromQueryString()(req, res, next);
+        });
+        it('should call next(route) if req.query.insidecats is not set', function (done) {
+            req.query = {};
+            var next = function () {
+                assert.strictEqual(arguments.length, 1);
+                assert.strictEqual(arguments[0], "route");
+                done();
+            };
+            notepadsRouter.insidecatsFromQueryString()(req, res, next);
+        });
     });
 
     describe('getNotepadsHandler', function () {
