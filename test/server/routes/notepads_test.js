@@ -6,6 +6,7 @@ var Notepad = require('../../../src/models/notepad'),
     notepadsRouter = require('../../../src/routes/notepads'),
     assert = require('assert'),
     connection = require('../../db_common'),
+    mongoose = require('mongoose'),
     Promise = require('bluebird'),
     HttpStatus = require('http-status');
 
@@ -197,7 +198,42 @@ describe('Notepads Routes', function () {
     });
 
     describe('getNotepadByIdHandler', function () {
+        it('should return NO_CONTENT if no notepad is found', function (done) {
+            req.params = {};
+            res.execDone = false;
+            res.statusExpected = HttpStatus.NO_CONTENT;
+            res.jsonChecker = function (obj) {
+                assert.deepEqual(obj, {});
+                //allow a second call before done
+                if (!res.execDone) {
+                    res.execDone = true;
+                } else {
+                    done();
+                }
+            };
+            notepadsRouter.getNotepadByIdHandler(req, res);
 
+            //second call
+            req.params.id = mongoose.Types.ObjectId();
+            notepadsRouter.getNotepadByIdHandler(req, res);
+        });
+
+        it('should return a notepad given a valid existing notepad and user id', function (done) {
+            req.params = { id: testNotepads[0]._id };
+            req.user = { id: testUser._id };
+            res.statusExpected = HttpStatus.OK;
+            res.jsonChecker = function (obj) {
+                assert.ok(obj._id.equals(testNotepads[0]._id));
+                done();
+            };
+            notepadsRouter.getNotepadByIdHandler(req, res);
+        });
+    });
+
+    describe('postNotepadsHandler', function () {
+        it('should return NO_CONTENT when the category given is not found');
+        it('should return INTERNAL SERVER ERROR when there is an error in Notepad.createAsync (like not enough of the required params)');
+        it('should return the created notepad and the User and Category should be with updated params');
     });
 
 });
