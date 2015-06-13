@@ -84,7 +84,7 @@ describe('API /users', function () {
         });
 
         //these tests pass only with a given test fb user - private CI or locally
-        if (config.testFBUser && config.testFBUser.fbId) {
+        if (config.testFBUser && config.testFBUser.fbAccessToken) {
             /*
              it('should return FORBIDDEN if no FB user is found by the given fbAccessToken', function (done) {
              var wrongToken = 'we need a valid FB token that could not find a user';
