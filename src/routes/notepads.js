@@ -131,13 +131,12 @@ var getNotepadByIdHandler = function (req, res) {
 };
 
 var postNotepadsHandler = function (req, res) {
-    //TODO: check for empty or invalid values: req.body.title/text/category
     var notepad;
-    Category.getByIdForUser(req.body.category, req.user.id)
+    var p = Category.getByIdForUser(req.body.category, req.user.id)
         .then(function (category) {
             if (!category) {
                 res.status(HttpStatus.NO_CONTENT).json({});
-                return Promise.reject(new Error('Category not found!'));
+                return p.cancel();
             }
 
             return Notepad.createAsync({
@@ -148,7 +147,11 @@ var postNotepadsHandler = function (req, res) {
             });
         })
         .then(function (note) {
-            //TODO: check if note is valid
+            if (!note) {
+                return Promise.reject(
+                    new Error('Invalid notepad returned by Notepad.create!')
+                );
+            }
             notepad = note;
             return Category.increaseNotepadsCountById(notepad.category);
         })
