@@ -1,5 +1,7 @@
 'use strict';
 
+require("babel/register");
+
 var config,
     express = require('express'),
     routes = require('./routes'),

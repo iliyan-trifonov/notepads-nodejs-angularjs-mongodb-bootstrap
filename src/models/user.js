@@ -24,8 +24,8 @@ userSchema.pre('validate', function (next) {
 });
 
 //returns only _id
-userSchema.static('getByAccessToken', function (accessToken) {
-    return this.findOneAsync(
+userSchema.static('getByAccessToken', accessToken => {
+    return User.findOneAsync(
         { accessToken: accessToken }
     );
 });

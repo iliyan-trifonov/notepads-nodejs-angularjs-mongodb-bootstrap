@@ -24,7 +24,8 @@ module.exports = function (grunt) {
                 bail: true,
                 timeout: 12000,
                 recursive: true,
-                coverage: true
+                coverage: true,
+                mochaOptions: ['--compilers=js:babel/register']
             }
         },
         specCheck: {
