@@ -96,4 +96,26 @@ describe('Notepad Model', function () {
             });
         });
     });
+
+    describe('updateForUserId', function () {
+        it('should return an updated Notepad object', function () {
+            var data =                 {
+                title: 'ttt',
+                text: 'txt',
+                category: cat._id
+            };
+            return Notepad.updateForUserId(
+                notepads[0]._id,
+                user._id,
+                data
+            ).then(function (notepad) {
+                console.log(notepad);
+                assert.ok(notepad);
+                assert.notDeepEqual(notepad, {});
+                assert.strictEqual(notepad.title, data.title);
+                assert.strictEqual(notepad.text, data.text);
+                assert.ok(notepad.category.equals(data.category));
+            });
+        });
+    });
 });
