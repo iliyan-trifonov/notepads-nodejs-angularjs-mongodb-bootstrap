@@ -12,7 +12,7 @@ var Notepad = require('../../../src/models/notepad'),
 
 describe('Notepads Routes', function () {
 
-    var db, testUser, testCat, testNotepads, req, res;
+    var db, testUser, testCat, testNotepads = [], req, res;
 
     before(function () {
         db = connection();
@@ -35,22 +35,25 @@ describe('Notepads Routes', function () {
                 {
                     title: 'Test notepad 1',
                     text: 'Test notepad 1 text',
-                    category: testCat,
-                    user: testUser
+                    category: testCat._id,
+                    user: testUser._id
                 },
                 {
                     title: 'Test notepad 2',
                     text: 'Test notepad 2 text',
-                    category: testCat,
-                    user: testUser
+                    category: testCat._id,
+                    user: testUser._id
                 }
             ];
 
             return Promise.map(notes, function (note) {
-                return Notepad.createAsync(note);
+                return Notepad.createAsync(note).then(function (doc) {
+                    testNotepads.push(doc);
+                    return Category.increaseNotepadsCountById({ _id: doc.category });
+                }).then(function (cat) {
+                    testCat = cat;
+                });
             });
-        }).then(function (notepads) {
-            testNotepads = notepads;
         });
     });
 
@@ -186,7 +189,6 @@ describe('Notepads Routes', function () {
         it('should return the categories and notepads for a user', function (done) {
             res.statusExpected = HttpStatus.OK;
             res.jsonChecker = function (obj) {
-                console.log('obj', obj);
                 //1 category
                 assert.strictEqual(obj.length, 1);
                 //2 notepads
@@ -256,9 +258,9 @@ describe('Notepads Routes', function () {
 
         it('should return the created notepad and the User and Category should be with updated params', function (done) {
             req.body = {
-                category: testCat._id,
                 title: 'Test title',
-                text: 'Test text'
+                text: 'Test text',
+                category: testCat._id
             };
             req.user = { id: testUser._id };
             res.statusExpected = HttpStatus.OK;
@@ -269,7 +271,9 @@ describe('Notepads Routes', function () {
                 assert.strictEqual(obj.title, req.body.title);
                 assert.strictEqual(obj.text, req.body.text);
 
-                Category.findOneAsync(testCat._id).then(function (cat) {
+                testNotepads.push(obj);
+
+                Category.findOneAsync({ _id: testCat._id }).then(function (cat) {
                     assert.strictEqual(cat.notepadsCount, testCat.notepadsCount + 1);
                     testCat = cat;
 
@@ -281,6 +285,131 @@ describe('Notepads Routes', function () {
             };
             notepadsRouter.postNotepadsHandler(req, res);
         });
+    });
+
+    describe('putNotepadsIdHandler', function () {
+        it('should return BAD_REQUEST when a required param is not given', function (done) {
+            var paramsToCheck = 4;
+            req.params = {};
+            req.body = {};
+            res.statusExpected = HttpStatus.BAD_REQUEST;
+            res.jsonChecker = function (obj) {
+                assert.deepEqual(obj, {});
+                if (--paramsToCheck === 0) {
+                    done();
+                }
+            };
+
+            notepadsRouter.putNotepadsIdHandler(req, res);
+
+            req.params.id = testNotepads._id;
+            notepadsRouter.putNotepadsIdHandler(req, res);
+
+            req.body.title = 'Test notepad';
+            notepadsRouter.putNotepadsIdHandler(req, res);
+
+            req.body.text = 'Test text';
+            notepadsRouter.putNotepadsIdHandler(req, res);
+        });
+
+        it('should return NO_CONTENT when the given notepad id is not found', function (done) {
+            req.params = { id: mongoose.Types.ObjectId() };
+            req.user = { id: testUser._id };
+            req.body = {
+                title: 'test',
+                text: 'test',
+                category: testCat._id
+            };
+            res.statusExpected = HttpStatus.NO_CONTENT;
+            res.jsonChecker = function (obj) {
+                assert.deepEqual(obj, {});
+                done();
+            };
+
+            notepadsRouter.putNotepadsIdHandler(req, res);
+        });
+
+        it('should return the updated Notepad object', function (done) {
+            req.params = { id: testNotepads[0]._id };
+            req.user = { id: testUser._id };
+            req.body = {
+                title: 'test',
+                text: 'test',
+                category: testCat._id
+            };
+            res.statusExpected = HttpStatus.OK;
+            res.jsonChecker = function (obj) {
+                assert.ok(obj);
+                assert.notDeepEqual(obj, {});
+                assert.strictEqual(obj.title, req.body.title);
+                assert.strictEqual(obj.text, req.body.text);
+                assert.ok(obj.category.equals(req.body.category));
+                assert.ok(obj.user.equals(req.user.id));
+                testNotepads[0] = obj;
+                done();
+            };
+
+            notepadsRouter.putNotepadsIdHandler(req, res);
+        });
+
+        it('should return the updated Notepad object + category change', done => {
+            var cat, notepad;
+            req.user = { id: testUser._id };
+            //create a new cat
+            Category.createAsync({
+                name: 'Test cat 2',
+                user: testUser
+            }).then(function (doc) {
+                cat = doc;
+                //create a new notepad for that cat
+                return Notepad.createAsync({
+                    title: 'Temp notepad',
+                    text: 'Temp text',
+                    category: cat._id,
+                    user: testUser._id
+                });
+            }).then(function (doc) {
+                notepad = doc;
+                req.params = { id: notepad._id };
+                //increase the notepadsCount for the category
+                return Category.increaseNotepadsCountById({_id: cat._id});
+            }).then(function (doc) {
+                cat = doc;
+                assert.strictEqual(cat.notepadsCount, 1);
+                req.body = {
+                    title: 'test',
+                    text: 'test',
+                    category: testCat._id
+                };
+                res.statusExpected = HttpStatus.OK;
+                res.jsonChecker = function (obj) {
+                    assert.ok(obj);
+                    assert.notDeepEqual(obj, {});
+                    assert.strictEqual(obj.title, req.body.title);
+                    assert.strictEqual(obj.text, req.body.text);
+                    assert.ok(obj.category.equals(testCat._id));
+                    assert.ok(obj.user.equals(req.user.id));
+
+                    //add the new notepad to the testing ones
+                    testNotepads.push(obj);
+
+                    Category.findOneAsync({
+                        _id: cat._id
+                    }).then(function (cat) {
+                        assert.strictEqual(cat.notepadsCount, 0);
+                        return Category.findOneAsync({ _id: testCat._id });
+                    }).then(function (cat) {
+                        testCat = cat;
+                        assert.strictEqual(testCat.notepadsCount, testNotepads.length);
+                    }).then(done);
+                };
+
+                assert.strictEqual(testCat.notepadsCount, testNotepads.length);
+
+                notepadsRouter.putNotepadsIdHandler(req, res);
+            });
+        });
+
     });
 
 });
