@@ -7,8 +7,7 @@ var express = require('express'),
     Category = require('../models/category'),
     Notepad = require('../models/notepad'),
     moment = require('moment'),
-    HttpStatus = require('http-status'),
-    Promise = require('bluebird');
+    HttpStatus = require('http-status');
 
 //TODO: put this in FacebookAuth
 //TODO: or make it connected somehow
@@ -139,6 +138,7 @@ var postNotepadsHandler = function (req, res) {
                 return p.cancel();
             }
 
+            //TODO: add checking for the required params and return BAD_REQUEST
             return Notepad.createAsync({
                 category: req.body.category,
                 title: req.body.title,
@@ -148,9 +148,7 @@ var postNotepadsHandler = function (req, res) {
         })
         .then(function (note) {
             if (!note) {
-                return Promise.reject(
-                    new Error('Invalid notepad returned by Notepad.create!')
-                );
+                throw new Error('Invalid notepad returned by Notepad.create!');
             }
             notepad = note;
             return Category.increaseNotepadsCountById(notepad.category);
@@ -172,11 +170,16 @@ var postNotepadsHandler = function (req, res) {
 var putNotepadsIdHandler = function (req, res) {
     //TODO: check id and notepad props validity: req.body.*
     var oldCat, newCat, notepadNew;
-    Notepad.getByIdForUser(req.params.id, req.user.id)
+    var p = Notepad.getByIdForUser(req.params.id, req.user.id)
         .then(function (notepad) {
-            //TODO: check err/null notepad and return empty res status
+            if (!notepad) {
+                res.status(HttpStatus.NO_CONTENT).json({});
+                return p.cancel();
+            }
+
             oldCat = notepad.category;
             newCat = req.body.category;
+            //TODO: create and use Notepad.update() static func instead:
             return Notepad.findOneAndUpdateAsync(
                 { _id: notepad._id },
                 {$set: {
@@ -186,17 +189,18 @@ var putNotepadsIdHandler = function (req, res) {
                 }}
             );
         }).then(function (notepad) {
-            //TODO: check err / notepad === null
+            if (!notepad) {
+                throw new Error('Error updating the notepad!');
+            }
+
             notepadNew = notepad;
             //update categories notepads' numbers if cat is changed
             if (String(newCat) !== String(oldCat)) {
-                return Category.decreaseNotepadsCountById(oldCat)
-                    .then(function (/*cat*/) {
-                        return Category.increaseNotepadsCountById(newCat);
-                    });
+                return Category.decreaseNotepadsCountById(oldCat).then(function (/*cat*/) {
+                    return Category.increaseNotepadsCountById(newCat);
+                });
             }
         }).then(function (/*cat*/) {
-            //TODO: if err / category === null
             res.status(HttpStatus.OK).json(notepadNew);
         }).catch(function (err) {
             console.error(err);
