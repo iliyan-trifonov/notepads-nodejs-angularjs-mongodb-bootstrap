@@ -18,6 +18,18 @@ notepadSchema.static('getByUserId', function (uid) {
     return this.findAsync({ user: uid }, 'title text category');
 });
 
+notepadSchema.static('updateForUserId', function (notepadId, uid, data) {
+    return this.findOneAndUpdateAsync(
+        { _id: notepadId, user: uid },
+        { $set: {
+            title: data.title,
+            text: data.text,
+            category: data.category
+        } },
+        { 'new': true }
+    );
+});
+
 var Notepad = mongoose.model('Notepad', notepadSchema);
 
 module.exports = exports = Notepad;
