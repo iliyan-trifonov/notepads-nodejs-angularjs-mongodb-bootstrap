@@ -168,7 +168,10 @@ var postNotepadsHandler = function (req, res) {
 };
 
 var putNotepadsIdHandler = function (req, res) {
-    //TODO: check id and notepad props validity: req.body.*
+    if (!req.params.id || ! req.body.title || !req.body.text || !req.body.category) {
+        return res.status(HttpStatus.BAD_REQUEST).json({});
+    }
+
     var oldCat, newCat, notepadNew;
     var p = Notepad.getByIdForUser(req.params.id, req.user.id)
         .then(function (notepad) {
@@ -179,14 +182,15 @@ var putNotepadsIdHandler = function (req, res) {
 
             oldCat = notepad.category;
             newCat = req.body.category;
-            //TODO: create and use Notepad.update() static func instead:
-            return Notepad.findOneAndUpdateAsync(
-                { _id: notepad._id },
-                {$set: {
+
+            return Notepad.updateForUserId(
+                notepad._id,
+                req.user.id,
+                {
                     title: req.body.title,
                     text: req.body.text,
                     category: req.body.category
-                }}
+                }
             );
         }).then(function (notepad) {
             if (!notepad) {
