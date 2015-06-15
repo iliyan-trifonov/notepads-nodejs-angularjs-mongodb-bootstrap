@@ -231,9 +231,56 @@ describe('Notepads Routes', function () {
     });
 
     describe('postNotepadsHandler', function () {
-        it('should return NO_CONTENT when the category given is not found');
-        it('should return INTERNAL SERVER ERROR when there is an error in Notepad.createAsync (like not enough of the required params)');
-        it('should return the created notepad and the User and Category should be with updated params');
+        it('should return NO_CONTENT when the category given is not found', function (done) {
+            req.body = { category: mongoose.Types.ObjectId() };
+            req.user = { id: testUser._id };
+            res.statusExpected = HttpStatus.NO_CONTENT;
+            res.jsonChecker = function (obj) {
+                assert.deepEqual(obj, {});
+                done();
+            };
+            notepadsRouter.postNotepadsHandler(req, res);
+        });
+
+        //TODO: convert this to BAD_REQUEST with added checking for the required params
+        it('should return INTERNAL SERVER ERROR when there is an error in Notepad.createAsync (like not enough of the required params)', function (done) {
+            req.body = { category: testCat._id };
+            req.user = { id: testUser._id };
+            res.statusExpected = HttpStatus.INTERNAL_SERVER_ERROR;
+            res.jsonChecker = function (obj) {
+                assert.deepEqual(obj, {});
+                done();
+            };
+            notepadsRouter.postNotepadsHandler(req, res);
+        });
+
+        it('should return the created notepad and the User and Category should be with updated params', function (done) {
+            req.body = {
+                category: testCat._id,
+                title: 'Test title',
+                text: 'Test text'
+            };
+            req.user = { id: testUser._id };
+            res.statusExpected = HttpStatus.OK;
+            res.jsonChecker = function (obj) {
+                assert.ok(obj);
+                assert.strictEqual(obj.user, req.user.id);
+                assert.strictEqual(obj.category, req.body.category);
+                assert.strictEqual(obj.title, req.body.title);
+                assert.strictEqual(obj.text, req.body.text);
+
+                Category.findOneAsync(testCat._id).then(function (cat) {
+                    assert.strictEqual(cat.notepadsCount, testCat.notepadsCount + 1);
+                    testCat = cat;
+
+                    return User.findOneAsync(testUser._id);
+                }).then(function (user) {
+                    assert.strictEqual(user.notepads.length, testUser.notepads.length + 1);
+                    testUser = user;
+                }).then(done);
+            };
+            notepadsRouter.postNotepadsHandler(req, res);
+        });
     });
 
 });
