@@ -27,9 +27,9 @@ categorySchema.static('add', function (catName, uid) {
 });
 
 categorySchema.static('update', function (catId, uid, name) {
-    return Category.findOneAndUpdateAsync(
+    return this.findOneAndUpdateAsync(
         { _id: catId, user: uid },
-        {$set: {name: name}},
+        { $set: { name: name } },
         { 'new': true }
     );
 });
