@@ -49,9 +49,14 @@ describe('Notepads Routes', function () {
             return Promise.map(notes, function (note) {
                 return Notepad.createAsync(note).then(function (doc) {
                     testNotepads.push(doc);
-                    return Category.increaseNotepadsCountById({ _id: doc.category });
-                }).then(function (cat) {
-                    testCat = cat;
+                    return Promise.join(
+                        Category.increaseNotepadsCountById({_id: doc.category}),
+                        User.addNotepad(testUser._id, testNotepads[testNotepads.length - 1]._id),
+                        function (cat, user) {
+                            testCat = cat;
+                            testUser = user;
+                        }
+                    );
                 });
             });
         });
@@ -277,7 +282,7 @@ describe('Notepads Routes', function () {
                     assert.strictEqual(cat.notepadsCount, testCat.notepadsCount + 1);
                     testCat = cat;
 
-                    return User.findOneAsync(testUser._id);
+                    return User.findOneAsync({ _id: testUser._id, notepads: obj._id });
                 }).then(function (user) {
                     assert.strictEqual(user.notepads.length, testUser.notepads.length + 1);
                     testUser = user;
@@ -370,7 +375,11 @@ describe('Notepads Routes', function () {
                 });
             }).then(function (doc) {
                 notepad = doc;
-                req.params = { id: notepad._id };
+                req.params = {id: notepad._id};
+                //add the new notepad to the user
+                return User.addNotepad(testUser._id, notepad._id);
+            }).then(function (user) {
+                testUser = user;
                 //increase the notepadsCount for the category
                 return Category.increaseNotepadsCountById({_id: cat._id});
             }).then(function (doc) {
@@ -410,6 +419,51 @@ describe('Notepads Routes', function () {
             });
         });
 
+    });
+
+    describe('deleteNotepadsIdHandler', function () {
+        it('should return NO_CONTENT if the Notepad is not found by the given params', done => {
+            req.params = req.user = {};
+            res.statusExpected = HttpStatus.NO_CONTENT;
+            res.jsonChecker = function (obj) {
+                assert.deepEqual(obj, {});
+                done();
+            };
+            notepadsRouter.deleteNotepadsIdHandler(req, res);
+        });
+
+        it('should delete the notepad, update the entries in User and Category and return the deleted notepad object', done => {
+            console.log('testUser.notepads.length', testUser.notepads.length);
+            var note = testNotepads[testNotepads.length - 1];
+            req.params = { id: note._id };
+            req.user = { id: testUser._id };
+            res.statusExpected = HttpStatus.OK;
+
+            User.findOneAsync({ _id: testUser._id }).then(function (user) {
+                console.log('user before test', user);
+            }).then(function () {
+                res.jsonChecker = function (obj) {
+                    assert.ok(obj);
+                    assert.notDeepEqual(obj, {});
+                    assert.ok(obj._id.equals(note._id));
+                    assert.strictEqual(obj.title, note.title);
+
+                    Category.findOneAsync({ _id: note.category })
+                        .then(cat => {
+                            assert.strictEqual(cat.notepadsCount, testCat.notepadsCount - 1);
+                            testCat = cat;
+                            testNotepads.pop();
+                            return User.findOneAsync({ _id: note.user });
+                        })
+                        .then(user => {
+                            console.log('updated user.notepads.length', user.notepads.length);
+                            assert.strictEqual(user.notepads.length, testUser.notepads.length - 1);
+                            testUser = user;
+                        }).then(done);
+                };
+                notepadsRouter.deleteNotepadsIdHandler(req, res);
+            });
+        });
     });
 
 });
