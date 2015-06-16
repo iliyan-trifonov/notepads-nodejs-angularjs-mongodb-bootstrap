@@ -24,72 +24,72 @@ userSchema.pre('validate', function (next) {
 });
 
 //returns only _id
-userSchema.static('getByAccessToken', accessToken => {
-    return User.findOneAsync(
+userSchema.static('getByAccessToken', accessToken =>
+    User.findOneAsync(
         { accessToken: accessToken }
-    );
-});
+    )
+);
 
-userSchema.static('fb', function (fbId) {
-    return this.findOneAsync(
+userSchema.static('fb', fbId =>
+    User.findOneAsync(
         { facebookId: fbId },
         'facebookId accessToken name photo'
-    );
-});
+    )
+);
 
-userSchema.static('getCategories', function (uid) {
-    return this.findOneAsync(
+userSchema.static('getCategories', uid =>
+    User.findOneAsync(
         { _id: uid },
         'categories'
-    );
-});
+    )
+);
 
-userSchema.static('getNotepads', function (uid) {
-    return this.findOneAsync(
+userSchema.static('getNotepads', uid =>
+    User.findOneAsync(
         { _id: uid },
         'notepads'
-    );
-});
+    )
+);
 
-userSchema.static('addCategory', function (uid, catId) {
-    return this.findOneAndUpdateAsync(
+userSchema.static('addCategory', (uid, catId) =>
+    User.findOneAndUpdateAsync(
         { _id: uid },
         { $addToSet: { categories: catId } },
         { 'new': true }
-    );
-});
+    )
+);
 
-userSchema.static('addNotepad', function (uid, notepadId) {
-    return this.findOneAndUpdateAsync(
+userSchema.static('addNotepad', (uid, notepadId) =>
+    User.findOneAndUpdateAsync(
         { _id: uid },
         { $addToSet: { notepads: notepadId } },
         { 'new': true }
-    );
-});
+    )
+);
 
-userSchema.static('removeCategory', function (userId, categoryId) {
-    return this.findOneAndUpdateAsync(
+userSchema.static('removeCategory', (userId, categoryId) =>
+    User.findOneAndUpdateAsync(
         { _id: userId },
         { $pull: { categories: categoryId } },
         { 'new': true }
-    );
-});
+    )
+);
 
-userSchema.static('removeNotepad', function (userId, notepadId) {
-    return this.findOneAndUpdateAsync(
+userSchema.static('removeNotepad', (userId, notepadId) =>
+    User.findOneAndUpdateAsync(
         { _id: userId },
         { $pull: { notepads: notepadId } },
         { 'new': true }
-    );
-});
+    )
+);
 
-userSchema.static('removeNotepads', function (userId, notepadsIds) {
-    return this.findOneAndUpdateAsync(
+userSchema.static('removeNotepads', (userId, notepadsIds) =>
+    User.findOneAndUpdateAsync(
         { _id: userId },
         { $pull: { notepads: { $in: notepadsIds } } },
         { 'new': true }
-    );
-});
+    )
+);
 
 var User = mongoose.model('User', userSchema);
 
