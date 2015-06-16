@@ -225,15 +225,11 @@ var deleteNotepadsIdHandler = function (req, res) {
             throw new Error('Could not delete the notepad!');
         }
         notepad = note;
-        return User.findOneAsync({ _id: req.user.id, notepads: req.params.id });
-    }).then(function (user) {
-        console.log('before upd user.notepads.length', user.notepads.length);
         return User.removeNotepad(req.user.id, req.params.id);
     }).then(function (user) {
         if (!user) {
             throw new Error('Could not remove the notepad id from user!');
         }
-        console.log('upd user.notepads.length', user.notepads.length);
         return Category.decreaseNotepadsCountById(notepad.category);
     }).then(function (category) {
         if (!category) {
