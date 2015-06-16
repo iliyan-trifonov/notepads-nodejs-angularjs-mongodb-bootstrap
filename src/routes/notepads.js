@@ -213,27 +213,31 @@ var putNotepadsIdHandler = function (req, res) {
 };
 
 var deleteNotepadsIdHandler = function (req, res) {
-    //TODO: check for valid id: exists/is ObjectID/etc.
     var notepad;
-    Notepad.getByIdForUser(req.params.id, req.user.id).then(function (notepad) {
+    var p = Notepad.getByIdForUser(req.params.id, req.user.id).then(function (notepad) {
         if (!notepad) {
-            return res.status(HttpStatus.NO_CONTENT).json({});
+            res.status(HttpStatus.NO_CONTENT).json({});
+            return p.cancel();
         }
         return Notepad.findByIdAndRemove(req.params.id);
     }).then(function (note) {
-        //TODO: check if err / notepad === null - missing
+        if (!note) {
+            throw new Error('Could not delete the notepad!');
+        }
         notepad = note;
-        return User.findOneAndUpdateAsync({ notepads: req.params.id }, {
-            $pull: { notepads: req.params.id }
-        });
+        return User.findOneAsync({ _id: req.user.id, notepads: req.params.id });
+    }).then(function (user) {
+        console.log('before upd user.notepads.length', user.notepads.length);
+        return User.removeNotepad(req.user.id, req.params.id);
     }).then(function (user) {
         if (!user) {
-            return res.status(HttpStatus.NO_CONTENT).json({});
+            throw new Error('Could not remove the notepad id from user!');
         }
+        console.log('upd user.notepads.length', user.notepads.length);
         return Category.decreaseNotepadsCountById(notepad.category);
     }).then(function (category) {
         if (!category) {
-            return res.status(HttpStatus.NO_CONTENT).json({});
+            throw new Error('Could not decrease notepads count!');
         }
         //success
         res.status(HttpStatus.OK).json(notepad);
