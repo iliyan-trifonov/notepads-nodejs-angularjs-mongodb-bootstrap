@@ -107,7 +107,7 @@ var getNotepadsHandler = function (req, res) {
         })
         .catch(function (err) {
             console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json([]);
         });
     /*} else {
      //get user's notepads
@@ -148,7 +148,7 @@ var postNotepadsHandler = function (req, res) {
         })
         .then(function (note) {
             if (!note) {
-                throw new Error('Invalid notepad returned by Notepad.create!');
+                throw new Error('Could not create notepad!');
             }
             notepad = note;
             return Category.increaseNotepadsCountById(notepad.category);
@@ -233,7 +233,7 @@ var deleteNotepadsIdHandler = function (req, res) {
         return Category.decreaseNotepadsCountById(notepad.category);
     }).then(function (category) {
         if (!category) {
-            throw new Error('Could not decrease notepads count!');
+            throw new Error('Could not decrease notepads count in category!');
         }
         //success
         res.status(HttpStatus.OK).json(notepad);
