@@ -7,7 +7,7 @@ var uri;
 var options = {
     db: { native_parser: true },
     server: { poolSize: 5 },
-    keepAlive: true
+    keepAlive: true //this option may have changed its place in this object
 };
 
 module.exports = exports = function () {
