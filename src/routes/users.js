@@ -20,7 +20,7 @@ if (!graph.getAsync) {
 //base: /users
 
 var postAuthHandler = function (req, res) {
-    var fbUserId = req.body.fbId,
+    let fbUserId = req.body.fbId,
         fbAccessToken = req.body.fbAccessToken,
         accessToken = req.body.accessToken;
 
@@ -32,20 +32,23 @@ var postAuthHandler = function (req, res) {
 
     //find a user by his accessToken
     if (accessToken) {
-        var blockUser = function blockUser () {
-            var err = 'Invalid Access Token!';
+        let blockUser = function blockUser (statusOverride) {
+            let err = 'Invalid Access Token!';
             console.error(err);
-            return res.status(HttpStatus.FORBIDDEN).json({});
+            return res.status(statusOverride || HttpStatus.FORBIDDEN).json({});
         };
+
         return User.getByAccessToken(accessToken)
             .then(function (user) {
                 if (!user) {
                     return blockUser();
                 }
-                return res.status(HttpStatus.OK).json(user);
-            }).catch(function (err) {
+
+                res.status(HttpStatus.OK).json(user);
+            })
+            .catch(function (err) {
                 console.error(err);
-                return blockUser();
+                blockUser(HttpStatus.INTERNAL_SERVER_ERROR);
             });
     } else {
         //find a user by his FB access token
@@ -92,7 +95,7 @@ var postAuthHandler = function (req, res) {
                 res.status(HttpStatus.OK).json({accessToken: user.accessToken});
             })
             .catch(function (err) {
-                console.error('API: /auth error', err);
+                console.error(err);
                 return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
             });
     }
