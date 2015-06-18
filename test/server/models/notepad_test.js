@@ -109,7 +109,6 @@ describe('Notepad Model', function () {
                 user._id,
                 data
             ).then(function (notepad) {
-                console.log(notepad);
                 assert.ok(notepad);
                 assert.notDeepEqual(notepad, {});
                 assert.strictEqual(notepad.title, data.title);
