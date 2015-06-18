@@ -3,36 +3,59 @@
 let express = require('express'),
     app = express(),
     router = express.Router(),
-    FacebookAuth = require('../FacebookAuth'),
     User = require('../models/user'),
     Category = require('../models/category'),
     Notepad = require('../models/notepad'),
     HttpStatus = require('http-status'),
     _ = require('lodash');
 
+//TODO: repeats with the same code in the notepads router!!
+//TODO: put this in FacebookAuth
+//TODO: or make it connected somehow
+//TODO: with the Facebook authentication process
+function checkAuth(req, res, next) {
+    if (!req.isAuthenticated()) {
+        console.error('API notepads: checkAuth(), not authenticated!');
+        res.status(HttpStatus.UNAUTHORIZED).json({});
+    } else {
+        next();
+    }
+}
+
 //protect this resource to the logged in user
-//TODO: return API error, not redirecting to the home page!!!
-//TODO: like: if GET token/or req.user, skip this:
-router.use(FacebookAuth.verifyAuth);
+//TODO: checkAuth() should be shared between all handlers/controllers
+//TODO: put it in the FacebookAuth file
+//TODO: or create a separate auth module
+router.use(checkAuth);
+
 
 //handlers start
+
+/**
+ *
+ * @param req
+ * @param res
+ */
 let getHandler = function (req, res) {
-    //get the categories by user id
-    //TODO: check if req.user._id/req.user.id exists
-    Category.getByUserId(req.user._id)
-        .then(function (categories) {
-            if (!categories) {
-                throw new Error('Categories not found!');
-            }
+    Category.getByUserId(req.user.id)
+        .then(categories => {
             res.status(HttpStatus.OK).json(categories);
-        }).catch(function (err) {
+        }).catch(err => {
             console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json([]);
         });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 let postHandler = function (req, res) {
-    //TODO: check if name param is given and is clean
+    if (!req.body.name) {
+        return res.status(HttpStatus.BAD_REQUEST).json({});
+    }
+
     let savedCat;
     Category.add(req.body.name, req.user.id)
         .then(function (cat) {
@@ -47,6 +70,10 @@ let postHandler = function (req, res) {
 };
 
 let getIdHandler = function (req, res) {
+    if (!req.params.id) {
+        return res.status(HttpStatus.BAD_REQUEST).json({});
+    }
+
     Category.getByIdForUser(req.params.id, req.user.id)
         .then(function (category) {
             if (!category) {
@@ -63,7 +90,10 @@ let getIdHandler = function (req, res) {
 };
 
 let putIdHandler = function (req, res) {
-    //TODO: check id, name allowed chars, etc.
+    if (!req.params.id || !req.body.name) {
+        return res.status(HttpStatus.BAD_REQUEST).json({});
+    }
+
     Category.update(req.params.id, req.user.id, req.body.name)
         .then(function (category) {
             if (!category) {
@@ -92,15 +122,15 @@ let deleteIdHandler = function (req, res) {
         .then(function (cat) {
             if (!cat) {
                 console.error('Category not found!');
-                return res.status(HttpStatus.NO_CONTENT).json({});
+                res.status(HttpStatus.NO_CONTENT).json({});
+                return p.cancel();
             }
 
             return User.removeCategory(req.user.id, category._id);
         })
         .then(function (user) {
             if (!user) {
-                console.error('User with that category not found!');
-                return res.status(HttpStatus.NO_CONTENT).json({});
+                throw new Error('User with that category not found!');
             }
 
             //delete all orphaned notepads(if any) belonging to the deleted category
@@ -125,7 +155,7 @@ let deleteIdHandler = function (req, res) {
         })
         .catch(function (err) {
             console.error(err);
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
         });
 };
 //handlers end
