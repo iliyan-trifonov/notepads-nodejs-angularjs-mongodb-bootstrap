@@ -1,11 +1,11 @@
 'use strict';
 
-var User = require('./models/user'),
+let User = require('./models/user'),
     Category = require('./models/category'),
     Notepad = require('./models/notepad'),
     Promise = require('bluebird');
 
-module.exports.prepopulate = exports.prepopulate = function (uid) {
+module.exports.prepopulate = exports.prepopulate = uid => {
 
     if (!uid) {
         return Promise.reject(new Error('Invalid user id!'));
@@ -13,12 +13,12 @@ module.exports.prepopulate = exports.prepopulate = function (uid) {
 
     //TODO: delete the notepad/category on any error / transaction?
 
-    var user, category, notepad;
+    let user, category, notepad;
 
     return User.findOneAsync({ _id: uid })
-        .then(function (foundUser) {
+        .then(foundUser => {
             if (!foundUser) {
-                var msg = 'User not found!';
+                let msg = 'User not found!';
                 console.error(msg);
                 return Promise.reject(new Error(msg));
             }
@@ -28,12 +28,12 @@ module.exports.prepopulate = exports.prepopulate = function (uid) {
                 'user': uid
             });
         })
-        .then(function (cat) {
+        .then(cat => {
             category = cat;
             return User.addCategory(user._id, cat._id);
         })
-        .then(function (updatedUser) {
-            return Notepad.createAsync({
+        .then(updatedUser =>
+            Notepad.createAsync({
                 title: 'Read me',
                 text: 'Use the menu on the top left to create your own categories ' +
                 'and then add notepads to them.' + "\n\n" +
@@ -49,25 +49,25 @@ module.exports.prepopulate = exports.prepopulate = function (uid) {
                 'Be careful when deleting a category as this will delete all notepads in it.' + "\n\n",
                 category: category._id,
                 user: updatedUser._id
-            });
-        })
-        .then(function (notepadCreated) {
+            })
+        )
+        .then(notepadCreated => {
             notepad = notepadCreated;
             return User.addNotepad(user._id, notepadCreated._id);
         })
-        .then(function (updatedUser) {
+        .then(updatedUser => {
             user = updatedUser;
             return Category.increaseNotepadsCountById(category._id);
         })
-        .then(function (cat) {
-            return {
+        .then(cat =>
+            ({
                 user: user,
                 category: cat,
                 notepad: notepad
-            };
-        })
+            })
+        )
         //catch may be skipped here and errors caught later on code calling prepopulate()
-        .catch(function (err) {
+        .catch(err => {
             console.error(err);
             //reject again for other catch()-es on the chain
             return Promise.reject(err);

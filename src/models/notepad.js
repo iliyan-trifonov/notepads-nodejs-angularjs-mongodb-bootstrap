@@ -10,16 +10,16 @@ var notepadSchema = new mongoose.Schema({
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
-notepadSchema.static('getByIdForUser', function (notepadId, uid) {
-    return this.findOneAsync({ _id: notepadId, user: uid }, 'title text category');
-});
+notepadSchema.static('getByIdForUser', (notepadId, uid) =>
+    Notepad.findOneAsync({ _id: notepadId, user: uid }, 'title text category')
+);
 
-notepadSchema.static('getByUserId', function (uid) {
-    return this.findAsync({ user: uid }, 'title text category');
-});
+notepadSchema.static('getByUserId', uid =>
+    Notepad.findAsync({ user: uid }, 'title text category')
+);
 
-notepadSchema.static('updateForUserId', function (notepadId, uid, data) {
-    return this.findOneAndUpdateAsync(
+notepadSchema.static('updateForUserId', (notepadId, uid, data) =>
+    Notepad.findOneAndUpdateAsync(
         { _id: notepadId, user: uid },
         { $set: {
             title: data.title,
@@ -27,8 +27,8 @@ notepadSchema.static('updateForUserId', function (notepadId, uid, data) {
             category: data.category
         } },
         { 'new': true }
-    );
-});
+    )
+);
 
 var Notepad = mongoose.model('Notepad', notepadSchema);
 

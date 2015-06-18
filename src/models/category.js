@@ -7,48 +7,48 @@ var Promise = require('bluebird'),
 //TODO: and list them for the Dashboard with one call
 var categorySchema = new mongoose.Schema({
     name: { type: String, required: true },
-    notepadsCount: { type: Number, default: 0 },
+    notepadsCount: { type: Number, 'default': 0 },
     user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
 });
 
-categorySchema.static('getByUserId', function (uid) {
-    return this.findAsync({ user: uid }, 'name notepadsCount');
-});
+categorySchema.static('getByUserId', uid =>
+    Category.findAsync({ user: uid }, 'name notepadsCount')
+);
 
-categorySchema.static('getByIdForUser', function (catId, uid) {
-    return this.findOneAsync({ _id: catId, user: uid }, 'name');
-});
+categorySchema.static('getByIdForUser', (catId, uid) =>
+    Category.findOneAsync({ _id: catId, user: uid }, 'name')
+);
 
-categorySchema.static('add', function (catName, uid) {
-    return this.createAsync({
+categorySchema.static('add', (catName, uid) =>
+    Category.createAsync({
         name: catName,
         user: uid
-    });
-});
+    })
+);
 
-categorySchema.static('update', function (catId, uid, name) {
-    return this.findOneAndUpdateAsync(
+categorySchema.static('update', (catId, uid, name) =>
+    Category.findOneAndUpdateAsync(
         { _id: catId, user: uid },
         { $set: { name: name } },
         { 'new': true }
-    );
-});
+    )
+);
 
-categorySchema.static('increaseNotepadsCountById', function (catId) {
-    return this.findOneAndUpdateAsync(
+categorySchema.static('increaseNotepadsCountById', catId =>
+    Category.findOneAndUpdateAsync(
         { _id: catId },
         { $inc: { notepadsCount: 1 } },
         { 'new': true }
-    );
-});
+    )
+);
 
-categorySchema.static('decreaseNotepadsCountById', function (catId) {
-    return this.findOneAndUpdateAsync(
+categorySchema.static('decreaseNotepadsCountById', catId =>
+    Category.findOneAndUpdateAsync(
         { _id: catId },
         { $inc: { notepadsCount: -1 } },
         { 'new': true }
-    );
-});
+    )
+);
 
 var Category = mongoose.model('Category', categorySchema);
 

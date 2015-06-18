@@ -1,12 +1,12 @@
 'use strict';
 
-var config,
+let config,
     FacebookStrategy = require('passport-facebook').Strategy,
     User = require('./models/user'),
     notepadsUtils = require('./notepadsUtils');
 
-var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done) {
-    var p = User.fb(fbProfile.id).then(function (existingUser) {
+let authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done) {
+    let p = User.fb(fbProfile.id).then(function (existingUser) {
         if (existingUser) {
             done(null, existingUser);
             //break the promises chain here:
@@ -20,7 +20,7 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
         }
     }).then(function (newUser) {
         if (!newUser) {
-            var err = new Error('authVerification(): user creation unsuccessful!');
+            let err = new Error('authVerification(): user creation unsuccessful!');
             console.error(err, { newUser: newUser });
             return done(err, newUser);
         }
@@ -35,11 +35,11 @@ var authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
     })/*.cancelable()*/;
 };
 
-var authSerialize = function (user, done) {
+let authSerialize = function (user, done) {
     done(null, user.facebookId);
 };
 
-var authDeserialize = function (fbId, done) {
+let authDeserialize = function (fbId, done) {
     User.fb(fbId).then(function (user) {
         done(null, user);
     }).catch(function (err) {

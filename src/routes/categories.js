@@ -1,6 +1,6 @@
 'use strict';
 
-var express = require('express'),
+let express = require('express'),
     app = express(),
     router = express.Router(),
     FacebookAuth = require('../FacebookAuth'),
@@ -16,14 +16,13 @@ var express = require('express'),
 router.use(FacebookAuth.verifyAuth);
 
 //handlers start
-var getHandler = function (req, res) {
+let getHandler = function (req, res) {
     //get the categories by user id
     //TODO: check if req.user._id/req.user.id exists
     Category.getByUserId(req.user._id)
         .then(function (categories) {
             if (!categories) {
-                var msg = 'Categories not found!';
-                throw new Error(msg);
+                throw new Error('Categories not found!');
             }
             res.status(HttpStatus.OK).json(categories);
         }).catch(function (err) {
@@ -32,9 +31,9 @@ var getHandler = function (req, res) {
         });
 };
 
-var postHandler = function (req, res) {
+let postHandler = function (req, res) {
     //TODO: check if name param is given and is clean
-    var savedCat;
+    let savedCat;
     Category.add(req.body.name, req.user.id)
         .then(function (cat) {
             savedCat = cat;
@@ -47,11 +46,11 @@ var postHandler = function (req, res) {
         });
 };
 
-var getIdHandler = function (req, res) {
+let getIdHandler = function (req, res) {
     Category.getByIdForUser(req.params.id, req.user.id)
         .then(function (category) {
             if (!category) {
-                var msg = 'getIdHandler(): Category not found!';
+                let msg = 'getIdHandler(): Category not found!';
                 console.error(msg);
                 //throw new Error(msg);
                 return res.status(HttpStatus.NO_CONTENT).json({});
@@ -63,7 +62,7 @@ var getIdHandler = function (req, res) {
         });
 };
 
-var putIdHandler = function (req, res) {
+let putIdHandler = function (req, res) {
     //TODO: check id, name allowed chars, etc.
     Category.update(req.params.id, req.user.id, req.body.name)
         .then(function (category) {
@@ -77,10 +76,10 @@ var putIdHandler = function (req, res) {
         });
 };
 
-var deleteIdHandler = function (req, res) {
-    var ns, category;
+let deleteIdHandler = function (req, res) {
+    let ns, category;
     //check if the current user has that Category
-    var p = Category.getByIdForUser(req.params.id, req.user.id)
+    let p = Category.getByIdForUser(req.params.id, req.user.id)
         .then(function (cat) {
             if (!cat) {
                 console.error('Category not found for user!');
