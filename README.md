@@ -103,3 +103,5 @@ Thanks to MongoDB/Mongoose the DB structure will be automatically created on fir
 You guessed it! Testing.
 
 And some small things that I didn't have time to finish - code improvements, db optimisation.
+
+[![Analytics](https://ga-beacon.appspot.com/UA-234720-45/notepads-nodejs-angularjs-mongodb-bootstrap/readme)](https://github.com/igrigorik/ga-beacon)
