@@ -2,7 +2,7 @@
 
 require("babel/register");
 
-var config,
+let config,
     express = require('express'),
     routes = require('./routes'),
     session = require('express-session'),
@@ -12,12 +12,13 @@ var config,
     FacebookAuth = require('./FacebookAuth'),
     usersRouter = require('./routes/users'),
     notepadsRouter = require('./routes/notepads'),
-    categoriesRouter = require('./routes/categories');
+    categoriesRouter = require('./routes/categories'),
+    HttpStatus = require('http-status');
 
-var app = express();
+let app = express();
 
 //export NODE_ENV=development npm start
-var envs = ['development', 'production', 'test'];
+let envs = ['development', 'production', 'test'];
 if (envs.indexOf(app.get('env')) !== -1) {
     console.info(app.get('env') + ' environment detected');
 } else {
@@ -87,20 +88,21 @@ if (config) {
     });
 }
 //authorize if valid access token is given
-app.use(function (req, res, next) {
-    var blockUser = function blockUser (err) {
+let parseAccessToken = (req, res, next) => {
+    let blockUser = function blockUser (err) {
         console.error(err);
-        return res.status(403).send('Forbidden');
+        return res.status(HttpStatus.FORBIDDEN).send('Forbidden');
     };
-    var accessToken = req.query.token;
+    let accessToken = req.query.token;
     if (accessToken) {
         console.info('using accessToken for auth', accessToken);
         //this require is used often, may be put on top:
-        var User = require('./models/user');
-        User.getByAccessToken(accessToken).then(function (user) {
+        let User = require('./models/user');
+        User.getByAccessToken(accessToken).then(user => {
             if (user) {
                 console.info('setting req.user from token', user);
                 req.user = user;
+                req.user.id = user._id;
                 next();
             } else {
                 return blockUser('Invalid access token!');
@@ -111,7 +113,8 @@ app.use(function (req, res, next) {
     } else {
         return next();
     }
-});
+};
+app.use(parseAccessToken);
 
 //API routes
 if (config) {
@@ -124,13 +127,13 @@ if (config) {
 //dev env
 if ('development' === app.get('env')) {
     //app.use(express.logger('dev')); TODO: check exp4 way
-    var errorHandler = require('errorhandler');
+    let errorHandler = require('errorhandler');
     app.use(errorHandler());
 }
 
 //server
 if (module === require.main) { //started with node app.js
-    var connection = require('./db');
+    let connection = require('./db');
     connection.setAppConfig(config);
     connection().on('connected', function (err) {
         if (err) {
@@ -144,4 +147,5 @@ if (module === require.main) { //started with node app.js
     });
 } else { //for the tests
     module.exports = exports = app;
+    module.exports.parseAccessToken = exports.parseAccessToken = parseAccessToken;
 }
