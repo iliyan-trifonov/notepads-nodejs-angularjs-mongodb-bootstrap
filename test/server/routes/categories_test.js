@@ -7,7 +7,8 @@ var categoriesRouter = require('../../../src/routes/categories'),
     Category = require('../../../src/models/category'),
     Notepad = require('../../../src/models/notepad'),
     HttpStatus = require('http-status'),
-    mongoose = require('mongoose');
+    mongoose = require('mongoose'),
+    proxyquire = require('proxyquire');
 
 describe('Categories Routes', function () {
 
@@ -48,9 +49,8 @@ describe('Categories Routes', function () {
         });
     });
 
-    beforeEach(function () {
+    beforeEach(() => {
         req = res = {};
-        //TODO: possible to put in before() instead:
         req.user = user;
     });
 
@@ -67,6 +67,38 @@ describe('Categories Routes', function () {
                 assert.ok(cats[0]._id.equals(category._id));
                 assert.strictEqual(cats[0].name, category.name);
                 assert.strictEqual(cats[0].notepadsCount, category.notepadsCount);
+                done();
+            };
+
+            categoriesRouter.getHandler(req, res);
+        });
+
+        it('should return empty JSON array when there are not categories found', function(done) {
+            req.user = { id: mongoose.Types.ObjectId() };
+
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.OK);
+                return this;
+            };
+
+            res.json = cats => {
+                assert.deepEqual(cats, []);
+                done();
+            };
+
+            categoriesRouter.getHandler(req, res);
+        });
+
+        it('should return INTERNAL SERVER ERROR on error', done => {
+            req.user = { id: +new Date() };
+
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.INTERNAL_SERVER_ERROR);
+                return this;
+            };
+
+            res.json = cats => {
+                assert.deepEqual(cats, []);
                 done();
             };
 
@@ -93,6 +125,24 @@ describe('Categories Routes', function () {
                         assert.notStrictEqual(user, null);
                     })
                     .then(done);
+            };
+
+            categoriesRouter.postHandler(req, res);
+        });
+
+        it('should return INTERNAL SERVER ERROR on error', done => {
+            req.user = { id: +new Date() };
+
+            req.body = { name: 'jhvjhvjh' };
+
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.INTERNAL_SERVER_ERROR);
+                return this;
+            };
+
+            res.json = cat => {
+                assert.deepEqual(cat, {});
+                done();
             };
 
             categoriesRouter.postHandler(req, res);
@@ -202,10 +252,30 @@ describe('Categories Routes', function () {
             };
             categoriesRouter.putIdHandler(req, res);
         });
+
+        it('should return INTERNAL SERVER ERROR on error', done => {
+            req = {
+                params: { id: mongoose.Types.ObjectId() },
+                user: { id: +new Date() },
+                body: { name: 'asdasdasd' }
+            };
+
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.INTERNAL_SERVER_ERROR);
+                return this;
+            };
+
+            res.json = cat => {
+                assert.deepEqual(cat, {});
+                done();
+            };
+
+            categoriesRouter.putIdHandler(req, res);
+        });
     });
 
     describe('DELETE /categories/:id', function () {
-        it('should not delete and return NO CONTENT given a non-existent category id', function (done) {
+        it('should not delete and return NO CONTENT given a non-existent category id', done => {
             req = {
                 params: { id: mongoose.Types.ObjectId() },
                 user: { id: user._id }
@@ -223,7 +293,65 @@ describe('Categories Routes', function () {
             categoriesRouter.deleteIdHandler(req, res);
         });
 
-        it('should delete a category, update categories in user and delete all notepads belonging to that category', function (done) {
+        it('should return NO_CONTENT if there was a problem deleting the category', done => {
+            req.params = { id: category._id };
+            req.user = { id: user._id };
+            let CategoryMock = {
+                findByIdAndRemoveAsync: function (catId) {
+                    assert.ok(catId);
+                    return null;
+                }
+            };
+            let categoriesRouterWithMocks = proxyquire('../../../src/routes/categories', {
+                '../models/category': CategoryMock
+            });
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.NO_CONTENT);
+                return this;
+            };
+            res.json = function (obj) {
+                assert.deepEqual(obj, {});
+                done();
+            };
+            categoriesRouterWithMocks.deleteIdHandler(req, res);
+        });
+
+        it('should return INTERNAL SERVER ERROR if there was a problem deleting the category id from User', done => {
+            req.params = { id: category._id };
+            req.user = { id: user._id };
+
+            let CategoryMock = {
+                findByIdAndRemoveAsync: function (catId) {
+                    assert.ok(catId);
+                    return category;
+                }
+            };
+
+            let UserMock = {
+                removeCategory: function (uid, catId) {
+                    assert.ok(uid.equals(user._id));
+                    assert.ok(catId.equals(category._id));
+                    return null;
+                }
+            };
+
+            let categoriesRouterWithMocks = proxyquire('../../../src/routes/categories', {
+                '../models/category': CategoryMock,
+                '../models/user': UserMock
+            });
+
+            res.status = function (status) {
+                assert.strictEqual(status, HttpStatus.INTERNAL_SERVER_ERROR);
+                return this;
+            };
+            res.json = function (obj) {
+                assert.deepEqual(obj, {});
+                done();
+            };
+            categoriesRouterWithMocks.deleteIdHandler(req, res);
+        });
+
+        it('should delete a category, update categories in user and delete all notepads belonging to that category', done => {
             //create a new category
             Category.createAsync({ name: 'Test cat to delete', user: user._id }).then(function (category) {
                 assert.notStrictEqual(category, null);

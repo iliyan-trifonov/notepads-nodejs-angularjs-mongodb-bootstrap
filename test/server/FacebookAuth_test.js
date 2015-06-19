@@ -70,6 +70,19 @@ describe('FacebookAuth', function () {
                 done();
             });
         });
+
+        it('should return done(err) on caught error', done => {
+            var fbProfile = {
+                id: String(+new Date().getTime()),
+                displayName: 'Iliyan Trifonov ' +new Date().getTime(),
+                photos: [{ value: null }]
+            };
+            FacebookAuth.authVerification(null, null, fbProfile, (err, result) => {
+                assert.ok(err);
+                assert.ok(!result);
+                done();
+            });
+        });
     });
 
     describe('authSerialize', function () {
@@ -95,6 +108,14 @@ describe('FacebookAuth', function () {
                     assert.deepEqual(doc.facebookId, user.facebookId);
                     done();
                 });
+            });
+        });
+
+        it('should return done(err) on caught error', done => {
+            FacebookAuth.authDeserialize(null, (err, doc) => {
+                assert.ok(err);
+                assert.ok(!doc);
+                done();
             });
         });
     });

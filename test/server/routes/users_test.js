@@ -69,10 +69,6 @@ describe('Users Routes', function () {
             });
     });
 
-    describe('postAuthHandler', function () {
-
-    });
-
     describe('setAppConfig', function () {
         it('should set the given config', function () {
             var config = { test: '', test2: 'asd asd asd' };
@@ -82,7 +78,6 @@ describe('Users Routes', function () {
     });
 
     describe('postAuthHandler', function () {
-
         it('should return BAD REQUEST with not enough params given', function (done) {
             var req = {
                 body: {
@@ -239,6 +234,70 @@ describe('Users Routes', function () {
             usersRouter.postAuthHandler(req, res);
         });
 
+        it('should return INTERNAL_SERVER_ERROR when there was an error getting the user from DB', done => {
+            let req = {
+                body: {
+                    accessToken: 'asdasdasd'
+                }
+            };
+
+            let UserMock = {
+                getByAccessToken: function (token) {
+                    assert.strictEqual(token, req.body.accessToken);
+                    return Promise.reject(new Error('Let\'s error!'));
+                }
+            };
+
+            let usersRouterWithMocks = proxyquire('../../../src/routes/users', {
+                '../models/user': UserMock
+            });
+
+            let res = {
+                status: function (status) {
+                    assert.strictEqual(status, HttpStatus.INTERNAL_SERVER_ERROR);
+                    return this;
+                },
+                json: function (obj) {
+                    assert.deepEqual(obj, {});
+                    done();
+                }
+            };
+
+            usersRouterWithMocks.postAuthHandler(req, res);
+        });
+
+        it('should return INTERNAL_SERVER_ERROR on graph or prepopulate error', done => {
+            var req = {
+                body: {
+                    fbId: testUser.facebookId,
+                    fbAccessToken: +new Date(),
+                    accessToken: ''
+                }
+            };
+
+            let oldAsync = fbgraphMock.getAsync;
+
+            //override getAsync temporarily
+            fbgraphMock.getAsync = function (reqStr) {
+                assert.ok(reqStr);
+                return Promise.reject(new Error('error from graph.getAsync()'));
+            };
+
+            var res = {
+                status: function status (stat) {
+                    assert.strictEqual(stat, HttpStatus.INTERNAL_SERVER_ERROR);
+                    return this;
+                },
+                json: function json (data) {
+                    assert.deepEqual(data, {});
+                    //restore the original function
+                    fbgraphMock.getAsync = oldAsync;
+                    done();
+                }
+            };
+
+            usersRouter.postAuthHandler(req, res);
+        });
     });
 
 });

@@ -210,6 +210,17 @@ describe('Notepads Routes', function () {
 
             notepadsRouter.getNotepadsHandler(req, res);
         });
+
+        it('should return INTERNAL SERVER ERROR on error', done => {
+            req.user.id = +new Date();
+            res.statusExpected = HttpStatus.INTERNAL_SERVER_ERROR;
+            res.jsonChecker = obj => {
+                assert.deepEqual(obj, []);
+                done();
+            };
+
+            notepadsRouter.getNotepadsHandler(req, res);
+        });
     });
 
     describe('getNotepadByIdHandler', () => {
@@ -240,6 +251,18 @@ describe('Notepads Routes', function () {
             res.statusExpected = HttpStatus.OK;
             res.jsonChecker = obj => {
                 assert.ok(obj._id.equals(testNotepads[0]._id));
+                done();
+            };
+
+            notepadsRouter.getNotepadByIdHandler(req, res);
+        });
+
+        it('should return INTERNAL SERVER ERROR on error', done => {
+            req.params = { id: null };
+            req.user = { id: null };
+            res.statusExpected = HttpStatus.INTERNAL_SERVER_ERROR;
+            res.jsonChecker = obj => {
+                assert.deepEqual(obj, {});
                 done();
             };
 
