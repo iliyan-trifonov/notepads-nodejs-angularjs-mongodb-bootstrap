@@ -1,9 +1,10 @@
 'use strict';
 
-let User = require('./models/user'),
-    Category = require('./models/category'),
+let Category = require('./models/category'),
     Notepad = require('./models/notepad'),
     Promise = require('bluebird');
+
+import User from './models/user';
 
 module.exports.prepopulate = exports.prepopulate = uid => {
 

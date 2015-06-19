@@ -94,3 +94,4 @@ userSchema.static('removeNotepads', (userId, notepadsIds) =>
 var User = mongoose.model('User', userSchema);
 
 module.exports = exports = User;
+export default User;

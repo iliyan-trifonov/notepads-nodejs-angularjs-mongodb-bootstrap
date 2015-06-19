@@ -2,8 +2,9 @@
 
 let config,
     FacebookStrategy = require('passport-facebook').Strategy,
-    User = require('./models/user'),
     notepadsUtils = require('./notepadsUtils');
+
+import User from './models/user';
 
 let authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done) {
     let p = User.fb(fbProfile.id).then(function (existingUser) {
