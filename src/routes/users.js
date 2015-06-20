@@ -1,14 +1,16 @@
 'use strict';
 
-var express = require('express'),
+let express = require('express'),
     app = express(),
     router = express.Router(),
-    User = require('../models/user'),
     graph = require('fbgraph'),
     notepadsUtils = require('../notepadsUtils'),
     Promise = require('bluebird'),
     HttpStatus = require('http-status'),
+    co = require('co'),
     config;
+
+import User from '../models/user';
 
 Promise.promisify(graph.get);
 
@@ -19,99 +21,83 @@ if (!graph.getAsync) {
 
 //base: /users
 
-var postAuthHandler = function (req, res) {
-    let fbUserId = req.body.fbId,
-        fbAccessToken = req.body.fbAccessToken,
-        accessToken = req.body.accessToken;
+let postAuthHandler = (req, res) => {
+    co(function* () {
+        let fbUserId = req.body.fbId,
+            fbAccessToken = req.body.fbAccessToken,
+            accessToken = req.body.accessToken;
 
-    //check if all required params are given
-    if (!accessToken && (!fbUserId || !fbAccessToken)) {
-        console.error('API /auth: not enough params!', fbUserId, fbAccessToken, accessToken);
-        return res.status(HttpStatus.BAD_REQUEST).json({});
-    }
+        //check if all required params are given
+        if (!accessToken && (!fbUserId || !fbAccessToken)) {
+            console.error('API /auth: not enough params!', fbUserId, fbAccessToken, accessToken);
+            return res.status(HttpStatus.BAD_REQUEST).json({});
+        }
 
-    //find a user by his accessToken
-    if (accessToken) {
-        let blockUser = function blockUser (statusOverride) {
-            let err = 'Invalid Access Token!';
-            console.error(err);
-            return res.status(statusOverride || HttpStatus.FORBIDDEN).json({});
-        };
+        //find a user by his accessToken
+        if (accessToken) {
+            //TODO: blockUser repeats in other code too: put it in a central place
+            let blockUser = statusOverride => {
+                console.error('Invalid Access Token!');
+                return res.status(statusOverride || HttpStatus.FORBIDDEN).json({});
+            };
 
-        return User.getByAccessToken(accessToken)
-            .then(function (user) {
-                if (!user) {
-                    return blockUser();
-                }
+            let user = yield User.getByAccessToken(accessToken);
 
-                res.status(HttpStatus.OK).json(user);
-            })
-            .catch(function (err) {
-                console.error(err);
-                blockUser(HttpStatus.INTERNAL_SERVER_ERROR);
-            });
-    } else {
-        //find a user by his FB access token
-        graph.setAppSecret(config.facebook.app.secret);
-        graph.setAccessToken(fbAccessToken);
+            if (!user) {
+                return blockUser();
+            }
 
-        var graphUser;
-        var p = graph.getAsync('me?fields=id,name,picture')
-            .then(function (fbGraphUser) {
-                //when the given fb id and token mismatch:
-                if (!fbGraphUser || fbGraphUser.id !== fbUserId) {
-                    console.error("Invalid user from fbAccessToken!");
-                    res.status(HttpStatus.FORBIDDEN).json({});
-                    return p.cancel();
-                }
+            return res.status(HttpStatus.OK).json(user);
+        } else {
+            //find a user by his FB access token
+            graph.setAppSecret(config.facebook.app.secret);
+            graph.setAccessToken(fbAccessToken);
 
-                graphUser = fbGraphUser;
+            let graphUser = yield graph.getAsync('me?fields=id,name,picture');
 
-                return User.fb(fbUserId);
-            })
-            .then(function (user) {
-                if (user) {
-                    //user found by his FB access token
-                    res.status(HttpStatus.OK).json({accessToken: user.accessToken});
-                    //stop here
-                    //TODO: try return Promise.reject() instead:
-                    return p.cancel();
-                }
-                else {
-                    //create a new user
-                    return User.createAsync({
-                        facebookId: graphUser.id,
-                        name: graphUser.name,
-                        photo: graphUser.picture.data.url
-                    });
-                }
-            })
-            .then(function (user) {
+            console.log('graphUser', graphUser, 'graphUser.id', graphUser.id);
+
+            //when the given fb id and token mismatch:
+            if (!graphUser || graphUser.id !== fbUserId) {
+                console.error("Invalid user from fbAccessToken!");
+                return res.status(HttpStatus.FORBIDDEN).json({});
+            }
+
+            let user = yield User.fb(fbUserId);
+
+            if (user) {
+                //user found by his FB access token
+                return res.status(HttpStatus.OK).json({accessToken: user.accessToken});
+            } else {
+                //create a new user
+                user = yield User.createAsync({
+                    facebookId: graphUser.id,
+                    name: graphUser.name,
+                    photo: graphUser.picture.data.url
+                });
+
                 //pre-populate only for new users
-                return notepadsUtils.prepopulate(user._id);
-            })
-            .then(function (user) {
+                notepadsUtils.prepopulate(user._id);
+
                 //success, return the accessToken
-                res.status(HttpStatus.OK).json({accessToken: user.accessToken});
-            })
-            .catch(function (err) {
-                console.error(err);
-                return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
-            });
-    }
+                return res.status(HttpStatus.OK).json({accessToken: user.accessToken});
+            }
+        }
+    }).catch(err => {
+        console.error(err);
+        return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+    });
 };
 
 router.post('/auth', postAuthHandler);
 
 module.exports = exports = router;
 
-module.exports.setAppConfig = exports.setAppConfig = function (cnf) {
+module.exports.setAppConfig = exports.setAppConfig = cnf => {
     config = cnf;
 };
 
 if (app.get('env') === 'test') {
     module.exports.postAuthHandler = exports.postAuthHandler = postAuthHandler;
-    module.exports.getAppConfig = exports.getAppConfig = function () {
-        return config;
-    };
+    module.exports.getAppConfig = exports.getAppConfig = () => config;
 }
