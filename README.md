@@ -16,7 +16,7 @@ Go to the project's directory and run:
     npm install
     bower install
 
-Copy config/app.conf.json.dist to config/app.conf.json and edit it for your environment 
+Copy [config/app.conf.json.dist](config/app.conf.json.dist) to config/app.conf.json and edit it for your environment 
 (set session SECRET, FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, MONGODB_URI).
 
 After that run the app with:
@@ -34,23 +34,40 @@ starting it for example in production:
     
 ## Tech
 
-Node.js + Express.js = RESTful API that uses Facebook auth and a custom accessToken after that. The API uses pure JSON
-communication.
+First I must mention that (most of)the (back-end)code is written in [ES6](http://exploringjs.com/): 
+let/Promise/generators/fat arrow functions/modules/default function parameters/template literals.
+I use dynamic transpiling with [Babel](http://babeljs.io/) in the app and tests. Later I may refactor the 
+generators+promises code to async functions.
 
-The index page is loaded through Express.js and is an ejs template. After that Angular.js is loaded and handles 
-everything else converting the app to a SAP.
+And now what the app uses:
 
-Passport us used for Facebook auth through the site and fbgraph is used to handle the same for the API.
+[Node.js](https://nodejs.org/) + [Express.js](http://expressjs.com/) = RESTful API that uses Facebook auth and a 
+custom accessToken after that. The API uses pure JSON communication.
 
-The API is used fully from the Notepads Ionic application - see on Google Play.
+The index page is loaded through Express.js and is an ejs template. After that [Angular.js](https://angularjs.org/) 
+is loaded and handles everything else converting the app to a [SPA](https://en.wikipedia.org/wiki/Single-page_application).
 
-MongoDB is used as a database. Node.js + Mongoose.js to create the models and connect to it.
+[Passport](http://passportjs.org/) is used for Facebook auth through the site 
+and [fbgraph](https://github.com/criso/fbgraph) is used to handle the same for the API.
 
-Mocha, proxyquire and supertest are used for unit and integration testing. Protractor is used for end to end testing. 
+The API is used fully from the 
+[Notepads Ionic application](https://play.google.com/store/apps/details?id=com.iliyan_trifonov.notepads) on Google Play.
+
+[MongoDB](https://www.mongodb.org/) is used as a database. Node.js + 
+[Mongoose.js](http://mongoosejs.com/): to create the models and connect to it.
+
+[Mocha](http://mochajs.org/), [proxyquire](https://github.com/thlorenz/proxyquire) 
+and [supertest](https://github.com/visionmedia/supertest) are used for unit and integration testing. 
+[Protractor](https://github.com/angular/protractor) is used for end-to-end testing.
+[Istanbul](https://github.com/gotwarlost/istanbul) is used for coverage. 
+I count on its future [source maps parsing](https://github.com/gotwarlost/istanbul/commits/source-map) for ES6 coverage.
 
 ## What can you do with this app
 
-First I must say that this is one of my first apps after I've read the great book [Your first app: node.js](https://leanpub.com/yfa-nodejs "Your first app: node.js") by [Jim Schubert](https://leanpub.com/u/jimschubert "Jim Schubert") and so it is influenced by it and by the code in the [book's repo](https://github.com/jimschubert/yfa-nodejs-code "Code to accompany the book Your first app: node.js").
+First I must say that this is one of my first apps after I've read the great book 
+[Your first app: node.js](https://leanpub.com/yfa-nodejs "Your first app: node.js") by 
+[Jim Schubert](https://leanpub.com/u/jimschubert "Jim Schubert") and so it is influenced by it and by the code in the 
+[book's repo](https://github.com/jimschubert/yfa-nodejs-code "Code to accompany the book Your first app: node.js").
 
 Now about the application. You sign up with Facebook. No extra information is needed for this app and only your photo 
 and name will be used and stored on the server as well as the Facebook Id to associate the user created in the DB with 
@@ -100,8 +117,15 @@ Thanks to MongoDB/Mongoose the DB structure will be automatically created on fir
 
 ## TODO
 
-You guessed it! Testing.
+More integration and e2e tests. 100% unit tests.
 
-And some small things that I didn't have time to finish - code improvements, db optimisation.
+Convert all possible code to ES6 while keeping the compatibility with Node.js v10+. This one is already in progress
+and you can see in the code that ES5 and ES6 syntax work together.
+
+Remove transpiling after Node.js and io.js merge and when support for the ES6 code here is full.
+ 
+Covert the front-end code to ES6 (with Babel).
+
+Use ES7 code where the transpilers allow it.
 
 [![Analytics](https://ga-beacon.appspot.com/UA-234720-45/notepads-nodejs-angularjs-mongodb-bootstrap/readme)](https://github.com/igrigorik/ga-beacon)
