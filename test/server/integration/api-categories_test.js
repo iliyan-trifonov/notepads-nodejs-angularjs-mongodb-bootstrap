@@ -5,10 +5,12 @@ var request = require('supertest'),
     HttpStatus = require('http-status'),
     config,
     connection = require('../../db_common'),
-    User = require('../../../src/models/user'),
     Category = require('../../../src/models/category'),
+    Notepad = require('../../../src/models/notepad'),
     assert = require('assert'),
     co = require('co');
+
+import User from '../../../src/models/user';
 
 try {
     config = require('../../../config/app.conf.json');
@@ -18,33 +20,47 @@ try {
 
 describe('API /categories', () => {
 
-    let db, testUser, testCat, testNotepads;
+    let db, testUser, testCat, testNotepad;
+    //set the main categories url
     let url = config.apiBase + '/categories';
 
-    let callUrl = (options) => {
-        let opts = options || {};
-        let addUrlPart = opts.addUrl || '';
-        let reqMethod = opts.method ? opts.method.toLowerCase() : null;
+    //helper function to make the request and to make the testing code more dry
+    let callUrl = (options = {}) => {
+        let addUrlPart = options.addUrl || '';
+        let reqMethod = options.method ? options.method.toLowerCase() : null;
         let req = request(app);
         if (!reqMethod || !(reqMethod in req)) {
             reqMethod = 'get';
         }
         let r = req[reqMethod];
-        let accessToken = opts.token || testUser.accessToken;
+        let accessToken = options.token || testUser.accessToken;
         let urlFinal = `${url}${addUrlPart}?token=${accessToken}`;
-        console.log(`callUrl urlFinal = ${urlFinal}`);
+        console.info(`callUrl urlFinal = ${urlFinal}`);
         return r(urlFinal);
     };
 
     before(() => {
-        db = connection();
+        return co(function* () {
+            db = connection();
 
-        return User.createAsync({
-            'facebookId': +new Date(),
-            'name': 'Iliyan Trifonov',
-            'photo': 'photourl'
-        }).then(user => {
-            testUser = user;
+            testUser = yield User.createAsync({
+                'facebookId': +new Date(),
+                'name': 'Iliyan Trifonov',
+                'photo': 'photourl'
+            });
+
+            testCat = yield Category.createAsync({
+                name: 'Test category',
+                user: testUser._id
+            });
+
+            testNotepad = yield Notepad.createAsync({
+                title: 'Test notepad',
+                text: 'Test notepad text',
+                category: testCat._id,
+                user: testUser._id
+            });
+
         });
     });
 
@@ -54,7 +70,7 @@ describe('API /categories', () => {
 
     describe('GET /categories', () => {
         it('should return status OK and an empty JSON array when the user has no categories', done => {
-            co(function* () {
+            return co(function* () {
                 let user = yield User.createAsync({
                     name: 'Iliyan Trifonov',
                     facebookId: +new Date(),
