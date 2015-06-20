@@ -1,10 +1,11 @@
 'use strict';
 
-var User = require('../../../src/models/user'),
-    assert = require('assert'),
+var assert = require('assert'),
     connection = require('../../db_common'),
     mongoose = require('mongoose'),
     Promise = require('bluebird');
+
+import User from '../../../src/models/user';
 
 describe('User model', function () {
 

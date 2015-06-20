@@ -3,8 +3,9 @@
 var connection = require('../../db_common'),
     Notepad = require('../../../src/models/notepad'),
     Category = require('../../../src/models/category'),
-    User = require('../../../src/models/user'),
     assert = require('assert');
+
+import User from '../../../src/models/user';
 
 describe('Notepad Model', function () {
 

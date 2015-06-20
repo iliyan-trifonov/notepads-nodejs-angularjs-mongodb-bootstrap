@@ -2,11 +2,12 @@
 
 var assert = require('assert'),
     connection = require('../../db_common'),
-    User = require('../../../src/models/user'),
     HttpStatus = require('http-status'),
     Promise = require('bluebird'),
     proxyquire = require('proxyquire'),
     usersRouter;
+
+import User from '../../../src/models/user';
 
 describe('Users Routes', function () {
 
@@ -145,7 +146,7 @@ describe('Users Routes', function () {
             };
 
             //return invalid user from fbgraph
-            fbgraphMock.user = null;
+            fbgraphMock.user = {};
 
             usersRouter.postAuthHandler(req, res);
         });
@@ -217,6 +218,7 @@ describe('Users Routes', function () {
                 },
                 json: function json (data) {
                     assert.ok(data.accessToken);
+                    //TODO: check if prepopulate() made changes to the DB
                     done();
                 }
             };

@@ -2,12 +2,13 @@
 
 var assert = require('assert'),
     connection = require('../db_common'),
-    User = require('../../src/models/user'),
     Category = require('../../src/models/category'),
     Notepad = require('../../src/models/notepad'),
     proxyquire = require('proxyquire'),
     Promise = require('bluebird'),
     FacebookAuth;
+
+import User from '../../src/models/user';
 
 describe('FacebookAuth', function () {
 

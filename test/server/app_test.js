@@ -4,8 +4,9 @@ let app = require('../../src/app'),
     assert = require('assert'),
     HttpStatus = require('http-status'),
     connection = require('../db_common'),
-    co = require('co'),
-    User = require('../../src/models/user');
+    co = require('co');
+
+import User from '../../src/models/user';
 
 describe('app', function () {
     it('should have the port set to 3000', function () {

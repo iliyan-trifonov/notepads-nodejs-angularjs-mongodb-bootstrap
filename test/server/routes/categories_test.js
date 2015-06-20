@@ -3,12 +3,13 @@
 var categoriesRouter = require('../../../src/routes/categories'),
     assert = require('assert'),
     connection = require('../../db_common'),
-    User = require('../../../src/models/user'),
     Category = require('../../../src/models/category'),
     Notepad = require('../../../src/models/notepad'),
     HttpStatus = require('http-status'),
     mongoose = require('mongoose'),
     proxyquire = require('proxyquire');
+
+import User from '../../../src/models/user';
 
 describe('Categories Routes', function () {
 

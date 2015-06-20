@@ -1,10 +1,11 @@
 'use strict';
 
 var Category = require('../../../src/models/category'),
-    User = require('../../../src/models/user'),
     assert = require('assert'),
     connection = require('../../db_common'),
     mongoose = require('mongoose');
+
+import User from '../../../src/models/user';
 
 describe('Category Model', function () {
 

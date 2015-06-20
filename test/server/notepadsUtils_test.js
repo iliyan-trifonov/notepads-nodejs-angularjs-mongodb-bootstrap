@@ -4,9 +4,10 @@ var notepadsUtils = require('../../src/notepadsUtils'),
     assert = require('assert'),
     connection = require('../db_common'),
     mongoose = require('mongoose'),
-    User = require('../../src/models/user'),
     Category = require('../../src/models/category'),
     Notepad = require('../../src/models/notepad');
+
+import User from '../../src/models/user';
 
 describe('notepadsUtils', function () {
 

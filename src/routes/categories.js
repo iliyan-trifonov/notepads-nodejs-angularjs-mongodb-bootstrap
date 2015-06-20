@@ -3,11 +3,12 @@
 let express = require('express'),
     app = express(),
     router = express.Router(),
-    User = require('../models/user'),
     Category = require('../models/category'),
     Notepad = require('../models/notepad'),
     HttpStatus = require('http-status'),
     _ = require('lodash');
+
+import User from '../models/user';
 
 //TODO: repeats with the same code in the notepads router!!
 //TODO: put this in FacebookAuth

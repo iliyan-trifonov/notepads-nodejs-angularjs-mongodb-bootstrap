@@ -2,7 +2,6 @@
 
 let Notepad = require('../../../src/models/notepad'),
     Category = require('../../../src/models/category'),
-    User = require('../../../src/models/user'),
     notepadsRouter = require('../../../src/routes/notepads'),
     assert = require('assert'),
     connection = require('../../db_common'),
@@ -10,6 +9,8 @@ let Notepad = require('../../../src/models/notepad'),
     Promise = require('bluebird'),
     HttpStatus = require('http-status'),
     co = require('co');
+
+import User from '../../../src/models/user';
 
 describe('Notepads Routes', function () {
 

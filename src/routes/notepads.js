@@ -3,11 +3,12 @@
 var express = require('express'),
     app = express(),
     router = express.Router(),
-    User = require('../models/user'),
     Category = require('../models/category'),
     Notepad = require('../models/notepad'),
     moment = require('moment'),
     HttpStatus = require('http-status');
+
+import User from '../models/user';
 
 //TODO: put this in FacebookAuth
 //TODO: or make it connected somehow
