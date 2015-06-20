@@ -5,8 +5,9 @@ var request = require('supertest'),
     HttpStatus = require('http-status'),
     config,
     connection = require('../../db_common'),
-    User = require('../../../src/models/user'),
     assert = require('assert');
+
+import User from '../../../src/models/user';
 
 try {
     config = require('../../../config/app.conf.json');
@@ -18,7 +19,7 @@ describe('API /users', function () {
 
     var db, testUser;
 
-    before(function () {
+    before(function (done) {
         db = connection();
 
         return User.createAsync({
@@ -27,7 +28,7 @@ describe('API /users', function () {
             'photo': 'photourl'
         }).then(function (user) {
             testUser = user;
-        });
+        }).then(done);
     });
 
     after(function () {
