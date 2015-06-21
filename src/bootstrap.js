@@ -30,6 +30,7 @@ try {
 } catch (err) {
     if (app.get('env') !== 'test') {
         //prod / dev env - cannot work without real config values
+        console.error('No configuration file!');
         process.stderr.write(err);
         process.exit();
     } else {
