@@ -77,8 +77,8 @@ describe('Category Model', function () {
                 assert.ok(cats !== null);
                 assert.ok(cats instanceof Array);
                 assert.ok(cats.length === 2);
-                assert.strictEqual(cats[0].name, testCats[0].name);
-                assert.strictEqual(cats[1].name, testCats[1].name);
+                assert.ok(cats[0].name === testCats[0].name || cats[0].name === testCats[1].name);
+                assert.ok(cats[1].name === testCats[0].name || cats[1].name === testCats[1].name);
             });
         });
     });
