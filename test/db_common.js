@@ -1,7 +1,6 @@
 'use strict';
 
 var mongoose = require('mongoose'),
-    assert = require('assert'),
     uri = 'mongodb://localhost/notepads-test',
     options = {
         db: { native_parser: true },
