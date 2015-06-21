@@ -19,6 +19,6 @@
     "fbId": "",
     "email": "",
     "password": "",
-    "accessToken": ""
+    "fbAccessToken": ""
   }
 }
