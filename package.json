@@ -36,7 +36,7 @@
     "express-session": "^1.10.4",
     "fbgraph": "^1.0.0",
     "hat": "0.0.3",
-    "http-status": "^0.1.8",
+    "http-status": "^0.2.0",
     "lodash": "^3.1.0",
     "moment": "^2.9.0",
     "mongoose": "^4.0.0",
