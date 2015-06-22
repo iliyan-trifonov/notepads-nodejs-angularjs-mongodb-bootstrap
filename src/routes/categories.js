@@ -58,6 +58,7 @@ let postHandler = function (req, res) {
     }
 
     let savedCat;
+
     Category.add(req.body.name, req.user.id)
         .then(function (cat) {
             savedCat = cat;
