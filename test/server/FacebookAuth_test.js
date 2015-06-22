@@ -4,25 +4,17 @@ var assert = require('assert'),
     connection = require('../db_common'),
     Category = require('../../src/models/category'),
     Notepad = require('../../src/models/notepad'),
-    proxyquire = require('proxyquire'),
     Promise = require('bluebird'),
-    FacebookAuth;
+    FacebookAuth = require('../../src/FacebookAuth');
 
 import User from '../../src/models/user';
 
 describe('FacebookAuth', function () {
 
-    var db, notepadsUtilsMock;
+    var db;
 
     before(function () {
         db = connection();
-        notepadsUtilsMock = {
-            prepopulate: function (uid) {
-                assert.ok(uid);
-                return Promise.resolve({});
-            }
-        };
-        FacebookAuth = proxyquire('../../src/FacebookAuth', { './notepadsUtils': notepadsUtilsMock });
     });
 
     after(function (done) {
@@ -62,12 +54,17 @@ describe('FacebookAuth', function () {
                 displayName: 'Iliyan Trifonov ' +new Date().getTime(),
                 photos: [{ value: 'photourl' }]
             };
-            FacebookAuth.authVerification(null, null, fbProfile, function (err, result) {
+
+            FacebookAuth.authVerification(null, null, fbProfile, function (err, user) {
                 assert.ifError(err);
-                assert.notStrictEqual(result, null);
-                assert.strictEqual(result.facebookId, fbProfile.id);
-                assert.strictEqual(result.name, fbProfile.displayName);
-                assert.strictEqual(result.photo, fbProfile.photos[0].value);
+                assert.ok(user);
+                assert.strictEqual(user.facebookId, fbProfile.id);
+                assert.strictEqual(user.name, fbProfile.displayName);
+                assert.strictEqual(user.photo, fbProfile.photos[0].value);
+                //prepopulated:
+                assert.strictEqual(user.categories.length, 1);
+                assert.strictEqual(user.notepads.length, 1);
+
                 done();
             });
         });
