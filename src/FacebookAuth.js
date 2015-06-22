@@ -26,9 +26,9 @@ let authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done)
             return done(err, newUser);
         }
         //pre-populate some data for just created users
-        notepadsUtils.prepopulate(newUser._id).then(function (/*result*/) {
+        notepadsUtils.prepopulate(newUser._id).then(function (result) {
             //return the new user object
-            done(null, newUser);
+            done(null, result.user);
         });
     }).catch(function (err) {
         console.error('authVerification(): error', err);
