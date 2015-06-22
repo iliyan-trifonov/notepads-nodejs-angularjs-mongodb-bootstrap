@@ -1,24 +1,24 @@
 'use strict';
 
-let config,
-    express = require('express'),
-    routes = require('./routes'),
-    session = require('express-session'),
-    //favicon = require('serve-favicon')
-    path = require('path'),
-    passport = require('passport'),
-    FacebookAuth = require('./FacebookAuth'),
-    usersRouter = require('./routes/users'),
-    notepadsRouter = require('./routes/notepads'),
-    categoriesRouter = require('./routes/categories'),
-    HttpStatus = require('http-status');
+let config;
 
+import express from 'express';
+import * as routes from './routes';
+import session from 'express-session';
+//favicon = require('serve-favicon')
+import path from 'path';
+import passport from 'passport';
+import FacebookAuth from './FacebookAuth';
+import usersRouter from './routes/users';
+import notepadsRouter from './routes/notepads';
+import categoriesRouter from './routes/categories';
+import HttpStatus from 'http-status';
 import User from './models/user';
 
 let app = express();
 
-//export NODE_ENV=development npm start
 let envs = ['development', 'production', 'test'];
+
 if (envs.indexOf(app.get('env')) !== -1) {
     console.info(app.get('env') + ' environment detected');
 } else {
@@ -114,6 +114,7 @@ let parseAccessToken = (req, res, next) => {
         return next();
     }
 };
+
 app.use(parseAccessToken);
 
 //API routes
