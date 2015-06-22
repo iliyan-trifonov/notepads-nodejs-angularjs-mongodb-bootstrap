@@ -1,14 +1,14 @@
 'use strict';
 
-var Promise = require('bluebird'),
-    mongoose = Promise.promisifyAll(require('mongoose')),
-    //TODO: replace hat with something more specific for API tokens
-    hat = require('hat');
+import Promise from 'bluebird';
+let mongoose = Promise.promisifyAll(require('mongoose'));
+//TODO: replace hat with something more specific for API tokens
+import hat from 'hat';
 
 //TODO: add required to the fields
-var userSchema = new mongoose.Schema({
-    facebookId: { type: String, required: true, unique: true },
-    accessToken: { type: String, required: true, unique: true },
+let userSchema = new mongoose.Schema({
+    facebookId: { type: String, required: true, unique: true, index: true },
+    accessToken: { type: String, required: true, unique: true, index: true },
     name: { type: String, required: true },
     photo: { type: String, required: true },
     categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
@@ -93,5 +93,5 @@ userSchema.static('removeNotepads', (userId, notepadsIds) =>
 
 var User = mongoose.model('User', userSchema);
 
-module.exports = exports = User;
+//module.exports = exports = User;
 export default User;

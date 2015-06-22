@@ -1,16 +1,16 @@
 'use strict';
 
-let express = require('express'),
-    app = express(),
-    router = express.Router(),
-    graph = require('fbgraph'),
-    notepadsUtils = require('../notepadsUtils'),
-    Promise = require('bluebird'),
-    HttpStatus = require('http-status'),
-    co = require('co'),
-    config;
-
+import express from 'express';
+import graph from 'fbgraph';
+import * as notepadsUtils from '../notepadsUtils';
+import Promise from 'bluebird';
+import HttpStatus from 'http-status';
+import co from 'co';
 import User from '../models/user';
+
+let app = express(),
+    router = express.Router(),
+    config;
 
 Promise.promisify(graph.get);
 
@@ -55,8 +55,6 @@ let postAuthHandler = (req, res) => {
 
             let graphUser = yield graph.getAsync('me?fields=id,name,picture');
 
-            console.log('graphUser', graphUser, 'graphUser.id', graphUser.id);
-
             //when the given fb id and token mismatch:
             if (!graphUser || graphUser.id !== fbUserId) {
                 console.error("Invalid user from fbAccessToken!");
@@ -89,15 +87,17 @@ let postAuthHandler = (req, res) => {
     });
 };
 
+//assign the handler to POST /users/auth
 router.post('/auth', postAuthHandler);
 
-module.exports = exports = router;
-
-module.exports.setAppConfig = exports.setAppConfig = cnf => {
+router.setAppConfig = cnf => {
     config = cnf;
 };
 
 if (app.get('env') === 'test') {
-    module.exports.postAuthHandler = exports.postAuthHandler = postAuthHandler;
-    module.exports.getAppConfig = exports.getAppConfig = () => config;
+    router.postAuthHandler = postAuthHandler;
+    router.getAppConfig = () => config;
 }
+
+//module.exports = exports = router;
+export default router;
