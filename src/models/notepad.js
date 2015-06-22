@@ -1,13 +1,13 @@
 'use strict';
 
-var Promise = require('bluebird'),
-    mongoose = Promise.promisifyAll(require('mongoose'));
+import Promise from 'bluebird';
+let mongoose = Promise.promisifyAll(require('mongoose'));
 
-var notepadSchema = new mongoose.Schema({
+let notepadSchema = new mongoose.Schema({
     title: { type: String, required: true },
     text: { type: String, required: true },
-    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+    category: { type: mongoose.Schema.Types.ObjectId, ref: 'Category', required: true, index: true },
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true }
 });
 
 notepadSchema.static('getByIdForUser', (notepadId, uid) =>
@@ -32,4 +32,5 @@ notepadSchema.static('updateForUserId', (notepadId, uid, data) =>
 
 var Notepad = mongoose.model('Notepad', notepadSchema);
 
-module.exports = exports = Notepad;
+//module.exports = exports = Notepad;
+export default Notepad;
