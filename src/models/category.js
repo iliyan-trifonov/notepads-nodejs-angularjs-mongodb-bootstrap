@@ -1,14 +1,14 @@
 'use strict';
 
-var Promise = require('bluebird'),
-    mongoose = Promise.promisifyAll(require('mongoose'));
+import Promise from 'bluebird';
+let mongoose = Promise.promisifyAll(require('mongoose'));
 
 //TODO: check if it's possible to add notepads[] with Notepad ids
 //TODO: and list them for the Dashboard with one call
-var categorySchema = new mongoose.Schema({
+let categorySchema = new mongoose.Schema({
     name: { type: String, required: true },
     notepadsCount: { type: Number, 'default': 0 },
-    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true }
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true }
 });
 
 categorySchema.static('getByUserId', uid =>
@@ -52,4 +52,5 @@ categorySchema.static('decreaseNotepadsCountById', catId =>
 
 var Category = mongoose.model('Category', categorySchema);
 
-module.exports = exports = Category;
+//module.exports = exports = Category;
+export default Category;
