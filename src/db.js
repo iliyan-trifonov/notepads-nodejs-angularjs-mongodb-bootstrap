@@ -1,7 +1,7 @@
 'use strict';
 
-let mongoose = require('mongoose'),
-    config;
+import mongoose from 'mongoose';
+let config;
 
 let uri;
 let options = {
@@ -10,7 +10,7 @@ let options = {
     keepAlive: true //this option may have changed its place in this object
 };
 
-module.exports = exports = () => {
+let main = () => {
     let db = mongoose.connect(uri, options);
 
     db.connection.on('error', err => {
@@ -21,8 +21,11 @@ module.exports = exports = () => {
     return db.connection;
 };
 
-module.exports.setAppConfig = exports.setAppConfig = cnf => {
+main.setAppConfig = cnf => {
     console.info('db - using config:', cnf);
     config = cnf;
     uri = config.mongodb.uri;
 };
+
+//module.exports = exports = main;
+export default main;
