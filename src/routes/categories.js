@@ -1,27 +1,28 @@
 'use strict';
 
-let express = require('express'),
-    app = express(),
-    router = express.Router(),
-    Category = require('../models/category'),
-    Notepad = require('../models/notepad'),
-    HttpStatus = require('http-status'),
-    _ = require('lodash');
-
 import User from '../models/user';
+import Category from '../models/category';
+import Notepad from '../models/notepad';
+import HttpStatus from 'http-status';
+import express from 'express';
+import { pluck } from 'lodash';
+import co from 'co';
+
+let app = express(),
+    router = express.Router();
 
 //TODO: repeats with the same code in the notepads router!!
 //TODO: put this in FacebookAuth
 //TODO: or make it connected somehow
 //TODO: with the Facebook authentication process
-function checkAuth(req, res, next) {
+let checkAuth = (req, res, next) => {
     if (!req.isAuthenticated()) {
         console.error('API notepads: checkAuth(), not authenticated!');
         res.status(HttpStatus.UNAUTHORIZED).json({});
     } else {
         next();
     }
-}
+};
 
 //protect this resource to the logged in user
 //TODO: checkAuth() should be shared between all handlers/controllers
@@ -33,18 +34,18 @@ router.use(checkAuth);
 //handlers start
 
 /**
- *
+ * Returns the categories of the current user
  * @param req
  * @param res
  */
-let getHandler = function (req, res) {
-    Category.getByUserId(req.user.id)
-        .then(categories => {
-            res.status(HttpStatus.OK).json(categories);
-        }).catch(err => {
-            console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json([]);
-        });
+let getHandler = (req, res) => {
+    co(function* () {
+        let categories = yield Category.getByUserId(req.user.id);
+        res.status(HttpStatus.OK).json(categories);
+    }).catch(err => {
+        console.error('categories route getHandler() error', err);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json([]);
+    });
 };
 
 /**
@@ -52,113 +53,104 @@ let getHandler = function (req, res) {
  * @param req
  * @param res
  */
-let postHandler = function (req, res) {
-    if (!req.body.name) {
-        return res.status(HttpStatus.BAD_REQUEST).json({});
-    }
+let postHandler = (req, res) => {
+    co(function* () {
+        if (!req.body.name) {
+            return res.status(HttpStatus.BAD_REQUEST).json({});
+        }
 
-    let savedCat;
+        let cat = yield Category.add(req.body.name, req.user.id);
 
-    Category.add(req.body.name, req.user.id)
-        .then(function (cat) {
-            savedCat = cat;
-            return User.addCategory(cat.user, cat._id);
-        }).then(function (/*user*/) {
-            res.status(HttpStatus.OK).json(savedCat);
-        }).catch(function (err) {
-            console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
-        });
+        yield User.addCategory(cat.user, cat._id);
+
+        res.status(HttpStatus.OK).json(cat);
+    }).catch(err => {
+        console.error('categories route postHandler() error', err);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+    });
 };
 
-let getIdHandler = function (req, res) {
-    if (!req.params.id) {
-        return res.status(HttpStatus.BAD_REQUEST).json({});
-    }
+let getIdHandler = (req, res) => {
+    co(function* () {
+        if (!req.params.id) {
+            return res.status(HttpStatus.BAD_REQUEST).json({});
+        }
 
-    Category.getByIdForUser(req.params.id, req.user.id)
-        .then(function (category) {
-            if (!category) {
-                let msg = 'getIdHandler(): Category not found!';
-                console.error(msg);
-                //throw new Error(msg);
-                return res.status(HttpStatus.NO_CONTENT).json({});
-            }
-            res.status(HttpStatus.OK).json(category);
-        }).catch(function (err) {
-            console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
-        });
+        let category = yield Category.getByIdForUser(req.params.id, req.user.id);
+
+        if (!category) {
+            console.error('categories route getIdHandler(): Category not found!');
+            //throw new Error(msg);
+            return res.status(HttpStatus.NO_CONTENT).json({});
+        }
+
+        res.status(HttpStatus.OK).json(category);
+    }).catch(err => {
+        console.error('categories route getIdHandler() error', err);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+    });
 };
 
-let putIdHandler = function (req, res) {
-    if (!req.params.id || !req.body.name) {
-        return res.status(HttpStatus.BAD_REQUEST).json({});
-    }
+let putIdHandler = (req, res) => {
+    co(function* () {
+        if (!req.params.id || !req.body.name) {
+            return res.status(HttpStatus.BAD_REQUEST).json({});
+        }
 
-    Category.update(req.params.id, req.user.id, req.body.name)
-        .then(function (category) {
-            if (!category) {
-                return res.status(HttpStatus.NO_CONTENT).json({});
-            }
-            res.status(HttpStatus.OK).json(category);
-        }).catch(function (err) {
-            console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
-        });
+        let category = yield Category.update(req.params.id, req.user.id, req.body.name);
+
+        if (!category) {
+            return res.status(HttpStatus.NO_CONTENT).json({});
+        }
+
+        res.status(HttpStatus.OK).json(category);
+    }).catch(err => {
+        console.error('categories route putIdHandler() error', err);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+    });
 };
 
-let deleteIdHandler = function (req, res) {
-    let ns, category;
-    //check if the current user has that Category
-    let p = Category.getByIdForUser(req.params.id, req.user.id)
-        .then(function (cat) {
-            if (!cat) {
-                console.error('Category not found for user!');
-                res.status(HttpStatus.NO_CONTENT).json({});
-                return p.cancel();
-            }
-            category = cat;
-            return Category.findByIdAndRemoveAsync(category._id);
-        })/*.cancelable()*/
-        .then(function (cat) {
-            if (!cat) {
-                console.error('Category not found!');
-                res.status(HttpStatus.NO_CONTENT).json({});
-                return p.cancel();
-            }
+let deleteIdHandler = (req, res) => {
+    co(function* () {
+        //check if the current user has that Category
+        console.log('getting category');
+        let category = yield Category.getByIdForUser(req.params.id, req.user.id);
 
-            return User.removeCategory(req.user.id, category._id);
-        })
-        .then(function (user) {
-            if (!user) {
-                throw new Error('User with that category not found!');
-            }
+        if (!category) {
+            console.error('categories route deleteIdHandler(): Category not found for user!');
+            return res.status(HttpStatus.NO_CONTENT).json({});
+        }
 
-            //delete all orphaned notepads(if any) belonging to the deleted category
-            //TODO: put the notepads in Uncategorized category instead
-            //TODO: check if Notepad.remove() returns the removed documents to use it directly
-            return Notepad.findAsync({ user: req.user.id, category: category._id });
-        })
-        .then(function (notepads) {
-            if (notepads) {
-                ns = _.pluck(notepads, '_id');
-                return Notepad.removeAsync({ _id: { $in: ns } });
-            }
-        })
-        .then(function () {
-            if (ns) {
-                //remove the notepads' ids from User.notepads too
-                return User.removeNotepads(req.user.id, ns);
-            }
-        })
-        .then(function (/*user*/) {
-            return res.status(HttpStatus.OK).json(category);
-        })
-        .catch(function (err) {
-            console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
-        });
+        console.log('removing category', category);
+        category = yield Category.findByIdAndRemoveAsync(category._id);
+
+        console.log('removing category from user');
+        let user = yield User.removeCategory(category.user, category._id);
+
+        if (!user) {
+            throw new Error('User with that category not found!');
+        }
+
+        //delete all orphaned notepads(if any) belonging to the deleted category
+        //TODO: ask to delete the notepads and if not put the notepads in Uncategorized category instead
+        //TODO: check if Notepad.remove() returns the removed documents to use it directly
+        console.log('getting notepads');
+        let notepads = yield Notepad.findAsync({ user: req.user.id, category: category._id });
+
+        if (notepads) {
+            let ns = pluck(notepads, '_id');
+            console.log('removing notepads');
+            yield Notepad.removeAsync({ _id: { $in: ns } });
+            //remove the notepads' ids from User.notepads too
+            console.log('removing notepads from user');
+            yield User.removeNotepads(req.user.id, ns);
+        }
+
+        return res.status(HttpStatus.OK).json(category);
+    }).catch(err => {
+        console.error('categories route deleteIdHandler() error', err);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+    });
 };
 //handlers end
 
@@ -179,12 +171,13 @@ router.put('/:id', putIdHandler);
 // DELETE /categories/1
 router.delete('/:id', deleteIdHandler);
 
-module.exports = exports = router;
-
 if (app.get('env') === 'test') {
-    module.exports.getHandler = exports.getHandler = getHandler;
-    module.exports.postHandler = exports.postHandler = postHandler;
-    module.exports.getIdHandler = exports.getIdHandler = getIdHandler;
-    module.exports.putIdHandler = exports.putIdHandler = putIdHandler;
-    module.exports.deleteIdHandler = exports.deleteIdHandler = deleteIdHandler;
+    router.getHandler = exports.getHandler = getHandler;
+    router.postHandler = exports.postHandler = postHandler;
+    router.getIdHandler = exports.getIdHandler = getIdHandler;
+    router.putIdHandler = exports.putIdHandler = putIdHandler;
+    router.deleteIdHandler = exports.deleteIdHandler = deleteIdHandler;
 }
+
+//module.exports = exports = router;
+export default router;
