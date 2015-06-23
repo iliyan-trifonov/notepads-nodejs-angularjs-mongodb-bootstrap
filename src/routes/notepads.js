@@ -120,7 +120,7 @@ var getNotepadByIdHandler = function (req, res) {
     Notepad.getByIdForUser(req.params.id, req.user.id)
         .then(function (notepad) {
             if (!notepad) {
-                return res.status(HttpStatus.NO_CONTENT).json({});
+                return res.status(HttpStatus.NOT_FOUND).json({});
             }
             res.status(HttpStatus.OK).json(notepad);
         })
@@ -135,7 +135,7 @@ var postNotepadsHandler = function (req, res) {
     var p = Category.getByIdForUser(req.body.category, req.user.id)
         .then(function (category) {
             if (!category) {
-                res.status(HttpStatus.NO_CONTENT).json({});
+                res.status(HttpStatus.NOT_FOUND).json({});
                 return p.cancel();
             }
 
@@ -177,7 +177,7 @@ var putNotepadsIdHandler = function (req, res) {
     var p = Notepad.getByIdForUser(req.params.id, req.user.id)
         .then(function (notepad) {
             if (!notepad) {
-                res.status(HttpStatus.NO_CONTENT).json({});
+                res.status(HttpStatus.NOT_FOUND).json({});
                 return p.cancel();
             }
 
@@ -217,7 +217,7 @@ var deleteNotepadsIdHandler = function (req, res) {
     var notepad;
     var p = Notepad.getByIdForUser(req.params.id, req.user.id).then(function (notepad) {
         if (!notepad) {
-            res.status(HttpStatus.NO_CONTENT).json({});
+            res.status(HttpStatus.NOT_FOUND).json({});
             return p.cancel();
         }
         return Notepad.findByIdAndRemove(req.params.id);

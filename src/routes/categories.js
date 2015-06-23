@@ -81,7 +81,7 @@ let getIdHandler = (req, res) => {
         if (!category) {
             console.error('categories route getIdHandler(): Category not found!');
             //throw new Error(msg);
-            return res.status(HttpStatus.NO_CONTENT).json({});
+            return res.status(HttpStatus.NOT_FOUND).json({});
         }
 
         res.status(HttpStatus.OK).json(category);
@@ -100,7 +100,7 @@ let putIdHandler = (req, res) => {
         let category = yield Category.update(req.params.id, req.user.id, req.body.name);
 
         if (!category) {
-            return res.status(HttpStatus.NO_CONTENT).json({});
+            return res.status(HttpStatus.NOT_FOUND).json({});
         }
 
         res.status(HttpStatus.OK).json(category);
@@ -118,7 +118,7 @@ let deleteIdHandler = (req, res) => {
 
         if (!category) {
             console.error('categories route deleteIdHandler(): Category not found for user!');
-            return res.status(HttpStatus.NO_CONTENT).json({});
+            return res.status(HttpStatus.NOT_FOUND).json({});
         }
 
         console.log('removing category', category);

@@ -225,10 +225,10 @@ describe('Notepads Routes', function () {
     });
 
     describe('getNotepadByIdHandler', () => {
-        it('should return NO_CONTENT if no notepad is found', done => {
+        it('should return NOT_FOUND if no notepad is found', done => {
             req.params = {};
             res.execDone = false;
-            res.statusExpected = HttpStatus.NO_CONTENT;
+            res.statusExpected = HttpStatus.NOT_FOUND;
             res.jsonChecker = obj => {
                 assert.deepEqual(obj, {});
                 //allow a second call before done
@@ -272,10 +272,10 @@ describe('Notepads Routes', function () {
     });
 
     describe('postNotepadsHandler', () => {
-        it('should return NO_CONTENT when the category given is not found', done => {
+        it('should return NOT_FOUND when the category given is not found', done => {
             req.body = { category: mongoose.Types.ObjectId() };
             req.user = { id: testUser._id };
-            res.statusExpected = HttpStatus.NO_CONTENT;
+            res.statusExpected = HttpStatus.NOT_FOUND;
             res.jsonChecker = obj => {
                 assert.deepEqual(obj, {});
                 done();
@@ -360,7 +360,7 @@ describe('Notepads Routes', function () {
             notepadsRouter.putNotepadsIdHandler(req, res);
         });
 
-        it('should return NO_CONTENT when the given notepad id is not found', done => {
+        it('should return NOT_FOUND when the given notepad id is not found', done => {
             req.params = { id: mongoose.Types.ObjectId() };
             req.user = { id: testUser._id };
             req.body = {
@@ -368,7 +368,7 @@ describe('Notepads Routes', function () {
                 text: 'test',
                 category: testCat._id
             };
-            res.statusExpected = HttpStatus.NO_CONTENT;
+            res.statusExpected = HttpStatus.NOT_FOUND;
             res.jsonChecker = obj => {
                 assert.deepEqual(obj, {});
                 done();
@@ -472,9 +472,9 @@ describe('Notepads Routes', function () {
     });
 
     describe('deleteNotepadsIdHandler', () => {
-        it('should return NO_CONTENT if the Notepad is not found by the given params', done => {
+        it('should return NOT_FOUND if the Notepad is not found by the given params', done => {
             req.params = req.user = {};
-            res.statusExpected = HttpStatus.NO_CONTENT;
+            res.statusExpected = HttpStatus.NOT_FOUND;
             res.jsonChecker = obj => {
                 assert.deepEqual(obj, {});
 

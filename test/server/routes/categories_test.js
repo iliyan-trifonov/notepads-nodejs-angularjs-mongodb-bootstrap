@@ -163,14 +163,14 @@ describe('Categories Routes', () => {
             categoriesRouter.getIdHandler(req, res);
         });
 
-        it('should return status 204 and an empty object result for a given non-existent id', done => {
+        it('should return NOT_FOUND and an empty object result for a given non-existent id', done => {
             req = {
                 params : { id: mongoose.Types.ObjectId() },
                 user: { id: user._id }
             };
 
             res.status = function (status) {
-                assert.strictEqual(status, HttpStatus.NO_CONTENT);
+                assert.strictEqual(status, HttpStatus.NOT_FOUND);
                 return this;
             };
 
@@ -234,7 +234,7 @@ describe('Categories Routes', () => {
             };
             res = {
                 status: function (status) {
-                    assert.strictEqual(status, HttpStatus.NO_CONTENT);
+                    assert.strictEqual(status, HttpStatus.NOT_FOUND);
                     return this;
                 },
                 json: cat => {
@@ -267,14 +267,14 @@ describe('Categories Routes', () => {
     });
 
     describe('DELETE /categories/:id', () => {
-        it('should not delete and return NO CONTENT given a non-existent category id', done => {
+        it('should not delete and return NOT_FOUND given a non-existent category id', done => {
             req = {
                 params: { id: mongoose.Types.ObjectId() },
                 user: { id: user._id }
             };
             res = {
                 status: function (status) {
-                    assert.strictEqual(status, HttpStatus.NO_CONTENT);
+                    assert.strictEqual(status, HttpStatus.NOT_FOUND);
                     return this;
                 },
                 json: cat => {
