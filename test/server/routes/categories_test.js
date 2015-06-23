@@ -1,68 +1,61 @@
 'use strict';
 
-var categoriesRouter = require('../../../src/routes/categories'),
-    assert = require('assert'),
-    connection = require('../../db_common'),
-    Category = require('../../../src/models/category'),
-    Notepad = require('../../../src/models/notepad'),
-    HttpStatus = require('http-status'),
-    mongoose = require('mongoose'),
-    proxyquire = require('proxyquire');
-
+import categoriesRouter from '../../../src/routes/categories';
+import assert from 'assert';
+import connection from '../../db_common';
 import User from '../../../src/models/user';
+import Category from '../../../src/models/category';
+import Notepad from '../../../src/models/notepad';
+import HttpStatus from 'http-status';
+import mongoose from 'mongoose';
+import proxyquire from 'proxyquire';
+import co from 'co';
 
-describe('Categories Routes', function () {
+describe('Categories Routes', () => {
 
     var db, user, category, req, res;
 
-    before(function () {
-        //TODO: use callback/promise
-        db = connection();
+    before(() =>
+        co(function* () {
+            db = connection();
 
-        return User.createAsync({
-            facebookId: +new Date(),
-            name: 'Iliyan Trifonov',
-            photo: 'photourl'
-        }).then(function (doc) {
-            assert.ok(doc !== null);
-            user = doc;
-            return Category.createAsync({
+            user = yield User.createAsync({
+                facebookId: +new Date(),
+                name: 'Iliyan Trifonov',
+                photo: 'photourl'
+            });
+
+            category = yield Category.createAsync({
                 name: 'Sample Category',
                 user: user._id
             });
-        }).then(function (cat) {
-            assert.ok(cat !== null);
-            category = cat;
-            return User.addCategory(user._id, cat._id);
-        }).then(function (updatedUser) {
-            assert.notStrictEqual(updatedUser, null);
-            user = updatedUser;
-        });
-    });
 
-    after(function () {
-        return User.removeAsync({}).then(function () {
-            return Category.removeAsync({});
+            user = yield User.addCategory(user._id, category._id);
         })
-        //TODO: try with then(db.close)
-        .then(function () {
+    );
+
+    after(() =>
+        co(function* () {
+            yield User.removeAsync({});
+            yield Category.removeAsync({});
+            yield Notepad.removeAsync({});
             db.close();
-        });
-    });
+        })
+    );
 
     beforeEach(() => {
         req = res = {};
         req.user = user;
     });
 
-    describe('GET /categories', function () {
-        it('should return status 200 and response type json with categories body', function (done) {
+    describe('GET /categories', () => {
+        it('should return status 200 and response type json with categories body', done => {
             res.status = function (status) {
                 assert.strictEqual(status, HttpStatus.OK);
                 return this;
             };
 
-            res.json = function (cats) {
+            res.json = cats => {
                 assert.ok(cats);
                 assert.strictEqual(cats.length, 1);
                 assert.ok(cats[0]._id.equals(category._id));
@@ -74,7 +67,7 @@ describe('Categories Routes', function () {
             categoriesRouter.getHandler(req, res);
         });
 
-        it('should return empty JSON array when there are not categories found', function(done) {
+        it('should return empty JSON array when there are not categories found', done => {
             req.user = { id: mongoose.Types.ObjectId() };
 
             res.status = function (status) {
@@ -107,8 +100,8 @@ describe('Categories Routes', function () {
         });
     });
 
-    describe('POST /categories', function () {
-        it('should add new Category and assign it to the user', function (done) {
+    describe('POST /categories', () => {
+        it('should add new Category and assign it to the user', done => {
             var testCatName = 'Test cat ' + (+new Date());
 
             req.body = { name: testCatName };
@@ -118,13 +111,11 @@ describe('Categories Routes', function () {
                 return this;
             };
 
-            res.json = function (cat) {
+            res.json = cat => {
                 assert.ok(cat);
                 assert.strictEqual(cat.name, testCatName);
                 User.findAsync({ category: cat._id })
-                    .then(function (user) {
-                        assert.notStrictEqual(user, null);
-                    })
+                    .then(user => assert.ok(user))
                     .then(done);
             };
 
@@ -150,8 +141,8 @@ describe('Categories Routes', function () {
         });
     });
 
-    describe('GET /categories/:id', function () {
-        it('should return status 200 and the required Category', function (done) {
+    describe('GET /categories/:id', () => {
+        it('should return status 200 and the required Category', done => {
             req = {
                 params : { id: category._id },
                 user: { id: user._id }
@@ -162,7 +153,7 @@ describe('Categories Routes', function () {
                 return this;
             };
 
-            res.json = function (cat) {
+            res.json = cat => {
                 assert.ok(cat._id.equals(category._id));
                 assert.strictEqual(cat.name, category.name);
 
@@ -172,7 +163,7 @@ describe('Categories Routes', function () {
             categoriesRouter.getIdHandler(req, res);
         });
 
-        it('should return status 204 and an empty object result for a given non-existent id', function (done) {
+        it('should return status 204 and an empty object result for a given non-existent id', done => {
             req = {
                 params : { id: mongoose.Types.ObjectId() },
                 user: { id: user._id }
@@ -183,7 +174,7 @@ describe('Categories Routes', function () {
                 return this;
             };
 
-            res.json = function (cat) {
+            res.json = cat => {
                 assert.deepEqual(cat, {});
 
                 done();
@@ -192,7 +183,7 @@ describe('Categories Routes', function () {
             categoriesRouter.getIdHandler(req, res);
         });
 
-        it('should return status 500 and an empty json error object for a wrong cat id format given', function (done) {
+        it('should return status 500 and an empty json error object for a wrong cat id format given', done => {
             req = {
                 params : { id: 123 },
                 user: { id: user._id }
@@ -203,7 +194,7 @@ describe('Categories Routes', function () {
                 return this;
             };
 
-            res.json = function (err) {
+            res.json = err => {
                 assert.deepEqual(err, {});
 
                 done();
@@ -213,8 +204,8 @@ describe('Categories Routes', function () {
         });
     });
 
-    describe('PUT /categories/:id', function () {
-        it('should update a Category\'s name given its id, uid and name', function (done) {
+    describe('PUT /categories/:id', () => {
+        it('should update a Category\'s name given its id, uid and name', done => {
             var newCatName = 'New Cat Name';
             req = {
                 params: { id: category._id },
@@ -226,7 +217,7 @@ describe('Categories Routes', function () {
                     assert.strictEqual(status, HttpStatus.OK);
                     return this;
                 },
-                json: function (cat) {
+                json: cat => {
                     assert.strictEqual(cat.name, newCatName);
                     category = cat;
                     done();
@@ -235,7 +226,7 @@ describe('Categories Routes', function () {
             categoriesRouter.putIdHandler(req, res);
         });
 
-        it('should not update given a non-existent cat id', function (done) {
+        it('should not update given a non-existent cat id', done => {
             req = {
                 params: { id: mongoose.Types.ObjectId() },
                 user: { id: user._id },
@@ -246,7 +237,7 @@ describe('Categories Routes', function () {
                     assert.strictEqual(status, HttpStatus.NO_CONTENT);
                     return this;
                 },
-                json: function (cat) {
+                json: cat => {
                     assert.deepEqual(cat, {});
                     done();
                 }
@@ -275,7 +266,7 @@ describe('Categories Routes', function () {
         });
     });
 
-    describe('DELETE /categories/:id', function () {
+    describe('DELETE /categories/:id', () => {
         it('should not delete and return NO CONTENT given a non-existent category id', done => {
             req = {
                 params: { id: mongoose.Types.ObjectId() },
@@ -286,7 +277,7 @@ describe('Categories Routes', function () {
                     assert.strictEqual(status, HttpStatus.NO_CONTENT);
                     return this;
                 },
-                json: function (cat) {
+                json: cat => {
                     assert.deepEqual(cat, {});
                     done();
                 }
@@ -294,23 +285,23 @@ describe('Categories Routes', function () {
             categoriesRouter.deleteIdHandler(req, res);
         });
 
-        it('should return NO_CONTENT if there was a problem deleting the category', done => {
+        it('should return INTERNAL_SERVER_ERROR if there was a problem deleting the category', done => {
             req.params = { id: category._id };
             req.user = { id: user._id };
             let CategoryMock = {
-                findByIdAndRemoveAsync: function (catId) {
+                findByIdAndRemoveAsync: catId => {
                     assert.ok(catId);
-                    return null;
+                    return Promise.reject(null);
                 }
             };
             let categoriesRouterWithMocks = proxyquire('../../../src/routes/categories', {
                 '../models/category': CategoryMock
             });
             res.status = function (status) {
-                assert.strictEqual(status, HttpStatus.NO_CONTENT);
+                assert.strictEqual(status, HttpStatus.INTERNAL_SERVER_ERROR);
                 return this;
             };
-            res.json = function (obj) {
+            res.json = obj => {
                 assert.deepEqual(obj, {});
                 done();
             };
@@ -322,17 +313,17 @@ describe('Categories Routes', function () {
             req.user = { id: user._id };
 
             let CategoryMock = {
-                findByIdAndRemoveAsync: function (catId) {
+                findByIdAndRemoveAsync: catId => {
                     assert.ok(catId);
                     return category;
                 }
             };
 
             let UserMock = {
-                removeCategory: function (uid, catId) {
+                removeCategory: (uid, catId) => {
                     assert.ok(uid.equals(user._id));
                     assert.ok(catId.equals(category._id));
-                    return null;
+                    return Promise.reject(null);
                 }
             };
 
@@ -345,21 +336,21 @@ describe('Categories Routes', function () {
                 assert.strictEqual(status, HttpStatus.INTERNAL_SERVER_ERROR);
                 return this;
             };
-            res.json = function (obj) {
+            res.json = obj => {
                 assert.deepEqual(obj, {});
                 done();
             };
             categoriesRouterWithMocks.deleteIdHandler(req, res);
         });
 
-        it('should delete a category, update categories in user and delete all notepads belonging to that category', done => {
+        it('should delete a category, delete all notepads belonging to that category and update categories in user', done => {
             //create a new category
-            Category.createAsync({ name: 'Test cat to delete', user: user._id }).then(function (category) {
-                assert.notStrictEqual(category, null);
+            Category.createAsync({ name: 'Test cat to delete', user: user._id }).then(category => {
+                assert.ok(category);
                 //add it to the user's categories array
                 return User.addCategory(user._id, category._id);
-            }).then(function (user) {
-                assert.notStrictEqual(user, null);
+            }).then(user => {
+                assert.ok(user);
                 //create a new notepad for that category and user
                 return Notepad.createAsync({
                     title: 'asdas',
@@ -367,12 +358,12 @@ describe('Categories Routes', function () {
                     category: category._id,
                     user: user._id
                 });
-            }).then(function (notepad) {
-                assert.ok(notepad !== null);
+            }).then(notepad => {
+                assert.ok(notepad);
                 //add the notepad to the user's notepads array
                 return User.addNotepad(user._id, notepad._id);
-            }).then(function (user) {
-                assert.notStrictEqual(user, null);
+            }).then(user => {
+                assert.ok(user);
 
                 //prepare the test params
                 req = {
@@ -385,20 +376,19 @@ describe('Categories Routes', function () {
                         assert.strictEqual(status, HttpStatus.OK);
                         return this;
                     },
-                    json: function (cat) {
-                        assert.ok(cat._id);
+                    json: cat => {
                         assert.ok(cat._id.equals(category._id));
                         //category doesn't exist
-                        Category.findOneAsync({ id: cat._id }).then(function (doc) {
+                        Category.findOneAsync({ id: cat._id }).then(doc => {
                             assert.strictEqual(doc, null);
 
                             //user with that category doesn't exist
                             return User.findOneAsync({ categories: cat._id });
-                        }).then(function (doc) {
+                        }).then(doc => {
                             assert.strictEqual(doc, null);
 
-                            return Notepad.find({ category: cat._id }).then(function (doc) {
-                                assert.deepEqual(doc, []);
+                            return Notepad.findOneAsync({ category: cat._id }).then(doc => {
+                                assert.strictEqual(doc, null);
                             });
                         }).then(done);
                     }
