@@ -8,7 +8,8 @@ let Notepad = require('../../../src/models/notepad'),
     mongoose = require('mongoose'),
     Promise = require('bluebird'),
     HttpStatus = require('http-status'),
-    co = require('co');
+    co = require('co'),
+    proxyquire = require('proxyquire');
 
 import User from '../../../src/models/user';
 
@@ -259,15 +260,29 @@ describe('Notepads Routes', function () {
         });
 
         it('should return INTERNAL SERVER ERROR on error', done => {
-            req.params = { id: null };
-            req.user = { id: null };
+            let NotepadMock = {
+                getByIdForUser: function (notepadId, uid) {
+                    assert.ok(notepadId);
+                    assert.ok(uid);
+                    return Promise.reject(new Error('triggered getByIdForUser() error'));
+                }
+            };
+
+            let notepadsRouterWithMocks = proxyquire('../../../src/routes/notepads', {
+                '../models/notepad': NotepadMock
+            });
+
+            req.params = { id: +new Date() };
+            req.user = { id: +new Date() };
+
             res.statusExpected = HttpStatus.INTERNAL_SERVER_ERROR;
+
             res.jsonChecker = obj => {
                 assert.deepEqual(obj, {});
                 done();
             };
 
-            notepadsRouter.getNotepadByIdHandler(req, res);
+            notepadsRouterWithMocks.getNotepadByIdHandler(req, res);
         });
     });
 
@@ -295,6 +310,30 @@ describe('Notepads Routes', function () {
             };
 
             notepadsRouter.postNotepadsHandler(req, res);
+        });
+
+        it('should return INTERNAL SERVER ERROR when Notepad.createAsync() doesn\'t return a valid object', done => {
+            let NotepadMock = {
+                createAsync: function (obj) {
+                    assert.ok(obj.category);
+                    assert.ok(obj.user);
+                    return Promise.resolve(null);
+                }
+            };
+
+            let notepadsRouterWithMocks = proxyquire('../../../src/routes/notepads', {
+                '../models/notepad': NotepadMock
+            });
+
+            req.body = { category: testCat._id };
+            req.user = { id: testUser._id };
+            res.statusExpected = HttpStatus.INTERNAL_SERVER_ERROR;
+            res.jsonChecker = obj => {
+                assert.deepEqual(obj, {});
+                done();
+            };
+
+            notepadsRouterWithMocks.postNotepadsHandler(req, res);
         });
 
         it('should return the created notepad and the User and Category should be with updated values', done => {
@@ -469,6 +508,36 @@ describe('Notepads Routes', function () {
             });
         });
 
+        it('should error if the updated notepad result is not valid', done => {
+            let NotepadMock = {
+                updateForUserId: function (notepadId, uid, obj) {
+                    assert.ok(notepadId);
+                    assert.ok(uid);
+                    assert.ok(obj);
+                    return Promise.resolve(null);
+                }
+            };
+
+            let notepadsRouterWithMocks = proxyquire('../../../src/routes/notepads', {
+                '../models/notepad': NotepadMock
+            });
+
+            req.user = { id: testUser._id };
+            req.params = {id: testNotepads[0]._id};
+            req.body = {
+                title: 'asdasd',
+                text: 'aasdasfa',
+                category: 123
+            };
+
+            res.statusExpected = HttpStatus.INTERNAL_SERVER_ERROR;
+            res.jsonChecker = function (obj) {
+                assert.deepEqual(obj, {});
+                done();
+            };
+
+            notepadsRouterWithMocks.putNotepadsIdHandler(req, res);
+        });
     });
 
     describe('deleteNotepadsIdHandler', () => {
