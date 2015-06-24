@@ -40,7 +40,6 @@ describe('API /users', function () {
 
             //if configuration is provided, enable tests that require real FB user id and access token:
             if (config.facebook.app.id && config.facebook.app.secret) {
-                console.log('using facebook app id and secret', config.facebook.app.id, config.facebook.app.secret);
                 try {
                     let result = yield graph.getAsync([
                         '/',
@@ -51,7 +50,6 @@ describe('API /users', function () {
                         config.facebook.app.secret
                     ].join(''));
 
-                    console.log('result', result);
                     if (result && result.data && result.data.length > 0) {
                         config.testFBUser.fbId = result.data[0].id;
                         config.testFBUser.fbAccessToken = result.data[0].access_token;
