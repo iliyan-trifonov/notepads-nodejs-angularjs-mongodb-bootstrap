@@ -35,16 +35,12 @@ let postAuthHandler = (req, res) => {
 
         //find a user by his accessToken
         if (accessToken) {
-            //TODO: blockUser repeats in other code too: put it in a central place
-            let blockUser = statusOverride => {
-                console.error('Invalid Access Token!');
-                return res.status(statusOverride || HttpStatus.FORBIDDEN).json({});
-            };
-
             let user = yield User.getByAccessToken(accessToken);
 
             if (!user) {
-                return blockUser();
+                console.error('Invalid Access Token!');
+                //or NOT_FOUND? UNAUTHORIZED?
+                return res.status(HttpStatus.FORBIDDEN).json({});
             }
 
             return res.status(HttpStatus.OK).json(user);
@@ -58,6 +54,7 @@ let postAuthHandler = (req, res) => {
             //when the given fb id and token mismatch:
             if (!graphUser || graphUser.id !== fbUserId) {
                 console.error("Invalid user from fbAccessToken!");
+                //or BAD_REQUEST? UNAUTHORIZED?
                 return res.status(HttpStatus.FORBIDDEN).json({});
             }
 

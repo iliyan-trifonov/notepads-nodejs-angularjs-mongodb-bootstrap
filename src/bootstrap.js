@@ -88,11 +88,14 @@ if (config) {
         next();
     });
 }
+
 //authorize if valid access token is given
+//populate req.user from a valid access token
 let parseAccessToken = (req, res, next) => {
     let blockUser = err => {
         console.error(err);
-        return res.status(HttpStatus.FORBIDDEN).send('Forbidden');
+        //this may return UNAUTHORIZED instead:
+        return res.status(HttpStatus.FORBIDDEN).json({});
     };
 
     let accessToken = req.query.token;
