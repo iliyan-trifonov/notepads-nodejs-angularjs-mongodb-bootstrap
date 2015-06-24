@@ -26,6 +26,7 @@
     "test": "grunt test"
   },
   "dependencies": {
+    "async": "^1.2.1",
     "babel": "^5.6.0",
     "bluebird": "^2.9.25",
     "body-parser": "^1.13.0",

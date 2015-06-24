@@ -6,7 +6,9 @@ var express = require('express'),
     Category = require('../models/category'),
     Notepad = require('../models/notepad'),
     moment = require('moment'),
-    HttpStatus = require('http-status');
+    HttpStatus = require('http-status'),
+    async = require('async'),
+    Promise = require('bluebird');
 
 import User from '../models/user';
 
@@ -58,18 +60,82 @@ var getNotepadsHandler = function (req, res) {
     var categories = [];
     var catsCache = {};
 
-    function findCat(cats, id) {
-        if ("undefined" !== typeof catsCache[id]) {
-            return catsCache[id];
-        }
-        cats.forEach(function (cat) {
-            if (cat._id.toString() === id.toString()) {
-                catsCache[id] = cat;
-                return false;
+    //uses the catsCache from the outer scope:
+    let findCat = (cats, id) => {
+        return new Promise(function (resolve, reject) {
+            //the category is already in the cache
+            if (catsCache[id]) {
+                return resolve(catsCache[id]);
             }
+
+            //check all items in the array
+            async.detect(cats, function (cat, callback) {
+                //we need callback(true) at some time:
+                callback(cat._id.equals(id));
+            }, function (result) {
+                //the item where we had callback(true):
+                if (result) {
+                    catsCache[id] = result;
+                    resolve(catsCache[id]);
+                } else {
+                    //should never happen as categories array will always have the required cat id
+                    reject();
+                }
+            });
         });
-        return catsCache[id];
-    }
+    };
+
+    //uses the categories from the outer scope:
+    let populateCategories = (cats) => {
+        return new Promise(function (resolve, reject) {
+            async.eachSeries(cats, function (cat, callback) {
+                categories.push({
+                    _id: cat._id,
+                    name: cat.name,
+                    notepadsCount: cat.notepadsCount,
+                    notepads: []
+                });
+                callback();
+            }, function (err) {
+                if (err) {
+                    console.error(err);
+                    reject();
+                } else {
+                    resolve();
+                }
+            });
+        });
+    };
+
+    //uses the categories from the outer scope:
+    let populateNotepads = (notepads) => {
+        return new Promise(function (resolve, reject) {
+
+            async.eachSeries(notepads, function (notepad, callback) {
+
+                findCat(categories, notepad.category).then(function (curCat) {
+                    curCat.notepads.push({
+                        _id: notepad._id,
+                        title: notepad.title,
+                        text: notepad.text,
+                        created: moment(
+                            notepad._id.getTimestamp())
+                            .format('YYYY/MM/DD HH:mm:ss')
+                    });
+                    callback();
+                });
+
+            }, function (err) {
+                if (err) {
+                    console.error(err);
+                    reject();
+                } else {
+                    resolve();
+                }
+            });//async
+
+        });//Promise
+    };
 
     //get the categories
     var p = Category.getByUserId(req.user.id)
@@ -79,31 +145,19 @@ var getNotepadsHandler = function (req, res) {
                 return p.cancel();
             }
 
-            cats.forEach(function (cat) {
-                categories.push({
-                    _id: cat._id,
-                    name: cat.name,
-                    notepadsCount: cat.notepadsCount,
-                    notepads: []
-                });
-            });
-
+            //populate the categories array from cats
+            return populateCategories(cats);
+        })
+        .then(function () {
             //and then get the notepads
             return Notepad.getByUserId(req.user.id);
         })
         .then(function (notepads) {
-            var curCat;
-            notepads.forEach(function (notepad) {
-                curCat = findCat(categories, notepad.category);
-                curCat.notepads.push({
-                    _id: notepad._id,
-                    title: notepad.title,
-                    text: notepad.text,
-                    created: moment(
-                        notepad._id.getTimestamp())
-                        .format('YYYY/MM/DD HH:mm:ss')
-                });
-            });
+            //add the notepads to the categories array
+            return populateNotepads(notepads);
+        })
+        .then(function () {
+            //return the categories array with inserted notepads for each cat
             res.status(HttpStatus.OK).json(categories);
         })
         .catch(function (err) {
