@@ -38,6 +38,15 @@ describe('app', function () {
                     if (this.sendCb) {
                         this.sendCb();
                     }
+                },
+                json: function (data) {
+                    if (!this.jsonDataExpected) {
+                        throw new Error('No jsonDataExpected set!');
+                    }
+                    assert.deepEqual(data, this.jsonDataExpected);
+                    if (this.jsonCb) {
+                        this.jsonCb();
+                    }
                 }
             };
             next = () => {
@@ -52,8 +61,8 @@ describe('app', function () {
         it('should return FORBIDDEN for a given but invalid accessToken', done => {
             req.query.token = 'asdasdasdasd';
             res.statusExpected = HttpStatus.FORBIDDEN;
-            res.sendDataExpected = 'Forbidden';
-            res.sendCb = done;
+            res.jsonDataExpected = {};
+            res.jsonCb = done;
 
             app.parseAccessToken(req, res, null);
         });
