@@ -11,10 +11,13 @@
 
 ## Install
 
-Go to the project's directory and run:
+Install the global tools:
+
+    npm install -g grunt-cli bower
+
+Go to the project's directory and run (also installs the bower's and [Selenium](http://www.seleniumhq.org/) server's packages):
 
     npm install
-    bower install
 
 Copy [config/app.conf.json.dist](config/app.conf.json.dist) to config/app.conf.json and edit it for your environment 
 (set session SECRET, FACEBOOK_APP_ID, FACEBOOK_APP_SECRET, MONGODB_URI).
