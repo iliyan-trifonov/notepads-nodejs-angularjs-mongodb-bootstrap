@@ -1,28 +1,29 @@
 'use strict';
 
-var express = require('express'),
-    app = express(),
-    router = express.Router(),
-    Category = require('../models/category'),
-    Notepad = require('../models/notepad'),
-    moment = require('moment'),
-    HttpStatus = require('http-status'),
-    async = require('async'),
-    Promise = require('bluebird');
-
+import express from 'express';
 import User from '../models/user';
+import Category from '../models/category';
+import Notepad from '../models/notepad';
+import moment from 'moment';
+import HttpStatus from 'http-status';
+import async from 'async';
+import Promise from 'bluebird';
+import co from 'co';
+
+let app = express(),
+    router = express.Router();
 
 //TODO: put this in FacebookAuth
 //TODO: or make it connected somehow
 //TODO: with the Facebook authentication process
-function checkAuth(req, res, next) {
+let checkAuth = (req, res, next) => {
     if (!req.isAuthenticated()) {
         console.error('API notepads: checkAuth(), not authenticated!');
         res.status(HttpStatus.UNAUTHORIZED).json({});
     } else {
         next();
     }
-}
+};
 
 //protect this resource to the logged in user
 //TODO: checkAuth() should be shared between all handlers/controllers
@@ -36,9 +37,9 @@ router.use(checkAuth);
 //TODO: only next() may be needed, not next(route)
 //TODO: check with/out the ?param
 //TODO: and create a second route without the query string instead of the else
-function insidecatsFromQueryString() {
-    return function (req, res, next) {
-        var insidecats = String(req.query.insidecats);
+let insidecatsFromQueryString = () =>
+    (req, res, next) => {
+        let insidecats = String(req.query.insidecats);
         if (insidecats && "1" === insidecats) {
             if (!req.params) {
                 req.params = {};
@@ -48,31 +49,33 @@ function insidecatsFromQueryString() {
         } else {
             next('route');
         }
-    };
-}
+    }
+;
 
 //validation
 //router.param('range', /^(\w+)\.\.(\w+)?$/);
 
-var getNotepadsHandler = function (req, res) {
+let getNotepadsHandler = (req, res) => {
     //if (req.params.insidecats) {
 
-    var categories = [];
-    var catsCache = {};
+    let categories = [];
+    let catsCache = {};
+
+    //helper functions//////////////////////////////////////////////
 
     //uses the catsCache from the outer scope:
     let findCat = (cats, id) => {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
             //the category is already in the cache
             if (catsCache[id]) {
                 return resolve(catsCache[id]);
             }
 
             //check all items in the array
-            async.detect(cats, function (cat, callback) {
+            async.detect(cats, (cat, callback) => {
                 //we need callback(true) at some time:
                 callback(cat._id.equals(id));
-            }, function (result) {
+            }, result => {
                 //the item where we had callback(true):
                 if (result) {
                     catsCache[id] = result;
@@ -87,8 +90,8 @@ var getNotepadsHandler = function (req, res) {
 
     //uses the categories from the outer scope:
     let populateCategories = (cats) => {
-        return new Promise(function (resolve, reject) {
-            async.eachSeries(cats, function (cat, callback) {
+        return new Promise((resolve, reject) => {
+            async.eachSeries(cats, (cat, callback) => {
                 categories.push({
                     _id: cat._id,
                     name: cat.name,
@@ -96,7 +99,7 @@ var getNotepadsHandler = function (req, res) {
                     notepads: []
                 });
                 callback();
-            }, function (err) {
+            }, err => {
                 if (err) {
                     console.error(err);
                     reject();
@@ -109,11 +112,11 @@ var getNotepadsHandler = function (req, res) {
 
     //uses the categories from the outer scope:
     let populateNotepads = (notepads) => {
-        return new Promise(function (resolve, reject) {
+        return new Promise((resolve, reject) => {
 
-            async.eachSeries(notepads, function (notepad, callback) {
+            async.eachSeries(notepads, (notepad, callback) => {
 
-                findCat(categories, notepad.category).then(function (curCat) {
+                findCat(categories, notepad.category).then(curCat => {
                     curCat.notepads.push({
                         _id: notepad._id,
                         title: notepad.title,
@@ -123,9 +126,9 @@ var getNotepadsHandler = function (req, res) {
                             .format('YYYY/MM/DD HH:mm:ss')
                     });
                     callback();
-                });
+                });//findCat
 
-            }, function (err) {
+            }, err => {
                 if (err) {
                     console.error(err);
                     reject();
@@ -137,162 +140,152 @@ var getNotepadsHandler = function (req, res) {
         });//Promise
     };
 
-    //get the categories
-    var p = Category.getByUserId(req.user.id)
-        .then(function (cats) {
-            if (!cats || cats.length === 0) {
-                res.status(HttpStatus.OK).json([]);
-                return p.cancel();
-            }
+    ////////////////////////////////////////////////////////////////
 
-            //populate the categories array from cats
-            return populateCategories(cats);
-        })
-        .then(function () {
-            //and then get the notepads
-            return Notepad.getByUserId(req.user.id);
-        })
-        .then(function (notepads) {
-            //add the notepads to the categories array
-            return populateNotepads(notepads);
-        })
-        .then(function () {
-            //return the categories array with inserted notepads for each cat
-            res.status(HttpStatus.OK).json(categories);
-        })
-        .catch(function (err) {
-            console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json([]);
-        });
+    co(function* () {
+        let cats = yield Category.getByUserId(req.user.id);
+
+        if (!cats || cats.length === 0) {
+            return res.status(HttpStatus.OK).json([]);
+        }
+
+        yield populateCategories(cats);
+
+        let notepads = yield Notepad.getByUserId(req.user.id);
+
+        yield populateNotepads(notepads);
+
+        res.status(HttpStatus.OK).json(categories);
+    }).catch(err => {
+        console.error(err);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json([]);
+    });
+
     /*} else {
      //get user's notepads
      res.json(notepads);
      }*/
 };
 
-var getNotepadByIdHandler = function (req, res) {
-    Notepad.getByIdForUser(req.params.id, req.user.id)
-        .then(function (notepad) {
-            if (!notepad) {
-                return res.status(HttpStatus.NOT_FOUND).json({});
-            }
-            res.status(HttpStatus.OK).json(notepad);
-        })
-        .catch(function (err) {
-            console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
-        });
+let getNotepadByIdHandler = (req, res) => {
+    co(function* () {
+
+        let notepad = yield Notepad.getByIdForUser(req.params.id, req.user.id);
+
+        if (!notepad) {
+            return res.status(HttpStatus.NOT_FOUND).json({});
+        }
+
+        res.status(HttpStatus.OK).json(notepad);
+
+    }).catch(err => {
+        console.error(err);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+    });
 };
 
-var postNotepadsHandler = function (req, res) {
-    var notepad;
-    var p = Category.getByIdForUser(req.body.category, req.user.id)
-        .then(function (category) {
-            if (!category) {
-                res.status(HttpStatus.NOT_FOUND).json({});
-                return p.cancel();
-            }
+let postNotepadsHandler = (req, res) => {
+    co(function* () {
 
-            //TODO: add checking for the required params and return BAD_REQUEST
-            return Notepad.createAsync({
-                category: req.body.category,
+        //TODO: check for valid params and return BAD_REQUEST
+
+        let category = yield Category.getByIdForUser(req.body.category, req.user.id);
+
+        if (!category) {
+            return res.status(HttpStatus.NOT_FOUND).json({});
+        }
+
+        let notepad = yield Notepad.createAsync({
+            category: category._id,
+            title: req.body.title,
+            text: req.body.text,
+            user: req.user.id
+        });
+
+        if (!notepad) {
+            throw new Error('Could not create notepad!');
+        }
+
+        yield Category.increaseNotepadsCountById(notepad.category);
+
+        yield User.addNotepad(notepad.user, notepad._id);
+
+        res.status(HttpStatus.OK).json(notepad);
+
+    }).catch(err => {
+        console.error(err);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+    });
+};
+
+let putNotepadsIdHandler = (req, res) => {
+    co(function* () {
+        if (!req.params.id || ! req.body.title || !req.body.text || !req.body.category) {
+            return res.status(HttpStatus.BAD_REQUEST).json({});
+        }
+
+        let notepad = yield Notepad.getByIdForUser(req.params.id, req.user.id);
+
+        if (!notepad) {
+            return res.status(HttpStatus.NOT_FOUND).json({});
+        }
+
+        let oldCat = notepad.category;
+
+        notepad = yield Notepad.updateForUserId(
+            notepad._id,
+            req.user.id,
+            {
                 title: req.body.title,
                 text: req.body.text,
-                user: req.user.id
-            });
-        })
-        .then(function (note) {
-            if (!note) {
-                throw new Error('Could not create notepad!');
+                category: req.body.category
             }
-            notepad = note;
-            return Category.increaseNotepadsCountById(notepad.category);
-        })
-        .then(function (/*category*/) {
-            //TODO: check if category is valid
-            return User.addNotepad(req.user.id, notepad._id);
-        })
-        .then(function (/*user*/) {
-            //TODO: check if user is valid
-            return res.status(HttpStatus.OK).json(notepad);
-        })
-        .catch(function (err) {
-            console.error(err);
-            return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
-        });
-};
+        );
 
-var putNotepadsIdHandler = function (req, res) {
-    if (!req.params.id || ! req.body.title || !req.body.text || !req.body.category) {
-        return res.status(HttpStatus.BAD_REQUEST).json({});
-    }
-
-    var oldCat, newCat, notepadNew;
-    var p = Notepad.getByIdForUser(req.params.id, req.user.id)
-        .then(function (notepad) {
-            if (!notepad) {
-                res.status(HttpStatus.NOT_FOUND).json({});
-                return p.cancel();
-            }
-
-            oldCat = notepad.category;
-            newCat = req.body.category;
-
-            return Notepad.updateForUserId(
-                notepad._id,
-                req.user.id,
-                {
-                    title: req.body.title,
-                    text: req.body.text,
-                    category: req.body.category
-                }
-            );
-        }).then(function (notepad) {
-            if (!notepad) {
-                throw new Error('Error updating the notepad!');
-            }
-
-            notepadNew = notepad;
-            //update categories notepads' numbers if cat is changed
-            if (String(newCat) !== String(oldCat)) {
-                return Category.decreaseNotepadsCountById(oldCat).then(function (/*cat*/) {
-                    return Category.increaseNotepadsCountById(newCat);
-                });
-            }
-        }).then(function (/*cat*/) {
-            res.status(HttpStatus.OK).json(notepadNew);
-        }).catch(function (err) {
-            console.error(err);
-            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
-        });
-};
-
-var deleteNotepadsIdHandler = function (req, res) {
-    var notepad;
-    var p = Notepad.getByIdForUser(req.params.id, req.user.id).then(function (notepad) {
         if (!notepad) {
-            res.status(HttpStatus.NOT_FOUND).json({});
-            return p.cancel();
+            throw new Error('Error updating the notepad!');
         }
-        return Notepad.findByIdAndRemove(req.params.id);
-    }).then(function (note) {
-        if (!note) {
+
+        if (String(oldCat) !== String(notepad.category)) {
+            yield Category.decreaseNotepadsCountById(oldCat);
+            yield Category.increaseNotepadsCountById(notepad.category);
+        }
+
+        res.status(HttpStatus.OK).json(notepad);
+    }).catch(err => {
+        console.error(err);
+        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
+    });
+};
+
+let deleteNotepadsIdHandler = (req, res) => {
+    co(function* () {
+        let notepad = yield  Notepad.getByIdForUser(req.params.id, req.user.id);
+
+        if (!notepad) {
+            return res.status(HttpStatus.NOT_FOUND).json({});
+        }
+
+        notepad = yield Notepad.findByIdAndRemove(req.params.id);
+
+        if (!notepad) {
             throw new Error('Could not delete the notepad!');
         }
-        notepad = note;
-        return User.removeNotepad(req.user.id, req.params.id);
-    }).then(function (user) {
+
+        let user = yield User.removeNotepad(req.user.id, req.params.id);
+
         if (!user) {
             throw new Error('Could not remove the notepad id from user!');
         }
-        return Category.decreaseNotepadsCountById(notepad.category);
-    }).then(function (category) {
+
+        let category = yield Category.decreaseNotepadsCountById(notepad.category);
+
         if (!category) {
             throw new Error('Could not decrease notepads count in category!');
         }
-        //success
+
         res.status(HttpStatus.OK).json(notepad);
-    }).catch(function (err) {
+    }).catch(err => {
         console.error(err);
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
     });
@@ -313,14 +306,16 @@ router.put('/:id', putNotepadsIdHandler);
 // DELETE /notepads/1
 router.delete('/:id', deleteNotepadsIdHandler);
 
-module.exports = exports = router;
 
 if (app.get('env') === 'test') {
-    module.exports.checkAuth = exports.checkAuth = checkAuth;
-    module.exports.insidecatsFromQueryString = exports.insidecatsFromQueryString = insidecatsFromQueryString;
-    module.exports.getNotepadsHandler = exports.getNotepadsHandler = getNotepadsHandler;
-    module.exports.getNotepadByIdHandler = exports.getNotepadByIdHandler = getNotepadByIdHandler;
-    module.exports.postNotepadsHandler = exports.postNotepadsHandler = postNotepadsHandler;
-    module.exports.putNotepadsIdHandler = exports.putNotepadsIdHandler = putNotepadsIdHandler;
-    module.exports.deleteNotepadsIdHandler = exports.deleteNotepadsIdHandler = deleteNotepadsIdHandler;
+    router.checkAuth = checkAuth;
+    router.insidecatsFromQueryString = insidecatsFromQueryString;
+    router.getNotepadsHandler = getNotepadsHandler;
+    router.getNotepadByIdHandler = getNotepadByIdHandler;
+    router.postNotepadsHandler = postNotepadsHandler;
+    router.putNotepadsIdHandler = putNotepadsIdHandler;
+    router.deleteNotepadsIdHandler = deleteNotepadsIdHandler;
 }
+
+//module.exports = exports = router;
+export default router;
