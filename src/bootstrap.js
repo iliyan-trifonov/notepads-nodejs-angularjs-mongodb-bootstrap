@@ -130,9 +130,8 @@ if (config) {
 
 //dev env
 if ('development' === app.get('env')) {
-    //app.use(express.logger('dev')); TODO: check exp4 way
-    let errorHandler = require('errorhandler');
-    app.use(errorHandler());
+    app.use(require('morgan')('combined'));
+    app.use(require('errorhandler')());
 }
 
 let createConnection = () => {
