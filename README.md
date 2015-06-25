@@ -62,6 +62,16 @@ and [supertest](https://github.com/visionmedia/supertest) are used for unit and 
 [Istanbul](https://github.com/gotwarlost/istanbul) is used for coverage. 
 I count on its future [source maps parsing](https://github.com/gotwarlost/istanbul/commits/source-map) for ES6 coverage.
 
+## Testing
+
+Unit and integration tests:
+
+    npm test
+    
+End-to-end tests:
+
+    npm e2e
+
 ## What can you do with this app
 
 First I must say that this is one of my first apps after I've read the great book 
