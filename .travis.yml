@@ -5,7 +5,7 @@ node_js:
   - "iojs"
 services:
   - mongodb
-before_install: npm install -g grunt-cli
+before_install: npm install -g grunt-cli bower
 install:
   - npm install
   - npm install codecov.io
