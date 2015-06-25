@@ -349,7 +349,7 @@ describe('Notepads Routes', function () {
                     //check the notepad object
                     assert.ok(obj);
                     assert.strictEqual(obj.user, req.user.id);
-                    assert.strictEqual(obj.category, req.body.category);
+                    assert.ok(obj.category.equals(req.body.category));
                     assert.strictEqual(obj.title, req.body.title);
                     assert.strictEqual(obj.text, req.body.text);
 
@@ -367,7 +367,8 @@ describe('Notepads Routes', function () {
                     testUser = user;
 
                     done();
-                });
+                })
+                .catch(done);
             };
 
             notepadsRouter.postNotepadsHandler(req, res);
