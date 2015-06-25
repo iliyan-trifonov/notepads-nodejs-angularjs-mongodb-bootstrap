@@ -64,13 +64,13 @@ I count on its future [source maps parsing](https://github.com/gotwarlost/istanb
 
 ## Testing
 
-Unit and integration tests:
+Unit and integration tests (you may provide FB app id and secret in [app.conf.json](config/app.conf.json.dist)):
 
     npm test
     
-End-to-end tests:
+End-to-end tests (must have FB email and pass in [app.conf.json](config/app.conf.json.dist)):
 
-    npm e2e
+    npm run e2e
 
 ## What can you do with this app
 
