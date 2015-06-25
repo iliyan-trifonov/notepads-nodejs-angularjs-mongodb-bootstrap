@@ -19,11 +19,13 @@
   ],
   "main": "src",
   "engines": {
-    "node": ">= 0.10.38"
+    "node": ">= 0.10.37"
   },
   "scripts": {
+    "postinstall": "bower install && webdriver-manager update --standalone",
     "start": "node src/app.js",
-    "test": "grunt test"
+    "test": "grunt test",
+    "e2e": "grunt e2e"
   },
   "dependencies": {
     "async": "^1.2.1",
@@ -49,8 +51,13 @@
     "grunt": "^0.4.5",
     "grunt-contrib-jshint": "^0.11.2",
     "grunt-env": "^0.4.4",
+    "grunt-express-server": "^0.5.1",
     "grunt-mocha-istanbul": "^2.4.0",
+    "grunt-protractor-runner": "^2.0.0",
+    "grunt-protractor-webdriver": "^0.2.0",
     "grunt-spec-check": "^0.1.0",
+    "morgan": "^1.6.0",
+    "protractor": "^2.1.0",
     "proxyquire": "^1.4.0",
     "supertest": "^1.0.1"
   }
