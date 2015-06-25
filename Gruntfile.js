@@ -43,6 +43,26 @@ module.exports = function (grunt) {
             test: {
                 NODE_ENV: 'test'
             }
+        },
+        protractor_webdriver: {
+            all: {
+                options: {
+                    keepAlive: true
+                }
+            }
+        },
+        protractor: {
+            options: {
+                configFile: "config/protractor.conf.js"
+            },
+            all: {}
+        },
+        express: {
+            dev: {
+                options: {
+                    script: './src/app.js'
+                }
+            }
         }
     });
 
@@ -60,8 +80,12 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-contrib-jshint');
     grunt.loadNpmTasks('grunt-mocha-istanbul');
     grunt.loadNpmTasks('grunt-spec-check');
+    grunt.loadNpmTasks('grunt-protractor-webdriver');
+    grunt.loadNpmTasks('grunt-protractor-runner');
+    grunt.loadNpmTasks('grunt-express-server');
 
     grunt.registerTask('test', ['env:test', 'jshint:app', 'mocha_istanbul', 'specCheck']);
+    grunt.registerTask('e2e', ['express', 'protractor_webdriver', 'protractor']);
     grunt.registerTask('default', 'test');
 
 };
