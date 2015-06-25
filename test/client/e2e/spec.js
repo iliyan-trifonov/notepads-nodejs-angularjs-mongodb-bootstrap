@@ -1,10 +1,14 @@
 'use strict';
 
+//this can be put directly in config/protractor.conf.js:
+require('babel/register');
+
+require('../waitReady');
+
+//TODO: use testing.json if the main config is not found:
 var config = require('../../../config/app.conf.json'),
     User = require('../../../src/models/user'),
     connection = require('../../db_common');
-
-require('../waitReady');
 
 describe('Notepads app', function() {
 
