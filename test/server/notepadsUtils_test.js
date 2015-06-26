@@ -108,7 +108,9 @@ describe('notepadsUtils', () => {
                 assert.ok(result.category._id.equals(category._id));
             });
         });
+    });
 
+    describe('unassignNotepad()', () => {
         it('should decrease the notepads count in the category and remove the notepad from the user', () => {
             return co(function* () {
                 //prepare
