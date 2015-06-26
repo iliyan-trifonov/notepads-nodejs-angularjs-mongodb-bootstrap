@@ -1,10 +1,10 @@
 'use strict';
 
-let config,
-    FacebookStrategy = require('passport-facebook').Strategy,
-    notepadsUtils = require('./notepadsUtils');
-
+import { Strategy as FacebookStrategy } from 'passport-facebook';
+import * as notepadsUtils from './notepadsUtils';
 import User from './models/user';
+
+let config;
 
 let authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done) {
     let p = User.fb(fbProfile.id).then(function (existingUser) {
