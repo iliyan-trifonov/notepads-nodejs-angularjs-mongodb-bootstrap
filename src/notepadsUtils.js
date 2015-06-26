@@ -6,7 +6,7 @@ import Notepad from './models/notepad';
 import Promise from 'bluebird';
 import co from 'co';
 
-module.exports.prepopulate = exports.prepopulate = uid => {
+export let prepopulate = uid => {
     let user, userOrig, category, notepad;
 
     return co(function* () {
@@ -55,7 +55,7 @@ module.exports.prepopulate = exports.prepopulate = uid => {
             notepad: notepad
         };
     }).catch(err => {
-        //cleanup - restore:
+        //cleanup - restore code, no need to wait for it to finish:
         //TODO: test this cleanup
         if (category && category._id) {
             Category.remove({ _id: category._id });
@@ -83,3 +83,30 @@ module.exports.prepopulate = exports.prepopulate = uid => {
         return Promise.reject(err);
     });
 };
+
+//the following 2 functions modify User and Category:
+export let assignNotepad = (notepadId, catId, uid) => {
+    return co(function* () {
+        let user = yield User.addNotepad(uid, notepadId);
+        let category = yield Category.increaseNotepadsCountById(catId);
+
+        return {
+            user,
+            category
+        };
+    });
+};
+
+export let unassignNotepad = (notepadId, catId, uid) => {
+    return co(function* () {
+        let user = yield User.removeNotepad(uid, notepadId);
+        let category = yield Category.decreaseNotepadsCountById(catId);
+
+        return {
+            user,
+            category
+        };
+    });
+};
+
+//TODO: make assignCategory(catId, uid), unassignC... too

@@ -1,72 +1,142 @@
 'use strict';
 
-var notepadsUtils = require('../../src/notepadsUtils'),
-    assert = require('assert'),
-    connection = require('../db_common'),
-    mongoose = require('mongoose'),
-    Category = require('../../src/models/category'),
-    Notepad = require('../../src/models/notepad');
-
+import * as notepadsUtils from '../../src/notepadsUtils';
+import assert from 'assert';
+import connection from '../db_common';
+import mongoose from 'mongoose';
 import User from '../../src/models/user';
+import Category from '../../src/models/category';
+import Notepad from '../../src/models/notepad';
+import co from 'co';
 
-describe('notepadsUtils', function () {
+describe('notepadsUtils', () => {
 
-    var db, user;
+    let db, user;
 
-    before(function () {
-        //TODO: use callback/promise:
-        db = connection();
+    before(() => {
+        return co(function* () {
+            db = connection();
 
-        var fbId = String(+new Date()), //convert to string for the comparison below
-            name = 'Iliyan Trifonov',
-            photo = 'photourl';
-        return User.createAsync({
-            facebookId: fbId,
-            name: name,
-            photo: photo
-        }).then(function (doc) {
-            assert.strictEqual(doc.facebookId, fbId);
-            assert.strictEqual(doc.name, name);
-            assert.strictEqual(doc.photo, photo);
-            user = doc;
+            let fbId = String(+new Date()), //convert to string for the comparison below
+                name = 'Iliyan Trifonov',
+                photo = 'photourl';
+
+            user = yield User.createAsync({
+                facebookId: fbId,
+                name: name,
+                photo: photo
+            });
         });
     });
 
-    after(function () {
-        return User.removeAsync({})
-            .then(function () {
-                return Category.remove({});
-            })
-            .then(function () {
-                return Notepad.remove({});
-            })
-            .then(function () {
-                db.close();
-            });
+    after(() => {
+        return co(function* () {
+            yield User.removeAsync({});
+            yield Category.removeAsync({});
+            yield Notepad.removeAsync({});
+            db.close();
+        });
     });
 
-    it("should create a new 'Sample Category' and a new Notepad 'Read me' for a given user id", function () {
-        return notepadsUtils.prepopulate(user._id)
-            .then(function (result) {
+    describe('prepopulate()', () => {
+        it("should create a new 'Sample Category' and a new Notepad 'Read me' for a given user id", () => {
+            return co(function* () {
+                let result = yield notepadsUtils.prepopulate(user._id);
                 assert.ok(result.user);
                 assert.ok(result.category);
                 assert.ok(result.notepad);
                 //TODO: check if the category and notepad exist in db and their props/texts are as expected
             });
-    });
+        });
 
-    it('should return Error Invalid user id on missing uid param', function () {
-        return notepadsUtils.prepopulate(null).catch(function (err) {
-            assert.ok(err);
-            assert.strictEqual(err.message, 'Invalid user id!');
+        it('should return Error Invalid user id on missing uid param', done => {
+            co(function* () {
+                yield notepadsUtils.prepopulate(null);
+            }).catch(err => {
+                assert.ok(err);
+                assert.strictEqual(err.message, 'Invalid user id!');
+                done();
+            });
+        });
+
+        it('should return Error on not existing user with the given uid', done => {
+            co(function* () {
+                yield notepadsUtils.prepopulate(mongoose.Types.ObjectId(+new Date()));
+            }).catch(function (err) {
+                assert.ok(err);
+                assert.strictEqual(err.message, 'User not found!');
+                done();
+            });
         });
     });
 
-    it('should return Error on not existing user with the given uid', function () {
-        return notepadsUtils.prepopulate(mongoose.Types.ObjectId(+new Date()))
-            .catch(function (err) {
-                assert.strictEqual(err.message, 'User not found!');
+    describe('assignNotepad()', () => {
+        it('should increase the notepads of a specified cat and add the notepad id to the user.notepads', () => {
+            return co(function* () {
+                //prepare
+
+                //refresh the user data:
+                user = yield User.findByIdAsync(user._id);
+                let oldNotesLen = user.notepads.length;
+
+                let category = yield Category.add('Test Cat Name', user._id);
+
+                assert.strictEqual(category.notepadsCount, 0);
+
+                let notepad = yield Notepad.createAsync({
+                    title: 'Test Notepad Title',
+                    text: 'Test Notepad Text',
+                    category: category._id,
+                    user: user._id
+                });
+
+                //execute
+                let result = yield notepadsUtils.assignNotepad(notepad._id, category._id, user._id);
+
+                //check
+
+                //get the latest user data:
+                user = yield User.findByIdAsync(user._id);
+                assert.strictEqual(user.notepads.length, oldNotesLen + 1);
+                assert.ok(user.notepads.indexOf(notepad._id) !== -1);
+
+                //get the latest category data:
+                category = yield Category.findByIdAsync(category._id);
+                assert.strictEqual(category.notepadsCount, 1);
+
+                assert.ok(result.user._id.equals(user._id));
+                assert.ok(result.category._id.equals(category._id));
             });
+        });
+
+        it('should decrease the notepads count in the category and remove the notepad from the user', () => {
+            return co(function* () {
+                //prepare
+
+                //get one notepad from the test user:
+                let notepad = yield Notepad.findByIdAsync(user.notepads[0]);
+                let oldNotesLen = user.notepads.length;
+
+                let category = yield Category.findByIdAsync(notepad.category);
+                let oldNotesCount = category.notepadsCount;
+
+                //execute
+                let result = yield notepadsUtils.unassignNotepad(notepad._id, category._id, user._id);
+
+                //check
+
+                //update the user and category data:
+                user = yield User.findByIdAsync(user._id);
+                category = yield Category.findByIdAsync(category._id);
+
+                assert.strictEqual(user.notepads.length, oldNotesLen - 1);
+                assert.strictEqual(category.notepadsCount, oldNotesCount - 1);
+                assert.ok(user.notepads.indexOf(notepad._id) === -1);
+
+                assert.ok(result.user._id.equals(user._id));
+                assert.ok(result.category._id.equals(category._id));
+            });
+        });
     });
 
 });
