@@ -11,6 +11,8 @@ var request = require('supertest'),
     co = require('co');
 
 import User from '../../../src/models/user';
+import Category from '../../../src/models/category';
+import Notepad from '../../../src/models/notepad';
 
 Promise.promisify(graph.get);
 
@@ -88,12 +90,12 @@ describe('API /users', function () {
                 .expect(HttpStatus.BAD_REQUEST, done);
         });
 
-        it('should return FORBIDDEN for a non-existent accessToken', function (done) {
+        it('should return UNAUTHORIZED for a non-existent accessToken', function (done) {
             request(app)
                 .post(url)
                 .send({ accessToken: +new Date() })
                 .expect('Content-Type', /json/)
-                .expect(HttpStatus.FORBIDDEN, done);
+                .expect(HttpStatus.UNAUTHORIZED, done);
         });
 
         it('should return a user for an existing accessToken', function (done) {
@@ -112,7 +114,7 @@ describe('API /users', function () {
 
 ////////these tests pass only with a given real test fb user - test on private CI or locally://////////////////////////
 
-        it('should return FORBIDDEN if FB user is found but has different id', function (done) {
+        it('should return UNAUTHORIZED if FB user is found but has different id', function (done) {
             if (!config.testFBUser || !config.testFBUser.fbAccessToken) {
                 this.skip();
             }
@@ -124,7 +126,7 @@ describe('API /users', function () {
                     fbAccessToken: config.testFBUser.fbAccessToken
                 })
                 .expect('Content-Type', /json/)
-                .expect(HttpStatus.FORBIDDEN, done);
+                .expect(HttpStatus.UNAUTHORIZED, done);
         });
 
         //TODO: check for the prepopulated cat and notepad here too:
@@ -144,11 +146,34 @@ describe('API /users', function () {
                         fbAccessToken: config.testFBUser.fbAccessToken
                     })
                     .expect('Content-Type', /json/)
-                    .expect(HttpStatus.OK)
+                    .expect(HttpStatus.CREATED)
                     .end(function (err, result) {
-                        assert.ifError(err);
-                        assert.ok(result.body.accessToken);
-                        done();
+                        co(function* () {
+                            if (err) {
+                                return done(err);
+                            }
+                            assert.ok(result.body.accessToken);
+
+                            //check the data inserted by prepopulate():
+
+                            let user = yield User.findOneAsync({ accessToken: result.body.accessToken });
+                            assert.strictEqual(String(user.facebookId), String(config.testFBUser.fbId));
+                            assert.strictEqual(user.categories.length, 1);
+                            assert.strictEqual(user.notepads.length, 1);
+
+                            let cat = yield Category.findByIdAsync(user.categories[0].toString());
+                            assert.ok(cat._id.equals(user.categories[0]));
+                            assert.strictEqual(cat.notepadsCount, 1);
+                            assert.strictEqual(cat.name, 'Sample category');
+
+                            let notepad = yield Notepad.findByIdAsync(user.notepads[0]);
+                            assert.ok(notepad._id.equals(user.notepads[0]));
+                            assert.ok(notepad.category.equals(cat._id));
+                            assert.strictEqual(notepad.title, 'Read me');
+                            assert.ok(notepad.text.startsWith('Use the menu on the top left to create your own categories'));
+
+                            done();
+                        }).catch(done);
                     });
             });
         });

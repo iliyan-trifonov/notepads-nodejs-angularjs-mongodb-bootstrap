@@ -1,13 +1,13 @@
 'use strict';
 
-var assert = require('assert'),
-    connection = require('../../db_common'),
-    HttpStatus = require('http-status'),
-    Promise = require('bluebird'),
-    proxyquire = require('proxyquire'),
-    usersRouter;
-
 import User from '../../../src/models/user';
+import assert from 'assert';
+import connection from '../../db_common';
+import HttpStatus from 'http-status';
+import Promise from 'bluebird';
+import proxyquire from 'proxyquire';
+import co from 'co';
+let usersRouter;
 
 describe('Users Routes', function () {
 
@@ -33,8 +33,14 @@ describe('Users Routes', function () {
 
         notepadsUtilsMock = {
             prepopulate: function (uid) {
-                assert.ok(uid);
-                return User.findOne({ _id: uid });
+                return co(function* () {
+                    assert.ok(uid);
+                    return {
+                        user: yield User.findByIdAsync(uid),
+                        category: {},
+                        notepad: {}
+                    };
+                });
             }
         };
 
@@ -102,53 +108,61 @@ describe('Users Routes', function () {
             usersRouter.postAuthHandler(req, res);
         });
 
-        it('it should return FORBIDDEN for non-existent accessToken', function (done) {
-            var req = {
-                body: {
-                    fbId: +new Date(),
-                    fbAccessToken: +new Date() + 1,
-                    accessToken: '0a9s7d0as97d0asd0as7d09'
-                }
-            };
+        it('it should return UNAUTHORIZED for non-existent accessToken', function (done) {
+            try {
+                var req = {
+                    body: {
+                        fbId: +new Date(),
+                        fbAccessToken: +new Date() + 1,
+                        accessToken: '0a9s7d0as97d0asd0as7d09'
+                    }
+                };
 
-            var res = {
-                status: function status (stat) {
-                    assert.strictEqual(stat, HttpStatus.FORBIDDEN);
-                    return this;
-                },
-                json: function json (data) {
-                    assert.deepEqual(data, {});
-                    done();
-                }
-            };
+                var res = {
+                    status: function status (stat) {
+                        assert.strictEqual(stat, HttpStatus.UNAUTHORIZED);
+                        return this;
+                    },
+                    json: function json (data) {
+                        assert.deepEqual(data, {});
+                        done();
+                    }
+                };
 
-            usersRouter.postAuthHandler(req, res);
+                usersRouter.postAuthHandler(req, res);
+            } catch(err) {
+                done(err);
+            }
         });
 
-        it('should return FORBIDDEN for wrong fbAccessToken', function (done) {
-            var req = {
-                body: {
-                    fbId: +new Date(),
-                    fbAccessToken: +new Date() + 1,
-                    accessToken: ''
-                }
-            };
+        it('should return UNAUTHORIZED for wrong fbAccessToken', function (done) {
+            try {
+                var req = {
+                    body: {
+                        fbId: +new Date(),
+                        fbAccessToken: +new Date() + 1,
+                        accessToken: ''
+                    }
+                };
 
-            var res = {
-                status: function status (stat) {
-                    assert.strictEqual(stat, HttpStatus.FORBIDDEN);
-                    return this;
-                },
-                json: function json (data) {
-                    assert.deepEqual(data, {});
-                    done();
-                }
-            };
+                var res = {
+                    status: function status (stat) {
+                        assert.strictEqual(stat, HttpStatus.UNAUTHORIZED);
+                        return this;
+                    },
+                    json: function json (data) {
+                        assert.deepEqual(data, {});
+                        done();
+                    }
+                };
 
-            //return invalid user from fbgraph
-            fbgraphMock.user = {};
+                //return invalid user from fbgraph
+                fbgraphMock.user = {};
 
-            usersRouter.postAuthHandler(req, res);
+                usersRouter.postAuthHandler(req, res);
+            } catch(err) {
+                done(err);
+            }
         });
 
         it('should return a valid user for an existing accessToken', function (done) {
@@ -203,6 +217,7 @@ describe('Users Routes', function () {
         });
 
         it('should create a new user and call prepopulate() given valid fbAccessToken for non-existent user', function (done) {
+            let testUsername = 'Test user';
             var req = {
                 body: {
                     fbId: +new Date(),
@@ -212,20 +227,26 @@ describe('Users Routes', function () {
             };
 
             var res = {
-                status: function status (stat) {
-                    assert.strictEqual(stat, HttpStatus.OK);
+                status: function (stat) {
+                    assert.strictEqual(stat, HttpStatus.CREATED);
                     return this;
                 },
-                json: function json (data) {
-                    assert.ok(data.accessToken);
-                    //TODO: check if prepopulate() made changes to the DB
-                    done();
+                json: data => {
+                    co(function* () {
+                        assert.ok(data.accessToken);
+
+                        let user = yield User.findOneAsync({ accessToken: data.accessToken });
+                        assert.strictEqual(String(user.facebookId), String(req.body.fbId));
+                        assert.strictEqual(user.name, testUsername);
+
+                        done();
+                    }).catch(done);
                 }
             };
 
             fbgraphMock.user = {
                 id: req.body.fbId,
-                name: 'Test user',
+                name: testUsername,
                 picture: {
                     data: {
                         url: 'photourl'

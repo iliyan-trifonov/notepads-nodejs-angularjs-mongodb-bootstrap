@@ -39,8 +39,7 @@ let postAuthHandler = (req, res) => {
 
             if (!user) {
                 console.error('Invalid Access Token!');
-                //or NOT_FOUND? UNAUTHORIZED?
-                return res.status(HttpStatus.FORBIDDEN).json({});
+                return res.status(HttpStatus.UNAUTHORIZED).json({});
             }
 
             return res.status(HttpStatus.OK).json(user);
@@ -54,15 +53,14 @@ let postAuthHandler = (req, res) => {
             //when the given fb id and token mismatch:
             if (!graphUser || graphUser.id !== fbUserId) {
                 console.error("Invalid user from fbAccessToken!");
-                //or BAD_REQUEST? UNAUTHORIZED?
-                return res.status(HttpStatus.FORBIDDEN).json({});
+                return res.status(HttpStatus.UNAUTHORIZED).json({});
             }
 
             let user = yield User.fb(fbUserId);
 
             if (user) {
                 //user found by his FB access token
-                return res.status(HttpStatus.OK).json({accessToken: user.accessToken});
+                return res.status(HttpStatus.OK).json({ accessToken: user.accessToken });
             } else {
                 //create a new user
                 user = yield User.createAsync({
@@ -72,10 +70,10 @@ let postAuthHandler = (req, res) => {
                 });
 
                 //pre-populate only for new users
-                notepadsUtils.prepopulate(user._id);
+                yield notepadsUtils.prepopulate(user._id);
 
                 //success, return the accessToken
-                return res.status(HttpStatus.OK).json({accessToken: user.accessToken});
+                return res.status(HttpStatus.CREATED).json({ accessToken: user.accessToken });
             }
         }
     }).catch(err => {
