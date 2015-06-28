@@ -7,6 +7,7 @@ import connection from '../../db_common';
 import User from '../../../src/models/user';
 import Category from '../../../src/models/category';
 import Notepad from '../../../src/models/notepad';
+import mongoose from 'mongoose';
 import assert from 'assert';
 import co from 'co';
 let config;
@@ -118,12 +119,12 @@ describe('API /categories', () => {
                 });
         });
 
-        it('should add a new category and assign it to the user', done => {
+        it('should create a new category and assign it to the user', done => {
             let catName = 'Test Cat Name';
             callUrl({ method: 'post', token: testUser.accessToken })
                 .send({ name: catName })
                 .expect('Content-Type', /json/)
-                .expect(HttpStatus.OK)
+                .expect(HttpStatus.CREATED)
                 .end((err, res) => {
                     co(function* () {
                         if (err) {
@@ -140,6 +141,83 @@ describe('API /categories', () => {
 
                         done();
                     });
+                });
+        });
+    });
+
+    describe('GET /categories/:id', () => {
+        it('should return NOT FOUND and an empty object literal when cat is not found', done => {
+            callUrl({ method: 'get', addUrl: '/' + mongoose.Types.ObjectId(), token: testUser.accessToken })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.NOT_FOUND)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.deepEqual(res.body, {});
+
+                    done();
+                });
+        });
+
+        it('should return a category given its id', done => {
+            callUrl({ method: 'get', addUrl: '/' + testCat._id, token: testUser.accessToken })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.OK)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    let cat = res.body;
+
+                    assert.ok(cat);
+                    assert.ok(testCat._id.equals(cat._id));
+                    assert.strictEqual(cat.name, testCat.name);
+
+                    done();
+                });
+        });
+    });
+
+    describe('PUT /categories/:id', () => {
+        it('should return a BAD_REQUEST status when a param is missing', done => {
+            callUrl({ method: 'put', addUrl: '/1234', token: testUser.accessToken })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.BAD_REQUEST)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.deepEqual(res.body, {});
+
+                    done();
+                });
+        });
+
+        it('should update a category given proper id and name', done => {
+            let newCatName = 'New Cat Name ' + String(new Date().getTime());
+            callUrl({ method: 'put', addUrl: '/' + testCat._id, token: testUser.accessToken })
+                .send({ name: newCatName })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.CREATED)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    let cat = res.body;
+
+                    assert.ok(cat);
+                    assert.ok(testCat._id.equals(cat._id));
+                    assert.strictEqual(cat.name, newCatName);
+
+                    //update the test category
+                    testCat.name = cat.name;
+
+                    done();
                 });
         });
     });
