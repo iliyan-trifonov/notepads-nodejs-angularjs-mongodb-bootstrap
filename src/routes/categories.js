@@ -63,7 +63,7 @@ let postHandler = (req, res) => {
 
         yield User.addCategory(cat.user, cat._id);
 
-        res.status(HttpStatus.OK).json(cat);
+        res.status(HttpStatus.CREATED).json(cat);
     }).catch(err => {
         console.error('categories route postHandler() error', err);
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
@@ -103,7 +103,7 @@ let putIdHandler = (req, res) => {
             return res.status(HttpStatus.NOT_FOUND).json({});
         }
 
-        res.status(HttpStatus.OK).json(category);
+        res.status(HttpStatus.CREATED).json(category);
     }).catch(err => {
         console.error('categories route putIdHandler() error', err);
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
@@ -113,7 +113,6 @@ let putIdHandler = (req, res) => {
 let deleteIdHandler = (req, res) => {
     co(function* () {
         //check if the current user has that Category
-        console.log('getting category');
         let category = yield Category.getByIdForUser(req.params.id, req.user.id);
 
         if (!category) {
@@ -121,10 +120,8 @@ let deleteIdHandler = (req, res) => {
             return res.status(HttpStatus.NOT_FOUND).json({});
         }
 
-        console.log('removing category', category);
         category = yield Category.findByIdAndRemoveAsync(category._id);
 
-        console.log('removing category from user');
         let user = yield User.removeCategory(category.user, category._id);
 
         if (!user) {
@@ -134,19 +131,16 @@ let deleteIdHandler = (req, res) => {
         //delete all orphaned notepads(if any) belonging to the deleted category
         //TODO: ask to delete the notepads and if not put the notepads in Uncategorized category instead
         //TODO: check if Notepad.remove() returns the removed documents to use it directly
-        console.log('getting notepads');
         let notepads = yield Notepad.findAsync({ user: req.user.id, category: category._id });
 
         if (notepads) {
             let ns = pluck(notepads, '_id');
-            console.log('removing notepads');
             yield Notepad.removeAsync({ _id: { $in: ns } });
             //remove the notepads' ids from User.notepads too
-            console.log('removing notepads from user');
             yield User.removeNotepads(req.user.id, ns);
         }
 
-        return res.status(HttpStatus.OK).json(category);
+        return res.status(HttpStatus.NO_CONTENT).json({});
     }).catch(err => {
         console.error('categories route deleteIdHandler() error', err);
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});

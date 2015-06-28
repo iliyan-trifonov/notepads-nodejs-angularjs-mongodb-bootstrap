@@ -210,7 +210,7 @@ let postNotepadsHandler = (req, res) => {
 
         yield User.addNotepad(notepad.user, notepad._id);
 
-        res.status(HttpStatus.OK).json(notepad);
+        res.status(HttpStatus.CREATED).json(notepad);
 
     }).catch(err => {
         console.error(err);
@@ -251,7 +251,7 @@ let putNotepadsIdHandler = (req, res) => {
             yield Category.increaseNotepadsCountById(notepad.category);
         }
 
-        res.status(HttpStatus.OK).json(notepad);
+        res.status(HttpStatus.CREATED).json(notepad);
     }).catch(err => {
         console.error(err);
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});
@@ -284,7 +284,7 @@ let deleteNotepadsIdHandler = (req, res) => {
             throw new Error('Could not decrease notepads count in category!');
         }
 
-        res.status(HttpStatus.OK).json(notepad);
+        res.status(HttpStatus.NO_CONTENT).json({});
     }).catch(err => {
         console.error(err);
         res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({});

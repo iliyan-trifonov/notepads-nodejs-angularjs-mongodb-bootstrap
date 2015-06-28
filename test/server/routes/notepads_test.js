@@ -343,7 +343,7 @@ describe('Notepads Routes', function () {
                 category: testCat._id
             };
             req.user = { id: testUser._id };
-            res.statusExpected = HttpStatus.OK;
+            res.statusExpected = HttpStatus.CREATED;
             res.jsonChecker = obj => {
                 co(function* () {
                     //check the notepad object
@@ -425,7 +425,7 @@ describe('Notepads Routes', function () {
                 text: 'test',
                 category: testCat._id
             };
-            res.statusExpected = HttpStatus.OK;
+            res.statusExpected = HttpStatus.CREATED;
             res.jsonChecker = obj => {
                 assert.ok(obj);
                 assert.notDeepEqual(obj, {});
@@ -473,7 +473,7 @@ describe('Notepads Routes', function () {
                     category: testCat._id
                 };
 
-                res.statusExpected = HttpStatus.OK;
+                res.statusExpected = HttpStatus.CREATED;
 
                 res.jsonChecker = obj => {
                     co(function* () {
@@ -558,15 +558,13 @@ describe('Notepads Routes', function () {
             let note = testNotepads[testNotepads.length - 1];
             req.params = { id: note._id };
             req.user = { id: testUser._id };
-            res.statusExpected = HttpStatus.OK;
+            res.statusExpected = HttpStatus.NO_CONTENT;
 
             res.jsonChecker = obj => {
                 co(function* () {
                     //check the notepad changes
                     assert.ok(obj);
-                    assert.notDeepEqual(obj, {});
-                    assert.ok(obj._id.equals(note._id));
-                    assert.strictEqual(obj.title, note.title);
+                    assert.deepEqual(obj, {});
 
                     let cat = yield Category.findOneAsync({ _id: note.category });
                     assert.strictEqual(cat.notepadsCount, testCat.notepadsCount - 1);

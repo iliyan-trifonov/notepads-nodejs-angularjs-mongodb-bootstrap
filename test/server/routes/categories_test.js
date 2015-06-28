@@ -101,13 +101,13 @@ describe('Categories Routes', () => {
     });
 
     describe('POST /categories', () => {
-        it('should add new Category and assign it to the user', done => {
+        it('should create a new Category and assign it to the user', done => {
             var testCatName = 'Test cat ' + (+new Date());
 
             req.body = { name: testCatName };
 
             res.status = function (status) {
-                assert.strictEqual(status, HttpStatus.OK);
+                assert.strictEqual(status, HttpStatus.CREATED);
                 return this;
             };
 
@@ -214,7 +214,7 @@ describe('Categories Routes', () => {
             };
             res = {
                 status: function (status) {
-                    assert.strictEqual(status, HttpStatus.OK);
+                    assert.strictEqual(status, HttpStatus.CREATED);
                     return this;
                 },
                 json: cat => {
@@ -344,9 +344,11 @@ describe('Categories Routes', () => {
         });
 
         it('should delete a category, delete all notepads belonging to that category and update categories in user', done => {
+            let cat;
             //create a new category
             Category.createAsync({ name: 'Test cat to delete', user: user._id }).then(category => {
                 assert.ok(category);
+                cat = category;
                 //add it to the user's categories array
                 return User.addCategory(user._id, category._id);
             }).then(user => {
@@ -355,7 +357,7 @@ describe('Categories Routes', () => {
                 return Notepad.createAsync({
                     title: 'asdas',
                     text: 'dfgdfg',
-                    category: category._id,
+                    category: cat._id,
                     user: user._id
                 });
             }).then(notepad => {
@@ -367,17 +369,20 @@ describe('Categories Routes', () => {
 
                 //prepare the test params
                 req = {
-                    params: { id: category._id },
+                    params: { id: cat._id },
                     user: { id: user._id }
                 };
 
                 res = {
                     status: function (status) {
-                        assert.strictEqual(status, HttpStatus.OK);
+                        assert.strictEqual(status, HttpStatus.NO_CONTENT);
                         return this;
                     },
-                    json: cat => {
-                        assert.ok(cat._id.equals(category._id));
+                    json: category => {
+                        assert.deepEqual(category, {});
+
+                        //check with the created cat above:
+
                         //category doesn't exist
                         Category.findOneAsync({ id: cat._id }).then(doc => {
                             assert.strictEqual(doc, null);
