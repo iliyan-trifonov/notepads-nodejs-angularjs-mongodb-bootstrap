@@ -2,8 +2,7 @@
 
 import Promise from 'bluebird';
 let mongoose = Promise.promisifyAll(require('mongoose'));
-//TODO: replace hat with something more specific for API tokens
-import hat from 'hat';
+import uuid from 'node-uuid';
 
 //TODO: add required to the fields
 let userSchema = new mongoose.Schema({
@@ -19,7 +18,7 @@ let userSchema = new mongoose.Schema({
 
 //auto create the accessToken
 userSchema.pre('validate', function (next) {
-    this.accessToken = this.accessToken || hat();
+    this.accessToken = this.accessToken || uuid.v4();
     next();
 });
 
