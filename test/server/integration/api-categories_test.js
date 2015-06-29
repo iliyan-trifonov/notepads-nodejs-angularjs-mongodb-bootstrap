@@ -222,4 +222,69 @@ describe('API /categories', () => {
         });
     });
 
+    describe('DELETE /categories/:id', () => {
+        it('should return NOT FOUND when the cat is not found by the given params', done => {
+            callUrl({ method: 'delete', addUrl: '/' + mongoose.Types.ObjectId(), token: testUser.accessToken })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.NOT_FOUND, done);
+        });
+
+        it('should remove the category, remove its id from user.categories, remove all notepads in that category and from user.notepads ', done => {
+            co(function* () {
+                //prepare
+                let user = yield User.createAsync({
+                    name: 'User to be deleted',
+                    facebookId: +new Date(),
+                    photo: 'photourl'
+                });
+
+                let cat = yield Category.createAsync({
+                    name: 'Cat to be deleted',
+                    user: user._id
+                });
+
+                user = yield User.addCategory(user._id, cat._id);
+
+                let notepad = yield Notepad.createAsync({
+                    title: 'Notepad to be deleted',
+                    text: 'Test text',
+                    category: cat._id,
+                    user: user._id
+                });
+
+                user = yield User.addNotepad(user._id, notepad._id);
+                cat = yield Category.increaseNotepadsCountById(cat._id);
+
+                assert.ok(user.categories.indexOf(cat._id) !== -1);
+                assert.ok(user.notepads.indexOf(notepad._id) !== -1);
+                assert.strictEqual(cat.notepadsCount, 1);
+
+                //execute
+                callUrl({ method: 'delete', addUrl: '/' + cat._id, token: user.accessToken })
+                    //.expect('Content-Type', /json/)
+                    .expect(HttpStatus.NO_CONTENT)
+                    .end((err, res) => {
+                        co(function* () {
+                            if (err) {
+                                return done(err);
+                            }
+
+                            assert.deepEqual(res.body, {});
+
+                            //check if the should be deleted stuff exists
+
+                            assert.strictEqual(null, yield Category.findByIdAsync(cat._id));
+                            assert.strictEqual(null, yield Notepad.findByIdAsync(notepad._id));
+
+                            user = yield User.findByIdAsync(user._id);
+                            assert.ok(user.categories.indexOf(cat._id) === -1);
+                            assert.ok(user.notepads.indexOf(notepad._id) === -1);
+
+                            done();
+                        }).catch(done);
+                    });
+            }).catch(done);
+        });
+    });
+
 });
