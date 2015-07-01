@@ -9,6 +9,7 @@ import Notepad from '../../../src/models/notepad';
 import HttpStatus from 'http-status';
 import mongoose from 'mongoose';
 import proxyquire from 'proxyquire';
+import Promise from 'bluebird';
 import co from 'co';
 
 describe('Categories Routes', () => {
