@@ -59,6 +59,7 @@
     "morgan": "^1.6.0",
     "protractor": "^2.1.0",
     "proxyquire": "^1.4.0",
-    "supertest": "^1.0.1"
+    "supertest": "^1.0.1",
+    "istanbul": "git://github.com/gotwarlost/istanbul.git#source-map"
   }
 }
