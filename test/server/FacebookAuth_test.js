@@ -4,7 +4,6 @@ var assert = require('assert'),
     connection = require('../db_common'),
     Category = require('../../src/models/category'),
     Notepad = require('../../src/models/notepad'),
-    Promise = require('bluebird'),
     FacebookAuth = require('../../src/FacebookAuth');
 
 import User from '../../src/models/user';
