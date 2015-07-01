@@ -1,7 +1,5 @@
 'use strict';
 
-import request from 'supertest';
-import app from '../../../src/app';
 import HttpStatus from 'http-status';
 import connection from '../../db_common';
 import User from '../../../src/models/user';
@@ -10,6 +8,8 @@ import Notepad from '../../../src/models/notepad';
 import mongoose from 'mongoose';
 import assert from 'assert';
 import co from 'co';
+import RequestUrl from './helper-functions';
+
 let config;
 
 try {
@@ -20,33 +20,26 @@ try {
 
 describe('API /categories', () => {
 
-    let db, testUser, testCat, testNotepad;
-    //set the main categories url
+    let db, testUser, testCat, testNotepad, callUrl;
+    //set the main categories API url
     let url = config.apiBase + '/categories';
-
-    //helper function to make the request and to make the testing code more dry
-    let callUrl = (options = {}) => {
-        let addUrlPart = options.addUrl || '';
-        let reqMethod = options.method ? options.method.toLowerCase() : null;
-        let req = request(app);
-        if (!reqMethod || !(reqMethod in req)) {
-            reqMethod = 'get';
-        }
-        let r = req[reqMethod];
-        let accessToken = options.token || testUser.accessToken;
-        let urlFinal = `${url}${addUrlPart}?token=${accessToken}`;
-        return r(urlFinal);
-    };
 
     before(() => {
         return co(function* () {
             db = connection();
+
+            let request = new RequestUrl();
+            callUrl = request.callUrl.bind(request);
+
+            request.setUrl(url);
 
             testUser = yield User.createAsync({
                 'facebookId': +new Date(),
                 'name': 'Iliyan Trifonov',
                 'photo': 'photourl'
             });
+
+            request.setToken(testUser.accessToken);
 
             testCat = yield Category.createAsync({
                 name: 'Test category',
@@ -68,7 +61,14 @@ describe('API /categories', () => {
     });
 
     after(() => {
-        db.close();
+        return co(function* () {
+            //cleanup
+            yield User.remove({});
+            yield Category.remove({});
+            yield Notepad.remove({});
+
+            db.close();
+        });
     });
 
     describe('GET /categories', () => {
