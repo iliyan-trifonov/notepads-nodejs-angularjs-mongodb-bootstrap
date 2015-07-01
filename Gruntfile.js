@@ -84,7 +84,8 @@ module.exports = function (grunt) {
     grunt.loadNpmTasks('grunt-protractor-runner');
     grunt.loadNpmTasks('grunt-express-server');
 
-    grunt.registerTask('test', ['env:test', 'jshint:app', 'mocha_istanbul', 'specCheck']);
+    grunt.registerTask('lintall', ['jshint:gruntfile', 'jshint:app', 'jshint:test']);
+    grunt.registerTask('test', ['env:test', 'lintall', 'mocha_istanbul', 'specCheck']);
     grunt.registerTask('e2e', ['express', 'protractor_webdriver', 'protractor']);
     grunt.registerTask('default', 'test');
 
