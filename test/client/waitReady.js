@@ -10,6 +10,8 @@
  */
 "use strict";
 
+/* jshint undef: false, unused: false */
+
 // Config
 var specTimeoutMs = 10000; // 10 seconds
 
@@ -28,12 +30,12 @@ ElementFinder.prototype.waitReady = function(opt_optStr) {
         "' to be present and visible. " +
         "After " + driverWaitIterations + " driverWaitIterations. " +
         "Last webdriver error: " + lastWebdriverError);
-    };
+    }
 
     function _isPresentError(err) {
-        lastWebdriverError = (err != null) ? err.toString() : err;
+        lastWebdriverError = (err !== null) ? err.toString() : err;
         return false;
-    };
+    }
 
     return browser.driver.wait(function() {
         driverWaitIterations++;
@@ -55,7 +57,7 @@ ElementFinder.prototype.waitReady = function(opt_optStr) {
             }
         }, _isPresentError);
     }, specTimeoutMs).then(function(waitResult) {
-        if (!waitResult) { _throwError() };
+        if (!waitResult) { _throwError(); }
         return waitResult;
     }, function(err) {
         _isPresentError(err);
