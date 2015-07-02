@@ -63,7 +63,8 @@ describe('Notepads Routes', function () {
         req = {
             user: {
                 id: testUser._id
-            }
+            },
+            params: {}
         };
 
         res = {
@@ -132,16 +133,6 @@ describe('Notepads Routes', function () {
             };
             notepadsRouter.insidecatsFromQueryString()(req, res, next);
         });
-
-        it('should call next(route) if req.query.insidecats is not set', done => {
-            req.query = {};
-            let next = function() {
-                assert.strictEqual(arguments.length, 1);
-                assert.strictEqual(arguments[0], "route");
-                done();
-            };
-            notepadsRouter.insidecatsFromQueryString()(req, res, next);
-        });
     });
 
     describe('getNotepadsHandler', () => {
@@ -154,6 +145,7 @@ describe('Notepads Routes', function () {
               });
 
                req.user.id = user._id;
+               req.params.insidecats = "1";
                res.statusExpected = HttpStatus.OK;
                res.jsonChecker = obj => {
                    assert.deepEqual(obj, []);
@@ -178,6 +170,7 @@ describe('Notepads Routes', function () {
                 });
 
                 req.user.id = user._id;
+                req.params.insidecats = "1";
 
                 for (let i = 0, l = cats.length; i < l; i++) {
                     yield Category.createAsync({
@@ -202,6 +195,7 @@ describe('Notepads Routes', function () {
 
         it('should return the categories and notepads for a user', done => {
             res.statusExpected = HttpStatus.OK;
+            req.params.insidecats = "1";
             res.jsonChecker = obj => {
                 //1 category
                 assert.strictEqual(obj.length, 1);
@@ -214,8 +208,34 @@ describe('Notepads Routes', function () {
         });
 
         it('should return INTERNAL SERVER ERROR on error', done => {
-            req.user.id = +new Date();
+            req.user.id = +new Date();//the error: not an ObjectId
+            req.params.insidecats = "1";
             res.statusExpected = HttpStatus.INTERNAL_SERVER_ERROR;
+            res.jsonChecker = obj => {
+                assert.deepEqual(obj, []);
+                done();
+            };
+
+            notepadsRouter.getNotepadsHandler(req, res);
+        });
+
+        it('should return the notepads of the current user', done => {
+            req.user.id = testUser._id;
+            res.statusExpected = HttpStatus.OK;
+            res.jsonChecker = obj => {
+                assert.ok(Array.isArray(obj));
+                assert.strictEqual(obj.length, 2);
+                assert.ok(obj[0].title === testNotepads[0].title || obj[0].title === testNotepads[1].title);
+                assert.ok(obj[1].title === testNotepads[0].title || obj[1].title === testNotepads[1].title);
+                done();
+            };
+
+            notepadsRouter.getNotepadsHandler(req, res);
+        });
+
+        it('should return NOT_FOUND if user has no notepads', done => {
+            req.user.id = mongoose.Types.ObjectId();
+            res.statusExpected = HttpStatus.NOT_FOUND;
             res.jsonChecker = obj => {
                 assert.deepEqual(obj, []);
                 done();

@@ -45,10 +45,8 @@ let insidecatsFromQueryString = () =>
                 req.params = {};
             }
             req.params.insidecats = insidecats;
-            next();
-        } else {
-            next('route');
         }
+        next();
     }
 ;
 
@@ -56,115 +54,125 @@ let insidecatsFromQueryString = () =>
 //router.param('range', /^(\w+)\.\.(\w+)?$/);
 
 let getNotepadsHandler = (req, res) => {
-    //if (req.params.insidecats) {
+    //put all notepads in categories:
+    if (req.params.insidecats === "1") {
+        let categories = [];
+        let catsCache = {};
 
-    let categories = [];
-    let catsCache = {};
+        //helper functions//////////////////////////////////////////////
 
-    //helper functions//////////////////////////////////////////////
-
-    //uses the catsCache from the outer scope:
-    let findCat = (cats, id) => {
-        return new Promise((resolve, reject) => {
-            //the category is already in the cache
-            if (catsCache[id]) {
-                return resolve(catsCache[id]);
-            }
-
-            //check all items in the array
-            async.detect(cats, (cat, callback) => {
-                //we need callback(true) at some time:
-                callback(cat._id.equals(id));
-            }, result => {
-                //the item where we had callback(true):
-                if (result) {
-                    catsCache[id] = result;
-                    resolve(catsCache[id]);
-                } else {
-                    //should never happen as categories array will always have the required cat id
-                    reject();
+        //uses the catsCache from the outer scope:
+        let findCat = (cats, id) => {
+            return new Promise((resolve, reject) => {
+                //the category is already in the cache
+                if (catsCache[id]) {
+                    return resolve(catsCache[id]);
                 }
-            });
-        });
-    };
 
-    //uses the categories from the outer scope:
-    let populateCategories = (cats) => {
-        return new Promise((resolve, reject) => {
-            async.eachSeries(cats, (cat, callback) => {
-                categories.push({
-                    _id: cat._id,
-                    name: cat.name,
-                    notepadsCount: cat.notepadsCount,
-                    notepads: []
+                //check all items in the array
+                async.detect(cats, (cat, callback) => {
+                    //we need callback(true) at some time:
+                    callback(cat._id.equals(id));
+                }, result => {
+                    //the item where we had callback(true):
+                    if (result) {
+                        catsCache[id] = result;
+                        resolve(catsCache[id]);
+                    } else {
+                        //should never happen as categories array will always have the required cat id
+                        reject();
+                    }
                 });
-                callback();
-            }, err => {
-                if (err) {
-                    console.error(err);
-                    reject();
-                } else {
-                    resolve();
-                }
             });
-        });
-    };
+        };
 
-    //uses the categories from the outer scope:
-    let populateNotepads = (notepads) => {
-        return new Promise((resolve, reject) => {
-
-            async.eachSeries(notepads, (notepad, callback) => {
-
-                findCat(categories, notepad.category).then(curCat => {
-                    curCat.notepads.push({
-                        _id: notepad._id,
-                        title: notepad.title,
-                        text: notepad.text,
-                        created: moment(
-                            notepad._id.getTimestamp())
-                            .format('YYYY/MM/DD HH:mm:ss')
+        //uses the categories from the outer scope:
+        let populateCategories = (cats) => {
+            return new Promise((resolve, reject) => {
+                async.eachSeries(cats, (cat, callback) => {
+                    categories.push({
+                        _id: cat._id,
+                        name: cat.name,
+                        notepadsCount: cat.notepadsCount,
+                        notepads: []
                     });
                     callback();
-                });//findCat
+                }, err => {
+                    if (err) {
+                        console.error(err);
+                        reject();
+                    } else {
+                        resolve();
+                    }
+                });
+            });
+        };
 
-            }, err => {
-                if (err) {
-                    console.error(err);
-                    reject();
-                } else {
-                    resolve();
-                }
-            });//async
+        //uses the categories from the outer scope:
+        let populateNotepads = (notepads) => {
+            return new Promise((resolve, reject) => {
 
-        });//Promise
-    };
+                async.eachSeries(notepads, (notepad, callback) => {
 
-    ////////////////////////////////////////////////////////////////
+                    findCat(categories, notepad.category).then(curCat => {
+                        curCat.notepads.push({
+                            _id: notepad._id,
+                            title: notepad.title,
+                            text: notepad.text,
+                            created: moment(
+                                notepad._id.getTimestamp())
+                                .format('YYYY/MM/DD HH:mm:ss')
+                        });
+                        callback();
+                    });//findCat
 
-    co(function* () {
-        let cats = yield Category.getByUserId(req.user.id);
+                }, err => {
+                    if (err) {
+                        console.error(err);
+                        reject();
+                    } else {
+                        resolve();
+                    }
+                });//async
 
-        if (!cats || cats.length === 0) {
-            return res.status(HttpStatus.OK).json([]);
-        }
+            });//Promise
+        };
 
-        yield populateCategories(cats);
+        ////////////////////////////////////////////////////////////////
 
-        let notepads = yield Notepad.getByUserId(req.user.id);
+        co(function* () {
+            let cats = yield Category.getByUserId(req.user.id);
 
-        yield populateNotepads(notepads);
+            if (!cats || cats.length === 0) {
+                return res.status(HttpStatus.OK).json([]);
+            }
 
-        res.status(HttpStatus.OK).json(categories);
-    }).catch(err => {
-        console.error(err);
-        res.status(HttpStatus.INTERNAL_SERVER_ERROR).json([]);
-    });
+            yield populateCategories(cats);
 
-    /*} else {
-     //get user's notepads
-     res.json(notepads);
-     }*/
+            let notepads = yield Notepad.getByUserId(req.user.id);
+
+            yield populateNotepads(notepads);
+
+            res.status(HttpStatus.OK).json(categories);
+        }).catch(err => {
+            console.error(err);
+            res.status(HttpStatus.INTERNAL_SERVER_ERROR).json([]);
+        });
+    } else {
+        //get all user's notepads
+        co(function* () {
+            console.log('getting notepads array');
+            let notepads = yield Notepad.getByUserId(req.user.id);
+            console.log('notepads result', notepads);
+            if (!notepads || !Array.isArray(notepads) || notepads.length === 0) {
+                console.log('returning not found');
+                return res.status(HttpStatus.NOT_FOUND).json([]);
+            }
+
+            console.log('returning ok with the notepads array');
+            res.status(HttpStatus.OK).json(notepads);
+        });
+    }
 };
 
 let getNotepadByIdHandler = (req, res) => {
