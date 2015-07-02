@@ -29,6 +29,7 @@ describe('API /categories', () => {
             db = connection();
 
             let request = new RequestUrl();
+
             callUrl = request.callUrl.bind(request);
 
             request.setUrl(url);
