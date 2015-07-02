@@ -19,7 +19,8 @@ describe('Notepads app', function() {
         });
 
         it('should have a title with specific text', function() {
-            expect(browser.getTitle()).toEqual('Notepads by Iliyan Trifonov');
+            expect(browser.getTitle())
+                .toEqual('Notepads by Iliyan Trifonov');
         });
 
         it('should have a jumbotron with specific items/text', function() {
@@ -50,7 +51,7 @@ describe('Notepads app', function() {
             browser.ignoreSynchronization = true;
 
             //element(by.css('div.jumbotron>p>a')).click();
-            browser.get('http://notepadsjs.dev:3000/auth/facebook');
+            browser.get(config.devUrl + 'auth/facebook');
 
             var emailInput = element(by.id('email'));
             var passInput = element(by.id('pass'));
@@ -75,7 +76,9 @@ describe('Notepads app', function() {
             browser.get(config.devUrl);
 
             expect(element(by.css('.dashboard')).waitReady()).toBeTruthy();
+        });
 
+        it('should have only the sample category and the read me notepad on the dashboard', function () {
             element.all(by.css('.category')).then(function (cats) {
                 expect(cats.length).toBe(1);
             });
@@ -84,11 +87,52 @@ describe('Notepads app', function() {
                 expect(notepads.length).toBe(1);
             });
 
-            expect(element(by.css('.category>h3>span:first-of-type')).getText()).toEqual('Sample category');
-            expect(element(by.css('.notepad>.title')).getText()).toEqual('Read me');
-
+            expect(element(by.css('.category>h3>span:first-of-type'))
+                .getText())
+                .toEqual('Sample category');
+            expect(element(by.css('.category>h3>small'))
+                .getText())
+                .toEqual('(1)');
+            expect(element(by.css('.category>h3>a'))
+                .getText())
+                .toEqual('Add Notepad Here');
+            expect(element(by.css('.notepad>.title'))
+                .getText())
+                .toEqual('Read me');
         });
 
+        it('should go to the Add Notepad page with the category preselected', function () {
+            element(by.css('.category>h3>a')).click();
+
+            expect(browser.getCurrentUrl())
+                .toContain('#/notepads/add/catid');
+
+            expect(element(by.id('category'))
+                .$('option:checked')
+                .getText())
+                .toEqual('Sample category');
+        });
+
+        it('should go to the Add Notepad page with no category preselected', function () {
+            browser.get(config.devUrl);
+
+            var addNotepadBtn = element.all(by.css('#navbar>ul>li')).get(2);
+
+            expect(addNotepadBtn.getText())
+                .toEqual('Add Notepad');
+
+            addNotepadBtn.click();
+
+            expect(browser.getCurrentUrl())
+                .toEqual(config.devUrl + '#/notepads/add');
+
+            expect(element(by.id('category'))
+                .$('option:checked')
+                .getText())
+                .toEqual('Select category');
+        });
+
+        //let this test to be the last:
         it('should go to the home page after logout is clicked', function () {
             element(by.css('.logout')).click();
             expect(element(by.css('div.jumbotron>h1'))
