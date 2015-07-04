@@ -5,7 +5,7 @@ import connection from '../../db_common';
 import User from '../../../src/models/user';
 import Category from '../../../src/models/category';
 import Notepad from '../../../src/models/notepad';
-//import mongoose from 'mongoose';
+import mongoose from 'mongoose';
 import assert from 'assert';
 import co from 'co';
 import RequestUrl from './helper-functions';
@@ -159,6 +159,190 @@ describe('API /notepads', () => {
                     done();
                 });
         });
+    });
+
+    describe('GET /notepads/:id', () => {
+        it('should return NOT_FOUND when there is no notepad with the given id', done => {
+            callUrl({ token: testUser.accessToken, addUrl: '/' + mongoose.Types.ObjectId() })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.NOT_FOUND)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.deepEqual(res.body, {});
+
+                    done();
+                });
+        });
+
+        it('should return NOT_FOUND when there is no notepad with the given uid', done => {
+            co(function* () {
+                let user = yield User.createAsync({
+                    name: 'Iliyan Trifonov',
+                    facebookId: +new Date(),
+                    photo: 'photourl'
+                });
+
+                callUrl({ token: user.accessToken, addUrl: '/' + testNotepad._id })
+                    .expect('Content-Type', /json/)
+                    .expect(HttpStatus.NOT_FOUND)
+                    .end((err, res) => {
+                        if (err) {
+                            return done(err);
+                        }
+
+                        assert.deepEqual(res.body, {});
+
+                        done();
+                    });
+            });
+        });
+
+        it('should return INTERNAL_SERVER_ERROR on error', done => {
+            callUrl({ token: testUser.accessToken, addUrl: '/' + (new Date().getTime()) })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.INTERNAL_SERVER_ERROR)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.deepEqual(res.body, {});
+
+                    done();
+                });
+        });
+
+        it('should return the requested notepad', done => {
+            callUrl({ token: testUser.accessToken, addUrl: '/' + testNotepad._id })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.OK)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    let notepad = res.body;
+
+                    assert.ok(testNotepad._id.equals(notepad._id));
+                    assert.strictEqual(notepad.title, testNotepad.title);
+
+                    done();
+                });
+        });
+    });
+
+    describe('POST /notepads', () => {
+        it('should return BAD_REQUEST when the category of the notepad is not found', done => {
+            callUrl({ token: testUser.accessToken, method: 'post' })
+                .send({
+                    title: 'test notepad',
+                    text: 'test text'
+                })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.BAD_REQUEST)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.deepEqual(res.body, {});
+
+                    done();
+                });
+        });
+
+        it('should return BAD_REQUEST when the title param is missing', done => {
+            callUrl({ token: testUser.accessToken, method: 'post' })
+                .send({
+                    category: testCat._id,
+                    text: 'test text'
+                })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.BAD_REQUEST)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.deepEqual(res.body, {});
+
+                    done();
+                });
+        });
+
+        it('should return BAD_REQUEST when the text param is missing', done => {
+            callUrl({ token: testUser.accessToken, method: 'post' })
+                .send({
+                    category: testCat._id,
+                    title: 'test notepad'
+                })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.BAD_REQUEST)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.deepEqual(res.body, {});
+
+                    done();
+                });
+        });
+
+        it('should return the created notepad', done => {
+            let notepadReq = {
+                category: testCat._id,
+                title: 'test notepad',
+                text: 'test text'
+            };
+
+            callUrl({ token: testUser.accessToken, method: 'post' })
+                .send(notepadReq)
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.CREATED)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    let notepad = res.body;
+
+                    assert.ok(notepad);
+                    assert.ok(notepadReq.category.equals(notepad.category));
+                    assert.strictEqual(notepadReq.title, notepad.title);
+                    assert.strictEqual(notepadReq.text, notepad.text);
+
+                    co(function* () {
+                        //refresh the test user and cat
+                        testUser = yield User.findByIdAsync(testUser._id);
+                        testCat = yield Category.findByIdAsync(testCat._id);
+
+                        done();
+                    });
+                });
+        });
+
+        it('should return INTERNAL_SERVER_ERROR on error', done => {
+            callUrl({ token: testUser.accessToken, method: 'post' })
+                .send({
+                    category: +new Date()
+                })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.INTERNAL_SERVER_ERROR)
+                .end((err, res) => {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    assert.deepEqual(res.body, {});
+
+                    done();
+                });
+        });
+
     });
 
 });
