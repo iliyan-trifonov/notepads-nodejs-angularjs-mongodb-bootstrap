@@ -161,15 +161,11 @@ let getNotepadsHandler = (req, res) => {
     } else {
         //get all user's notepads
         co(function* () {
-            console.log('getting notepads array');
             let notepads = yield Notepad.getByUserId(req.user.id);
-            console.log('notepads result', notepads);
             if (!notepads || !Array.isArray(notepads) || notepads.length === 0) {
-                console.log('returning not found');
                 return res.status(HttpStatus.NOT_FOUND).json([]);
             }
 
-            console.log('returning ok with the notepads array');
             res.status(HttpStatus.OK).json(notepads);
         });
     }
@@ -199,8 +195,8 @@ let postNotepadsHandler = (req, res) => {
 
         let category = yield Category.getByIdForUser(req.body.category, req.user.id);
 
-        if (!category) {
-            return res.status(HttpStatus.NOT_FOUND).json({});
+        if (!category || !req.body.title || !req.body.text) {
+            return res.status(HttpStatus.BAD_REQUEST).json({});
         }
 
         let notepad = yield Notepad.createAsync({
