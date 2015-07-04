@@ -316,7 +316,7 @@ describe('Categories Routes', () => {
             let CategoryMock = {
                 findByIdAndRemoveAsync: catId => {
                     assert.ok(catId);
-                    return category;
+                    return Promise.resolve(category);
                 }
             };
 
@@ -324,7 +324,7 @@ describe('Categories Routes', () => {
                 removeCategory: (uid, catId) => {
                     assert.ok(uid.equals(user._id));
                     assert.ok(catId.equals(category._id));
-                    return Promise.reject(null);
+                    return Promise.reject(new Error('triggerred error from User.removeCategory()'));
                 }
             };
 
