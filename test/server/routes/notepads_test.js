@@ -68,10 +68,22 @@ describe('Notepads Routes', function () {
         };
 
         res = {
+            maxCalls: 1,
+            statusCalls: 0,
+            jsonCalls: 0,
             status: function(status) {
+                console.log(`res.status(${status}) called`);
+
                 if (!this.statusExpected) {
                     throw new Error('unconfigured response object!');
                 }
+
+                if (this.statusCalls > this.maxCalls - 1) {
+                    throw new Error(`res.status() called more than ${this.maxCalls} time(s)!`);
+                }
+
+                this.statusCalls++;
+
                 assert.strictEqual(status, this.statusExpected);
                 return this;
             },
@@ -79,6 +91,13 @@ describe('Notepads Routes', function () {
                 if (!this.jsonChecker) {
                     throw new Error('unconfigured response object!');
                 }
+
+                if (this.jsonCalls > this.maxCalls - 1) {
+                    throw new Error(`res.json() called more than ${this.maxCalls} time(s)!`);
+                }
+
+                this.jsonCalls++;
+
                 this.jsonChecker(obj);
             }
         };
@@ -259,6 +278,7 @@ describe('Notepads Routes', function () {
                     done();
                 }
             };
+            res.maxCalls = 2;
 
             notepadsRouter.getNotepadByIdHandler(req, res);
 
@@ -307,10 +327,14 @@ describe('Notepads Routes', function () {
     });
 
     describe('postNotepadsHandler', () => {
-        it('should return NOT_FOUND when the category given is not found', done => {
-            req.body = { category: mongoose.Types.ObjectId() };
+        it('should return BAD_REQUEST when the category given is not found', done => {
+            req.body = {
+                category: mongoose.Types.ObjectId(),
+                title: 'test notepad',
+                text: 'test text'
+            };
             req.user = { id: testUser._id };
-            res.statusExpected = HttpStatus.NOT_FOUND;
+            res.statusExpected = HttpStatus.BAD_REQUEST;
             res.jsonChecker = obj => {
                 assert.deepEqual(obj, {});
                 done();
@@ -319,9 +343,52 @@ describe('Notepads Routes', function () {
             notepadsRouter.postNotepadsHandler(req, res);
         });
 
-        //TODO: convert this to BAD_REQUEST with added checking for the required params
-        it('should return INTERNAL SERVER ERROR when there is an error in Notepad.createAsync (like not enough of the required params)', done => {
-            req.body = { category: testCat._id };
+        it('should return BAD_REQUEST when title param is missing', done => {
+            req.body = {
+                category: mongoose.Types.ObjectId(),
+                text: 'test text'
+            };
+            req.user = { id: testUser._id };
+            res.statusExpected = HttpStatus.BAD_REQUEST;
+            res.jsonChecker = obj => {
+                assert.deepEqual(obj, {});
+                done();
+            };
+
+            notepadsRouter.postNotepadsHandler(req, res);
+        });
+
+        it('should return BAD_REQUEST when the text param is missing', done => {
+            req.body = {
+                category: mongoose.Types.ObjectId(),
+                title: 'test notepad'
+            };
+            req.user = { id: testUser._id };
+            res.statusExpected = HttpStatus.BAD_REQUEST;
+            res.jsonChecker = obj => {
+                assert.deepEqual(obj, {});
+                done();
+            };
+
+            notepadsRouter.postNotepadsHandler(req, res);
+        });
+
+        it('should return INTERNAL SERVER ERROR when there is an error in Notepad.createAsync()', done => {
+            let NotepadMock = {
+                createAsync: function (/*obj*/) {
+                    return Promise.reject(null);
+                }
+            };
+
+            let notepadsRouterWithMocks = proxyquire('../../../src/routes/notepads', {
+                '../models/notepad': NotepadMock
+            });
+
+            req.body = {
+                category: testCat._id,
+                title: 'test notepad',
+                text: 'test text'
+            };
             req.user = { id: testUser._id };
             res.statusExpected = HttpStatus.INTERNAL_SERVER_ERROR;
             res.jsonChecker = obj => {
@@ -329,7 +396,7 @@ describe('Notepads Routes', function () {
                 done();
             };
 
-            notepadsRouter.postNotepadsHandler(req, res);
+            notepadsRouterWithMocks.postNotepadsHandler(req, res);
         });
 
         it('should return INTERNAL SERVER ERROR when Notepad.createAsync() doesn\'t return a valid object', done => {
@@ -345,7 +412,11 @@ describe('Notepads Routes', function () {
                 '../models/notepad': NotepadMock
             });
 
-            req.body = { category: testCat._id };
+            req.body = {
+                category: testCat._id,
+                title: 'test notepad',
+                text: 'test text'
+            };
             req.user = { id: testUser._id };
             res.statusExpected = HttpStatus.INTERNAL_SERVER_ERROR;
             res.jsonChecker = obj => {
@@ -407,15 +478,20 @@ describe('Notepads Routes', function () {
                     done();
                 }
             };
+            res.maxCalls = 4;
 
+            //first call
             notepadsRouter.putNotepadsIdHandler(req, res);
 
+            //second call
             req.params.id = testNotepads._id;
             notepadsRouter.putNotepadsIdHandler(req, res);
 
+            //third call
             req.body.title = 'Test notepad';
             notepadsRouter.putNotepadsIdHandler(req, res);
 
+            //fourth call
             req.body.text = 'Test text';
             notepadsRouter.putNotepadsIdHandler(req, res);
         });
