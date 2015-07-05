@@ -1,6 +1,6 @@
 'use strict';
 
-import request from 'supertest';
+import request from 'supertest-as-promised';
 import app from '../../../src/app';
 
 //helper functions to make the request and to make the testing code more dry
