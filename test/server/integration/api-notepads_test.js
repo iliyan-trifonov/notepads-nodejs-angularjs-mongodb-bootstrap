@@ -24,8 +24,8 @@ describe('API /notepads', () => {
     //set the main notepads API url
     let url = config.apiBase + '/notepads';
 
-    before(() => {
-        return co(function* () {
+    before(() =>
+        co(function* () {
             db = connection();
 
             let request = new RequestUrl();
@@ -57,23 +57,23 @@ describe('API /notepads', () => {
             //assign the notepad to cat and user
             testCat = yield Category.increaseNotepadsCountById(testCat._id);
             testUser = yield User.addNotepad(testUser._id, testNotepad._id);
-        });
-    });
+        })
+    );
 
-    after(() => {
-        return co(function* () {
+    after(() =>
+        co(function* () {
             //cleanup
             yield User.remove({});
             yield Category.remove({});
             yield Notepad.remove({});
 
             db.close();
-        });
-    });
+        })
+    );
 
     describe('GET /notepads', () => {
         describe('?insidecats=1', () => {
-            it('should return an empty array if no cats are found', done => {
+            it('should return an empty array if no cats are found', () =>
                 co(function* () {
                     let user = yield User.createAsync({
                         name: 'Iliyan Trifonov',
@@ -81,30 +81,20 @@ describe('API /notepads', () => {
                         photo: 'photourl'
                     });
 
-                    callUrl({ token: user.accessToken, addQuery: 'insidecats=1' })
+                    return callUrl({ token: user.accessToken, addQuery: 'insidecats=1' })
                         .expect('Content-Type', /json/)
                         .expect(HttpStatus.OK)
-                        .end((err, res) => {
-                            if (err) {
-                                return done(err);
-                            }
+                        .then(res =>
+                            assert.deepEqual(res.body, [])
+                        );
+                })
+            );
 
-                            assert.deepEqual(res.body, []);
-
-                            done();
-                        });
-                }).catch(done);
-            });
-
-            it('should return an array of categories with notepads inside', done => {
+            it('should return an array of categories with notepads inside', () =>
                 callUrl({ token: testUser.accessToken, addQuery: 'insidecats=1' })
                     .expect('Content-Type', /json/)
                     .expect(HttpStatus.OK)
-                    .end((err, res) => {
-                        if (err) {
-                            return done(err);
-                        }
-
+                    .then(res => {
                         let cats = res.body;
 
                         assert.ok(Array.isArray(cats));
@@ -112,13 +102,11 @@ describe('API /notepads', () => {
                         assert.strictEqual(cats[0].notepads.length, 1);
                         assert.ok(testCat._id.equals(cats[0]._id));
                         assert.ok(testNotepad._id.equals(cats[0].notepads[0]._id));
-
-                        done();
-                    });
-            });
+                    })
+            );
         });
 
-        it('should return NOT_FOUND if user has no notepads', done => {
+        it('should return NOT_FOUND if user has no notepads', () =>
             co(function* () {
                 let user = yield User.createAsync({
                     name: 'Iliyan Trifonov',
@@ -129,36 +117,24 @@ describe('API /notepads', () => {
                 callUrl({ token: user.accessToken })
                     .expect('Content-Type', /json/)
                     .expect(HttpStatus.NOT_FOUND)
-                    .end((err, res) => {
-                        if (err) {
-                            return done(err);
-                        }
+                    .then(res =>
+                        assert.deepEqual(res.body, [])
+                    );
+            })
+        );
 
-                        assert.deepEqual(res.body, []);
-
-                        done();
-                    });
-            }).catch(done);
-        });
-
-        it('should return the notepads of the user', done => {
+        it('should return the notepads of the user', () =>
             callUrl({ token: testUser.accessToken })
                 .expect('Content-Type', /json/)
                 .expect(HttpStatus.OK)
-                .end((err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
-
+                .then(res => {
                     let notepads= res.body;
 
                     assert.ok(Array.isArray(notepads));
                     assert.strictEqual(notepads.length, 1);
                     assert.strictEqual(notepads[0].title, testNotepad.title);
-
-                    done();
-                });
-        });
+                })
+        );
     });
 
     describe('GET /notepads/:id', () => {
@@ -343,6 +319,154 @@ describe('API /notepads', () => {
                 });
         });
 
+    });
+
+    describe('PUT /notepads/:id', () => {
+        it('should return BAD_REQUEST when a param is missing', () =>
+            co(function* () {
+                //missing title
+                yield callUrl({ token: testUser.accessToken, method: 'put', addUrl: '/' + mongoose.Types.ObjectId() })
+                    .send({
+                        text: 'test text',
+                        category: mongoose.Types.ObjectId()
+                    })
+                    .expect('Content-Type', /json/)
+                    .expect(HttpStatus.BAD_REQUEST);
+
+                //missing text
+                yield callUrl({ token: testUser.accessToken, method: 'put', addUrl: '/' + mongoose.Types.ObjectId() })
+                    .send({
+                        title: 'test title',
+                        category: mongoose.Types.ObjectId()
+                    })
+                    .expect('Content-Type', /json/)
+                    .expect(HttpStatus.BAD_REQUEST);
+
+                 //missing category
+                 yield callUrl({ token: testUser.accessToken, method: 'put', addUrl: '/' + mongoose.Types.ObjectId() })
+                     .send({
+                         title: 'test title',
+                         text: 'test text'
+                     })
+                     .expect('Content-Type', /json/)
+                     .expect(HttpStatus.BAD_REQUEST);
+            })
+        );
+
+        it('should return INTERNAL_SERVER_ERROR on error', done => {
+            callUrl({ token: testUser.accessToken, method: 'put', addUrl: '/' + (new Date().getTime()) })
+                .send({
+                    title: 'test title',
+                    text: 'test text',
+                    category: mongoose.Types.ObjectId()
+                })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.INTERNAL_SERVER_ERROR, done);
+        });
+
+        it('should return NOT_FOUND when the requested notepad to update is not found', done => {
+            callUrl({ token: testUser.accessToken, method: 'put', addUrl: '/' + mongoose.Types.ObjectId() })
+                .send({
+                    title: 'test title',
+                    text: 'test text',
+                    category: mongoose.Types.ObjectId()
+                })
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.NOT_FOUND, done);
+        });
+
+        it('should update a notepad and return the updated notepad object', done => {
+            let newNotepadData = {
+                title: 'new notepad title',
+                text: 'new notepad text',
+                category: testCat._id
+            };
+
+            //make sure the title and text are different before the update
+            assert.notStrictEqual(testNotepad.title, newNotepadData.title);
+            assert.notStrictEqual(testNotepad.text, newNotepadData.text);
+
+            //the category of the tested notepad should be the tested category
+            assert.ok(testNotepad.category.equals(testCat._id));
+
+            callUrl({ token: testUser.accessToken, method: 'put', addUrl: '/' + testNotepad._id })
+                .send(newNotepadData)
+                .expect('Content-Type', /json/)
+                .expect(HttpStatus.CREATED)
+                .end(function (err, res) {
+                    if (err) {
+                        return done(err);
+                    }
+
+                    let notepad = res.body;
+
+                    assert.ok(notepad);
+                    //the updated notepad is as expected:
+                    assert.ok(testNotepad._id.equals(notepad._id));
+                    assert.strictEqual(notepad.title, newNotepadData.title);
+                    assert.strictEqual(notepad.text, newNotepadData.text);
+                    assert.ok(testCat._id.equals(notepad.category));
+
+                    //refresh the testNotepad:
+                    testNotepad.title = notepad.title;
+                    testNotepad.text = notepad.text;
+
+                    done();
+                });
+        });
+
+        it('should update a notepad, change its category and update the 2 categories involved', done =>
+            co(function* () {
+                //create a new category to use for updating the notepad
+                let newCat = yield Category.add('test new cat', testUser._id);
+
+                assert.ok( ! newCat._id.equals(testCat._id) );
+
+                callUrl({ token: testUser.accessToken, method: 'put', addUrl: '/' + testNotepad._id })
+                    .send({
+                        title: testNotepad.title,
+                        text: testNotepad.text,
+                        category: newCat._id
+                    })
+                    .expect('Content-Type', /json/)
+                    .expect(HttpStatus.CREATED)
+                    .end(function (err, res) {
+                        if (err) {
+                            return done(err);
+                        }
+
+                        co(function* () {
+                            let notepad = res.body;
+
+                            assert.ok(notepad);
+                            //the updated notepad is as expected:
+                            assert.ok(testNotepad._id.equals(notepad._id));
+                            assert.strictEqual(notepad.title, testNotepad.title);
+                            assert.strictEqual(notepad.text, testNotepad.text);
+                            assert.ok(newCat._id.equals(notepad.category));
+
+                            let oldCatNotepadsCount = testCat.notepadsCount;
+
+                            //refresh the new and old cats
+                            testCat = yield Category.findByIdAsync(testCat._id);
+                            newCat = yield Category.findByIdAsync(newCat._id);
+
+                            assert.strictEqual(testCat.notepadsCount, oldCatNotepadsCount - 1);
+                            assert.strictEqual(newCat.notepadsCount, 1);
+
+                            //refresh the testNotepad:
+                            testNotepad.title = notepad.title;
+                            testNotepad.text = notepad.text;
+
+                            //add the newCat as testCat:
+                            testCat = newCat;
+
+                            done();
+                        }).catch(done);
+                    });
+
+            })
+        );
     });
 
 });
