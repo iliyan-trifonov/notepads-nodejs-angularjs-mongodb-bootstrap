@@ -1,9 +1,9 @@
 'use strict';
 
 import express from 'express';
-import User from '../models/user';
 import Category from '../models/category';
 import Notepad from '../models/notepad';
+import { assignNotepad, unassignNotepad } from '../notepadsUtils';
 import moment from 'moment';
 import HttpStatus from 'http-status';
 import async from 'async';
@@ -210,9 +210,7 @@ let postNotepadsHandler = (req, res) => {
             throw new Error('Could not create notepad!');
         }
 
-        yield Category.increaseNotepadsCountById(notepad.category);
-
-        yield User.addNotepad(notepad.user, notepad._id);
+        yield assignNotepad(notepad._id, notepad.category, notepad.user);
 
         res.status(HttpStatus.CREATED).json(notepad);
 
@@ -276,17 +274,7 @@ let deleteNotepadsIdHandler = (req, res) => {
             throw new Error('Could not delete the notepad!');
         }
 
-        let user = yield User.removeNotepad(req.user.id, req.params.id);
-
-        if (!user) {
-            throw new Error('Could not remove the notepad id from user!');
-        }
-
-        let category = yield Category.decreaseNotepadsCountById(notepad.category);
-
-        if (!category) {
-            throw new Error('Could not decrease notepads count in category!');
-        }
+        yield unassignNotepad(notepad._id, notepad.category, notepad.user);
 
         res.status(HttpStatus.NO_CONTENT).json({});
     }).catch(err => {
