@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import assert from 'assert';
 import co from 'co';
 import RequestUrl from './helper-functions';
+import { assignNotepad } from '../../../src/notepadsUtils';
 
 let config;
 
@@ -464,7 +465,61 @@ describe('API /notepads', () => {
                             done();
                         }).catch(done);
                     });
+            })
+        );
+    });
 
+    describe('DELETE /notepads/:id', () => {
+        it('should return INTERNAL_SERVER_ERROR on error', () =>
+                callUrl({ token: testUser.accessToken, method: 'delete', addUrl: '/' + (new Date().getTime()) })
+                    .expect('Content-Type', /json/)
+                    .expect(HttpStatus.INTERNAL_SERVER_ERROR)
+        );
+
+        it('should return NOT_FOUND if the notepad to delete is not found', () =>
+                callUrl({ token: testUser.accessToken, method: 'delete', addUrl: '/' + mongoose.Types.ObjectId() })
+                    .expect('Content-Type', /json/)
+                    .expect(HttpStatus.NOT_FOUND)
+        );
+
+        it('should delete the notepad, update user and category data and return NO_CONTENT', () =>
+            co(function* () {
+                //create a new notepad to delete
+                let notepadDel = yield Notepad.createAsync({
+                    title: 'del title',
+                    text: 'del text',
+                    category: testCat._id,
+                    user: testUser._id
+                });
+
+                //modify the user and cat data
+                let result = yield assignNotepad(notepadDel._id, testCat._id, testUser._id);
+
+                //assign the latest data for test user and cat
+                testUser = result.user;
+                testCat = result.category;
+
+                let oldNotepadsCount = testCat.notepadsCount;
+                let oldUserNotepads = testUser.notepads;
+
+                assert.ok(oldNotepadsCount > 0);
+                assert.ok(oldUserNotepads.indexOf(notepadDel._id) !== -1);
+
+                //delete
+                yield callUrl({ token: testUser.accessToken, method: 'delete', addUrl: '/' + notepadDel._id })
+                    .expect(HttpStatus.NO_CONTENT);
+
+                //check
+                assert.strictEqual(yield Notepad.findByIdAsync(notepadDel._id), null);
+
+                //refresh the test user and cat data
+                testCat = yield Category.findByIdAsync(testCat._id);
+                testUser = yield User.findByIdAsync(testUser._id);
+
+                //make sure the deleted notepad doesn't exist in user and cat data:
+                assert.strictEqual(testCat.notepadsCount, oldNotepadsCount - 1);
+                assert.strictEqual(testUser.notepads.length, oldUserNotepads.length - 1);
+                assert.ok(testUser.notepads.indexOf(notepadDel._id) === -1);
             })
         );
     });
