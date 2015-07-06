@@ -40,7 +40,10 @@ export let prepopulate = uid => {
             'where you can read it, edit it and delete it.' +  "\n\n" +
             'The categories are managed from their own window where you can go ' +
             'by selecting Categories from the left menu(top left to open it).' +  "\n\n" +
-            'Be careful when deleting a category as this will delete all notepads in it.' + "\n\n",
+            'Be careful when deleting a category as this will delete all notepads in it.' + "\n\n" +
+            'Don\'t forget to check https://notepads.iliyan-trifonov.com.' + "\n" +
+            'You can use the website when you\'re on your PC for even faster creation of notepads ' +
+            'which you can later read on your phone.' + "\n\n",
             category: category._id,
             user: user._id
         });
@@ -108,5 +111,3 @@ export let unassignNotepad = (notepadId, catId, uid) => {
         };
     });
 };
-
-//TODO: make assignCategory(catId, uid), unassignC... too
