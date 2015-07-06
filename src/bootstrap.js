@@ -44,12 +44,16 @@ app.set('port', process.env.PORT || 3000);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 //app.use(favicon(__dirname + '/public/favicon.ico'));
+app.use(express.static(path.join(__dirname, 'public')));
+//get all data sent to the API inside req.body:
+app.use(require('body-parser').json());
+
 if (config) {
+    //TODO: disable unneeded stuff like session cookies, etc. when API auth is used
     app.use(session({
         //TODO: check these properties for their default values
         resave: true,
         saveUninitialized: true,
-        //TODO: use the app.conf.js config file for this
         secret: config.sessionSecret
     }));
     FacebookAuth.setAppConfig(config);
@@ -57,9 +61,6 @@ if (config) {
     app.use(passport.initialize());
     app.use(passport.session());
 }
-//get all data sent to the API inside req.body
-app.use(require('body-parser').json());
-app.use(express.static(path.join(__dirname, 'public')));
 
 app.get('/', routes.index);
 app.get('/auth/facebook',
@@ -73,21 +74,6 @@ app.get('/auth/facebook/callback',
     FacebookAuth.login
 );
 app.get('/logout', FacebookAuth.logout);
-
-//API URLs
-//allow all locations access to the api urls
-if (config) {
-    app.use(config.apiBase, (req, res, next) => {
-        // Website you wish to allow to connect
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        // Request methods you wish to allow
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-        // Request headers you wish to allow
-        res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-        // Pass to next layer of middleware
-        next();
-    });
-}
 
 //authorize if valid access token is given
 //populate req.user from a valid access token
@@ -126,6 +112,21 @@ if (config) {
     app.use(config.apiBase + '/users', usersRouter);
     app.use(config.apiBase + '/notepads', notepadsRouter);
     app.use(config.apiBase + '/categories', categoriesRouter);
+}
+
+//API URLs
+//allow all locations access to the api urls
+if (config) {
+    app.use(config.apiBase, (req, res, next) => {
+        // Website you wish to allow to connect
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        // Request methods you wish to allow
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+        // Request headers you wish to allow
+        res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+        // Pass to next layer of middleware
+        next();
+    });
 }
 
 //dev env
