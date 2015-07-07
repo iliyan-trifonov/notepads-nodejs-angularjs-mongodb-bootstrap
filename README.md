@@ -9,6 +9,284 @@
 
 [See it in action here](https://notepads.iliyan-trifonov.com "Notepads by Iliyan Trifonov"). This is the official application domain. It is used also by the [mobile Android app](https://play.google.com/store/apps/details?id=com.iliyan_trifonov.notepads "Notepads Mobile") (built with Ionic/AngularJS) too.
 
+## The API
+
+Currently the API is situated at https://notepads.iliyan-trifonov.com/api/v1
+
+Here's a table showing what requests can be made and their possible results:
+
+<table>
+    <thead>
+        <th><sub>Endpoint</sub></th>
+        <th><sub>Params(GET)</sub></th>
+        <th><sub>Body(POST, PUT)</sub></th>
+        <th><sub>Status returned</sub></th>
+        <th><sub>Data returned</sub></th>
+        <th><sub>Example result</sub></th>
+    </thead>
+    <tbody>
+        <tr>
+            <td colspan="6">/notepads</td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">GET /notepads</pre></sub></td>
+            <td><sub><pre lang="javascript">?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">none</pre></sub></td>
+            <td><sub>OK = success, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript">[{notepad objects}..], []</pre></sub></td>
+            <td><sub><pre lang="javascript">
+[
+    {
+        "_id": "5599057e4f1b9b8826711e9a",
+        "title": "notepad titlte",
+        "text": "notepad text",
+        "category": "5599057e4f1b9b8826711e99"
+    },
+    {
+        "_id": "5599057e4f1b9b8826711e9c",
+        "title": "notepad titlte 2",
+        "text": "notepad text 2",
+        "category": "5599057e4f1b9b8826711e99"
+    },
+    ...
+]
+            </pre></sub></td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">GET /notepads</pre></sub></td>
+            <td><sub><pre lang="javascript">?insidecategories=1&token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">none</pre></sub></td>
+            <td><sub>OK = success, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript">[{category&nbsp;objects-->notepads:[{notepad&nbsp;objects...}]}..],&nbsp;[]</pre></sub></td>
+            <td><sub><pre lang="javascript">
+[
+    {
+        "_id":"5599057e4f1b9b8826711e99",
+        "name":"category name",
+        "notepadsCount": 1,
+        "notepads": [
+            {
+                "_id": "5599057e4f1b9b8826711e9a",
+                "title": "notepad title",
+                "text": "notepad text",
+                "created": "2015/07/05 13:22:54"
+            },
+            {
+                "_id": "5599057e4f1b9b8826711e9c",
+                "title": "notepad title 2",
+                "text": "notepad text 2",
+                "created": "2015/07/05 13:23:28"
+            },
+            ...
+        ]
+    },
+    ...
+]
+        </pre></sub></td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">POST /notepads</pre></sub></td>
+            <td><sub><pre lang="javascript">?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+    title: "new title",
+    text: "new text",
+    category: "5599057e4f1b9b8826711e99",
+}
+            </pre></sub></td>
+            <td><sub>CREATED = success, BAD_REQUEST, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript"><sub>{notepad object}, {}</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+    "__v": 0,
+    "category": "5599057e4f1b9b8826711e99",
+    "title": "new title",
+    "text": "new text",
+    "user": "5599057e4f1b9b8826711e98",
+    "_id": "559968509ae0090c22e76e92"
+}            
+            </pre></sub></td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">GET /notepads/:id</pre></sub></td>
+            <td><sub><pre lang="javascript">?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">none</pre></sub></td>
+            <td><sub>OK = success, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript"><sub>{notepad object}, {}</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+    "_id": "5599057e4f1b9b8826711e9a",
+    "title": "new title",
+    "text": "new text",
+    "category": "5599057e4f1b9b8826711e99"
+}
+            </pre></sub></td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">PUT /notepads/:id</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+    title: "updated title",
+    text: "updated text",
+    category: "5599057e4f1b9b8826711e99",
+}
+            </pre></sub></td>
+            <td><sub>CREATED = success, BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript"><sub>{notepad object}, {}</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+    "_id": "5599057e4f1b9b8826711e9a",
+    "title": "new title",
+    "text": "new text",
+    "category": "5599057e4f1b9b8826711e99",
+    "user": "5599057e4f1b9b8826711e98",
+    "__v": 0
+}
+            </pre></sub></td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">DELETE /notepads/:id</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">none</pre></sub></td>
+            <td><sub>NO_CONTENT = success, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript"><sub>none, {}</pre></sub></td>
+            <td><sub><pre lang="javascript">none on success or {}</pre></sub></td>
+        </tr>
+
+        <tr>
+            <td colspan="6">/categories</td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">GET /categories</pre></sub></td>
+            <td><sub><pre lang="javascript">?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">none</pre></sub></td>
+            <td><sub>OK = success, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript">[{category objects}..], []</pre></sub></td>
+            <td><sub><pre lang="javascript">
+[
+  {
+    "_id": "5599057e4f1b9b8826711e99",
+    "name": "Sample category",
+    "notepadsCount": 3
+  },
+  ...
+]
+            </pre></sub></td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">POST /categories</pre></sub></td>
+            <td><sub><pre lang="javascript">?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+    "name": "new name"
+}            
+            </pre></sub></td>
+            <td><sub>CREATED = success, BAD_REQUEST, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript">{category object}, {}</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+  "__v": 0,
+  "name": "new name",
+  "user": "5599057e4f1b9b8826711e98",
+  "_id": "559a4fa0c29f8ea009271b83",
+  "notepadsCount": 0
+}
+            </pre></sub></td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">GET /categories/:id</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">none</pre></sub></td>
+            <td><sub>OK = success, BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript">{category object}, {}</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+  "_id": "559a4fa0c29f8ea009271b83",
+  "name": "new name"
+}
+            </pre></sub></td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">PUT /categories/:id</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+    "name": "updated name"
+}                        
+            </pre></sub></td>
+            <td><sub>CREATED = success, BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript">{category object}, {}</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+  "_id": "559a4fa0c29f8ea009271b83",
+  "name": "updated name",
+  "user": "5599057e4f1b9b8826711e98",
+  "__v": 0,
+  "notepadsCount": 0
+}
+            </pre></sub></td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">DELETE /categories/:id</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">none</pre></sub></td>
+            <td><sub>NO_CONTENT = success, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript">none, {}</pre></sub></td>
+            <td><sub><pre lang="javascript">none on success or {}</pre></sub></td>
+        </tr>
+
+        <tr>
+            <td colspan="6">/users</td>
+        </tr>
+        <tr>
+            <td><sub><pre lang="javascript">POST /users/auth</pre></sub></td>
+            <td><sub><pre lang="javascript">none</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+    "accessToken": "xxx"
+}
+
+or
+
+{
+    "fbId": "xxx",
+    "fbAccessToken": "xxx"
+}
+            </pre></sub></td>
+            <td><sub>OK/CREATED = success, BAD_REQUEST, UNAUTHORIZED, INTERNAL_SERVER_ERROR</sub></td>
+            <td><sub><pre lang="javascript">{user object->name/photo/token/etc.}, {accessToken: "xxx"}</pre></sub></td>
+            <td><sub><pre lang="javascript">
+{
+  "_id": "5599057e4f1b9b8826711e98",
+  "accessToken": "xxx",
+  "facebookId": "xxx",
+  "name": "FB user name",
+  "photo": "https://scontent.xx.fbcdn.net/xxxxx.jpg...",
+  "__v": 0,
+  "notepads": [
+    "559968509ae0090c22e76e92",
+    "559968ee9ae0090c22e76e93",
+    "55996ac39ae0090c22e76e94",
+    ...
+  ],
+  "categories": [
+    "5599057e4f1b9b8826711e99",
+    "559a4fa0c29f8ea009271b83",
+    ...
+  ]
+}
+            
+or
+
+{
+  "accessToken": "xxx"
+}
+            </pre></sub></td>
+        </tr>        
+    </tbody>
+</table>
+
 ## Install
 
 Install the global tools:
