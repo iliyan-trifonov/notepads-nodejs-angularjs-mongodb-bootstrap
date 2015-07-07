@@ -5,6 +5,7 @@ import Category from './models/category';
 import Notepad from './models/notepad';
 import Promise from 'bluebird';
 import co from 'co';
+import HttpStatus from 'http-status';
 
 export let prepopulate = uid => {
     let user, userOrig, category, notepad;
@@ -110,4 +111,13 @@ export let unassignNotepad = (notepadId, catId, uid) => {
             category
         };
     });
+};
+
+export let checkAuth = (req, res, next) => {
+    if (!req.isAuthenticated()) {
+        console.error('API notepads: checkAuth(), not authenticated!');
+        res.status(HttpStatus.UNAUTHORIZED).json({});
+    } else {
+        next();
+    }
 };

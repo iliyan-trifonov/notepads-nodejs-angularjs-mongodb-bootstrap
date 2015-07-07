@@ -7,27 +7,12 @@ import HttpStatus from 'http-status';
 import express from 'express';
 import { pluck } from 'lodash';
 import co from 'co';
+import { checkAuth } from '../notepadsUtils';
 
 let app = express(),
     router = express.Router();
 
-//TODO: repeats with the same code in the notepads router!!
-//TODO: put this in FacebookAuth
-//TODO: or make it connected somehow
-//TODO: with the Facebook authentication process
-let checkAuth = (req, res, next) => {
-    if (!req.isAuthenticated()) {
-        console.error('API notepads: checkAuth(), not authenticated!');
-        res.status(HttpStatus.UNAUTHORIZED).json({});
-    } else {
-        next();
-    }
-};
-
 //protect this resource to the logged in user
-//TODO: checkAuth() should be shared between all handlers/controllers
-//TODO: put it in the FacebookAuth file
-//TODO: or create a separate auth module
 router.use(checkAuth);
 
 
@@ -129,8 +114,7 @@ let deleteIdHandler = (req, res) => {
         }
 
         //delete all orphaned notepads(if any) belonging to the deleted category
-        //TODO: ask to delete the notepads and if not put the notepads in Uncategorized category instead
-        //TODO: check if Notepad.remove() returns the removed documents to use it directly
+        //TODO: think about putting the notepads in Uncategorized category instead of deleting them
         let notepads = yield Notepad.findAsync({ user: req.user.id, category: category._id });
 
         if (notepads) {

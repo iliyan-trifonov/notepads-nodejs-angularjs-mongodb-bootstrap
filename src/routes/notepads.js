@@ -9,34 +9,17 @@ import HttpStatus from 'http-status';
 import async from 'async';
 import Promise from 'bluebird';
 import co from 'co';
+import { checkAuth } from '../notepadsUtils';
 
 let app = express(),
     router = express.Router();
 
-//TODO: put this in FacebookAuth
-//TODO: or make it connected somehow
-//TODO: with the Facebook authentication process
-let checkAuth = (req, res, next) => {
-    if (!req.isAuthenticated()) {
-        console.error('API notepads: checkAuth(), not authenticated!');
-        res.status(HttpStatus.UNAUTHORIZED).json({});
-    } else {
-        next();
-    }
-};
-
 //protect this resource to the logged in user
-//TODO: checkAuth() should be shared between all handlers/controllers
-//TODO: put it in the FacebookAuth file
-//TODO: or create a separate auth module
 router.use(checkAuth);
 
 //base: /notepads
 
-// ?insidecats=1
-//TODO: only next() may be needed, not next(route)
-//TODO: check with/out the ?param
-//TODO: and create a second route without the query string instead of the else
+// if ?insidecats=1
 let insidecatsFromQueryString = () =>
     (req, res, next) => {
         let insidecats = String(req.query.insidecats);
@@ -190,8 +173,6 @@ let getNotepadByIdHandler = (req, res) => {
 
 let postNotepadsHandler = (req, res) => {
     co(function* () {
-
-        //TODO: check for valid params and return BAD_REQUEST
 
         let category = yield Category.getByIdForUser(req.body.category, req.user.id);
 
