@@ -21,6 +21,7 @@ if (!graph.getAsync) {
 
 //base: /users
 
+//TODO: instead of returning only the app's accessToken in some places, always return the whole user object
 let postAuthHandler = (req, res) => {
     co(function* () {
         let fbUserId = req.body.fbId,
@@ -42,6 +43,7 @@ let postAuthHandler = (req, res) => {
                 return res.status(HttpStatus.UNAUTHORIZED).json({});
             }
 
+            //returns user name and photo to be used by the front-end client
             return res.status(HttpStatus.OK).json(user);
         } else {
             //find a user by his FB access token
@@ -59,7 +61,7 @@ let postAuthHandler = (req, res) => {
             let user = yield User.fb(fbUserId);
 
             if (user) {
-                //user found by his FB access token
+                //user found by his FB access token, return the app's custom token
                 return res.status(HttpStatus.OK).json({ accessToken: user.accessToken });
             } else {
                 //create a new user
@@ -72,7 +74,7 @@ let postAuthHandler = (req, res) => {
                 //pre-populate only for new users
                 yield notepadsUtils.prepopulate(user._id);
 
-                //success, return the accessToken
+                //success, return the app's custom token
                 return res.status(HttpStatus.CREATED).json({ accessToken: user.accessToken });
             }
         }

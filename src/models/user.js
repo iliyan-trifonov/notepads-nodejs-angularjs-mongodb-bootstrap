@@ -4,7 +4,6 @@ import Promise from 'bluebird';
 let mongoose = Promise.promisifyAll(require('mongoose'));
 import uuid from 'node-uuid';
 
-//TODO: add required to the fields
 let userSchema = new mongoose.Schema({
     facebookId: { type: String, required: true, unique: true, index: true },
     accessToken: { type: String, required: true, unique: true, index: true },
@@ -13,8 +12,6 @@ let userSchema = new mongoose.Schema({
     categories: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Category' }],
     notepads: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Notepad' }]
 });
-
-//TODO: remove the callbacks after promises are used 100%
 
 //auto create the accessToken
 userSchema.pre('validate', function (next) {

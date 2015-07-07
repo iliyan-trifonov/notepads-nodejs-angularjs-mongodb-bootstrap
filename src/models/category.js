@@ -3,8 +3,6 @@
 import Promise from 'bluebird';
 let mongoose = Promise.promisifyAll(require('mongoose'));
 
-//TODO: check if it's possible to add notepads[] with Notepad ids
-//TODO: and list them for the Dashboard with one call
 let categorySchema = new mongoose.Schema({
     name: { type: String, required: true },
     notepadsCount: { type: Number, 'default': 0 },
