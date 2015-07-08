@@ -57,7 +57,17 @@ Here's a table showing what requests can be made and their possible results:
             <td><sub><pre lang="javascript">?insidecategories=1&token=xxx</pre></sub></td>
             <td><sub><pre lang="javascript">none</pre></sub></td>
             <td><sub>OK = success, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
-            <td><sub><pre lang="javascript">[{category&nbsp;objects-->notepads:[{notepad&nbsp;objects...}]}..],&nbsp;[]</pre></sub></td>
+            <td><sub><pre lang="javascript">
+[
+    {category objects-->
+        notepads:[
+            {notepad objects...}
+        ]
+    }
+    ..
+],
+[]
+</pre></sub></td>
             <td><sub><pre lang="javascript">
 [
     {
@@ -124,7 +134,7 @@ Here's a table showing what requests can be made and their possible results:
         </tr>
         <tr>
             <td><sub><pre lang="javascript">PUT /notepads/:id</pre></sub></td>
-            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is ObjectId(), ?token=xxx</pre></sub></td>
             <td><sub><pre lang="javascript">
 {
     title: "updated title",
@@ -147,7 +157,7 @@ Here's a table showing what requests can be made and their possible results:
         </tr>
         <tr>
             <td><sub><pre lang="javascript">DELETE /notepads/:id</pre></sub></td>
-            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is ObjectId(), ?token=xxx</pre></sub></td>
             <td><sub><pre lang="javascript">none</pre></sub></td>
             <td><sub>NO_CONTENT = success, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
             <td><sub><pre lang="javascript"><sub>none, {}</pre></sub></td>
@@ -196,7 +206,7 @@ Here's a table showing what requests can be made and their possible results:
         </tr>
         <tr>
             <td><sub><pre lang="javascript">GET /categories/:id</pre></sub></td>
-            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is ObjectId(), ?token=xxx</pre></sub></td>
             <td><sub><pre lang="javascript">none</pre></sub></td>
             <td><sub>OK = success, BAD_REQUEST, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
             <td><sub><pre lang="javascript">{category object}, {}</pre></sub></td>
@@ -209,7 +219,7 @@ Here's a table showing what requests can be made and their possible results:
         </tr>
         <tr>
             <td><sub><pre lang="javascript">PUT /categories/:id</pre></sub></td>
-            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is ObjectId(), ?token=xxx</pre></sub></td>
             <td><sub><pre lang="javascript">
 {
     "name": "updated name"
@@ -229,7 +239,7 @@ Here's a table showing what requests can be made and their possible results:
         </tr>
         <tr>
             <td><sub><pre lang="javascript">DELETE /categories/:id</pre></sub></td>
-            <td><sub><pre lang="javascript">:id is mongoose.Types.ObjectId(), ?token=xxx</pre></sub></td>
+            <td><sub><pre lang="javascript">:id is ObjectId(), ?token=xxx</pre></sub></td>
             <td><sub><pre lang="javascript">none</pre></sub></td>
             <td><sub>NO_CONTENT = success, NOT_FOUND, INTERNAL_SERVER_ERROR</sub></td>
             <td><sub><pre lang="javascript">none, {}</pre></sub></td>
@@ -255,7 +265,10 @@ or
 }
             </pre></sub></td>
             <td><sub>OK/CREATED = success, BAD_REQUEST, UNAUTHORIZED, INTERNAL_SERVER_ERROR</sub></td>
-            <td><sub><pre lang="javascript">{user object->name/photo/token/etc.}, {accessToken: "xxx"}</pre></sub></td>
+            <td><sub>
+                <pre lang="javascript">{user object},</pre>
+                <pre lang="javascript">{accessToken: "xxx"}</pre>
+            </sub></td>
             <td><sub><pre lang="javascript">
 {
   "_id": "5599057e4f1b9b8826711e98",
