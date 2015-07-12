@@ -136,8 +136,13 @@ if ('development' === app.get('env')) {
 }
 
 let createConnection = () => {
-    let connection = require('./db');
-    connection.setAppConfig(config);
+    let connection;
+    if ('test' === app.get('env')) {
+        connection = require('../test/db_common');
+    } else {
+        connection = require('./db');
+        connection.setAppConfig(config);
+    }
     connection().on('connected', err => {
         if (err) {
             process.stderr.write(err);
