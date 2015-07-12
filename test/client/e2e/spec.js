@@ -8,9 +8,26 @@ require('../waitReady');
 //TODO: use testing.json if the main config is not found:
 var config = require('../../../config/app.conf.json'),
     User = require('../../../src/models/user'),
+    Category = require('../../../src/models/category'),
+    Notepad = require('../../../src/models/notepad'),
     connection = require('../../db_common');
 
 describe('Notepads app', function() {
+
+    it('should remove all data in the test DB', function (done) {
+        var db = connection();
+        User.removeAsync({})
+            .then(function () {
+                return Category.removeAsync({});
+            })
+            .then(function () {
+                return Notepad.removeAsync({});
+            })
+            .then(function () {
+                db.close();
+                done();
+            });
+    });
 
     describe('home', function () {
 
@@ -130,6 +147,49 @@ describe('Notepads app', function() {
                 .$('option:checked')
                 .getText())
                 .toEqual('Select category');
+        });
+
+        it('should add a notepad', function () {
+            browser.get(config.devUrl + '#/notepads/add');
+
+            var title = element(by.id('title'));
+            var text = element(by.id('text'));
+            var addBtn = element(by.binding('buttonText'));
+
+            expect(title.getText()).toEqual('');
+            expect(text.getText()).toEqual('');
+            expect(addBtn.isEnabled()).toBe(false);
+
+            element(by.id('category'))
+                .element(by.cssContainingText('option', 'Sample category')).click();
+
+            title.sendKeys('test title');
+            text.sendKeys('test text');
+
+            expect(addBtn.isEnabled()).toBe(true);
+
+            addBtn.click();
+        });
+
+        it('should show the new notepad in the dashboard', function () {
+            expect(browser.getCurrentUrl())
+                .toEqual(config.devUrl + '#/');
+
+            element.all(by.css('.notepad')).then(function (notepads) {
+                expect(notepads.length).toBe(2);
+            });
+
+            expect(element(by.css('.category>h3>small'))
+                .getText())
+                .toEqual('(2)');
+
+            expect(element(by.css('.notepad>.title'))
+                .getText())
+                .toEqual('test title');
+
+            expect(element(by.css('.notepad>.text'))
+                .getText())
+                .toEqual('test text');
         });
 
         //let this test to be the last:
