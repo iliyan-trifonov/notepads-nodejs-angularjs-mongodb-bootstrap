@@ -84,7 +84,7 @@ let parseAccessToken = (req, res, next) => {
         return res.status(HttpStatus.FORBIDDEN).json({});
     };
 
-    let accessToken = req.query.token;
+    let accessToken = req.headers.token || req.query.token;
 
     if (accessToken) {
         //this require is used often, may be put on top:

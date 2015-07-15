@@ -21,7 +21,10 @@ describe('app', function () {
         });
 
         beforeEach(() => {
-            req = { query: { token: null } };
+            req = {
+                query: { token: null },
+                headers: {}
+            };
             res = {
                 status: function (status) {
                     if (!this.statusExpected) {
@@ -58,39 +61,67 @@ describe('app', function () {
             db.close();
         });
 
-        it('should return FORBIDDEN for a given but invalid accessToken', done => {
-            req.query.token = 'asdasdasdasd';
-            res.statusExpected = HttpStatus.FORBIDDEN;
-            res.jsonDataExpected = {};
-            res.jsonCb = done;
-
-            app.parseAccessToken(req, res, null);
+        it('should call next() with missing accessToken', done => {
+            app.parseAccessToken(req, null, done);
         });
 
-        it('should set req.user by given valid accessToken', done => {
-            co(function* () {
-                let user = yield User.createAsync({
-                    name: 'Iliyan Trifonov',
-                    facebookId: +new Date(),
-                    photo: 'photourl'
+        describe('token in query string', () => {
+            it('should return FORBIDDEN for a given but invalid accessToken', done => {
+                req.query.token = 'asdasdasdasd';
+                res.statusExpected = HttpStatus.FORBIDDEN;
+                res.jsonDataExpected = {};
+                res.jsonCb = done;
+
+                app.parseAccessToken(req, res, null);
+            });
+
+            it('should set req.user by given valid accessToken', done => {
+                co(function* () {
+                    let user = yield User.createAsync({
+                        name: 'Iliyan Trifonov',
+                        facebookId: +new Date(),
+                        photo: 'photourl'
+                    });
+
+                    req.query.token = user.accessToken;
+                    next = () => {
+                        assert.strictEqual(req.user.id, String(user._id));
+                        done();
+                    };
+
+                    app.parseAccessToken(req, null, next);
                 });
-
-                req.query.token = user.accessToken;
-                next = () => {
-                    assert.strictEqual(req.user.id, String(user._id));
-                    done();
-                };
-
-                app.parseAccessToken(req, null, next);
             });
         });
 
-        it('should call next() with missing accessToken', done => {
-            next = () => {
-                done();
-            };
+        describe('token in headers', () => {
+            it('should return FORBIDDEN for a given but invalid accessToken', done => {
+                req.headers.token = 'asdasdasdasd';
+                res.statusExpected = HttpStatus.FORBIDDEN;
+                res.jsonDataExpected = {};
+                res.jsonCb = done;
 
-            app.parseAccessToken(req, null, next);
+                app.parseAccessToken(req, res, null);
+            });
+
+            it('should set req.user by given valid accessToken', done => {
+                co(function* () {
+                    let user = yield User.createAsync({
+                        name: 'Iliyan Trifonov',
+                        facebookId: +new Date(),
+                        photo: 'photourl'
+                    });
+
+                    req.headers.token = user.accessToken;
+                    next = () => {
+                        assert.strictEqual(req.user.id, String(user._id));
+                        done();
+                    };
+
+                    app.parseAccessToken(req, null, next);
+                });
+            });
         });
+
     });
 });
