@@ -94,9 +94,9 @@ describe('app', function () {
             });
         });
 
-        describe('token in headers', () => {
+        describe('x-access-token in headers', () => {
             it('should return FORBIDDEN for a given but invalid accessToken', done => {
-                req.headers.token = 'asdasdasdasd';
+                req.headers['x-access-token'] = 'asdasdasdasd';
                 res.statusExpected = HttpStatus.FORBIDDEN;
                 res.jsonDataExpected = {};
                 res.jsonCb = done;
@@ -112,7 +112,7 @@ describe('app', function () {
                         photo: 'photourl'
                     });
 
-                    req.headers.token = user.accessToken;
+                    req.headers['x-access-token'] = user.accessToken;
                     next = () => {
                         assert.strictEqual(req.user.id, String(user._id));
                         done();
