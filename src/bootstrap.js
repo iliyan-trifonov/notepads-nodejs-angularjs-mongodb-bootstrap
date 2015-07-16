@@ -84,13 +84,14 @@ let parseAccessToken = (req, res, next) => {
         return res.status(HttpStatus.FORBIDDEN).json({});
     };
 
-    let accessToken = req.headers.token || req.query.token;
+    let accessToken = req.headers['x-access-token'] || req.query.token;
 
     if (accessToken) {
         //this require is used often, may be put on top:
         User.getByAccessToken(accessToken).then(user => {
             if (user) {
                 req.user = user;
+                //we will have req.user._id and req.user.id:
                 req.user.id = user._id;
                 next();
             } else {
@@ -104,6 +105,27 @@ let parseAccessToken = (req, res, next) => {
     }
 };
 
+//API URLs
+//allow all locations access to the api urls
+if (config) {
+    app.use(config.apiBase, (req, res, next) => {
+        // Website you wish to allow to connect
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        // Request methods you wish to allow
+        res.setHeader('Access-Control-Allow-Methods', 'OPTIONS, GET, POST, PUT, DELETE');
+        // Request headers you wish to allow
+        res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,x-access-token');
+
+        if (req.method === 'OPTIONS') {
+            //OPTIONS doesn't need auth or other parsing
+            res.status(HttpStatus.OK).end();
+        } else {
+            // Pass to next layer of middleware
+            next();
+        }
+    });
+}
+
 app.use(parseAccessToken);
 
 //API routes
@@ -114,23 +136,9 @@ if (config) {
     app.use(config.apiBase + '/categories', categoriesRouter);
 }
 
-//API URLs
-//allow all locations access to the api urls
-if (config) {
-    app.use(config.apiBase, (req, res, next) => {
-        // Website you wish to allow to connect
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        // Request methods you wish to allow
-        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-        // Request headers you wish to allow
-        res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
-        // Pass to next layer of middleware
-        next();
-    });
-}
-
 //dev env
 if ('development' === app.get('env')) {
+    console.info('activating morgan and errorhandler middleware for dev env');
     app.use(require('morgan')('combined'));
     app.use(require('errorhandler')());
 }
