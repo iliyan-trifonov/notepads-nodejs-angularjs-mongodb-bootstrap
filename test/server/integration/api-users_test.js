@@ -1,18 +1,18 @@
 'use strict';
 
-var request = require('supertest'),
+import User from '../../../src/models/user';
+import Category from '../../../src/models/category';
+import Notepad from '../../../src/models/notepad';
+import { loadConfig } from './helper-functions';
+
+let request = require('supertest'),
     app = require('../../../src/app'),
     HttpStatus = require('http-status'),
-    config,
     connection = require('../../db_common'),
     assert = require('assert'),
     graph = require('fbgraph'),
     Promise = require('bluebird'),
     co = require('co');
-
-import User from '../../../src/models/user';
-import Category from '../../../src/models/category';
-import Notepad from '../../../src/models/notepad';
 
 Promise.promisify(graph.get);
 
@@ -20,11 +20,7 @@ if (!graph.getAsync) {
     graph.getAsync = Promise.promisify(graph.get);
 }
 
-try {
-    config = require('../../../config/app.conf.json');
-} catch (err) {
-    config = require('../../../config/testing.json');
-}
+let config = loadConfig();
 
 describe('API /users', function () {
 

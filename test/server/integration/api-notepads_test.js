@@ -8,16 +8,10 @@ import Notepad from '../../../src/models/notepad';
 import mongoose from 'mongoose';
 import assert from 'assert';
 import co from 'co';
-import RequestUrl from './helper-functions';
+import RequestUrl, { loadConfig } from './helper-functions';
 import { assignNotepad } from '../../../src/notepadsUtils';
 
-let config;
-
-try {
-    config = require('../../../config/app.conf.json');
-} catch (err) {
-    config = require('../../../config/testing.json');
-}
+let config = loadConfig();
 
 describe('API /notepads', () => {
 

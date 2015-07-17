@@ -8,15 +8,9 @@ import Notepad from '../../../src/models/notepad';
 import mongoose from 'mongoose';
 import assert from 'assert';
 import co from 'co';
-import RequestUrl from './helper-functions';
+import RequestUrl, { loadConfig } from './helper-functions';
 
-let config;
-
-try {
-    config = require('../../../config/app.conf.json');
-} catch (err) {
-    config = require('../../../config/testing.json');
-}
+let config = loadConfig();
 
 describe('API /categories', () => {
 
@@ -73,7 +67,7 @@ describe('API /categories', () => {
     });
 
     describe('GET /categories', () => {
-        it('should return status OK and an empty JSON array when the user has no categories', done => {
+        it('should return status OK and an empty JSON array when the user has no categories', () =>
             co(function* () {
                 let user = yield User.createAsync({
                     name: 'Iliyan Trifonov',
@@ -81,29 +75,37 @@ describe('API /categories', () => {
                     photo: 'photourl'
                 });
 
-                callUrl({ token: user.accessToken })
-                    .expect('Content-Type', /json/)
-                    .expect(HttpStatus.OK)
-                    .end((err, res) => {
-                        assert.ifError(err);
-                        assert.deepEqual(res.body, []);
-                        done();
-                    });
-            }).catch(done);
-        });
+                let checks = request =>
+                    request
+                        .expect('Content-Type', /json/)
+                        .expect(HttpStatus.OK)
+                        .then(res => {
+                            assert.deepEqual(res.body, []);
+                        })
+                ;
 
-        it('should return status OK and a JSON array with 1 cat that has 1 notepad assigned', done => {
-            callUrl({ token: testUser.accessToken })
-                .expect('Content-Type', /json/)
-                .expect(HttpStatus.OK)
-                .end((err, res) => {
-                    assert.ifError(err); //or return done(err) on error
-                    let cats = res.body;
-                    assert.strictEqual(cats.length, 1);
-                    assert.strictEqual(cats[0].notepadsCount, 1);
-                    done();
-                });
-        });
+                yield checks(callUrl({ token: user.accessToken }));
+                return checks(callUrl({ token: user.accessToken, tokenInHeaders: false }));
+            })
+        );
+
+        it('should return status OK and a JSON array with 1 cat that has 1 notepad assigned', () =>
+            co(function* () {
+                let checks = request =>
+                        request
+                            .expect('Content-Type', /json/)
+                            .expect(HttpStatus.OK)
+                            .then(res => {
+                                let cats = res.body;
+                                assert.strictEqual(cats.length, 1);
+                                assert.strictEqual(cats[0].notepadsCount, 1);
+                            })
+                    ;
+
+                yield checks(callUrl({ token: testUser.accessToken }));
+                return checks(callUrl({ token: testUser.accessToken, tokenInHeaders: false }));
+            })
+        );
     });
 
     describe('POST /categories', () => {
