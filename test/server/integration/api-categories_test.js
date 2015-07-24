@@ -109,43 +109,48 @@ describe('API /categories', () => {
     });
 
     describe('POST /categories', () => {
-        it('should return BAD_REQUEST when cat name is not given', done => {
-            callUrl({ method: 'post', token: testUser.accessToken })
-                .expect('Content-Type', /json/)
-                .expect(HttpStatus.BAD_REQUEST)
-                .end((err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
-                    assert.deepEqual(res.body, {});
-                    done();
-                });
-        });
+        it('should return BAD_REQUEST when cat name is not given', () =>
+            co(function* () {
+                let checks = request =>
+                    request
+                        .expect('Content-Type', /json/)
+                        .expect(HttpStatus.BAD_REQUEST)
+                        .then(res => {
+                            assert.deepEqual(res.body, {});
+                        })
+                ;
 
-        it('should create a new category and assign it to the user', done => {
-            let catName = 'Test Cat Name';
-            callUrl({ method: 'post', token: testUser.accessToken })
-                .send({ name: catName })
-                .expect('Content-Type', /json/)
-                .expect(HttpStatus.CREATED)
-                .end((err, res) => {
-                    co(function* () {
-                        if (err) {
-                            return done(err);
-                        }
-                        let cat = res.body;
-                        assert.ok(cat._id);
-                        assert.strictEqual(cat.name, catName);
-                        assert.ok(testUser._id.equals(cat.user));
+                yield checks(callUrl({ method: 'post', token: testUser.accessToken }));
+                yield checks(callUrl({ method: 'post', token: testUser.accessToken, tokenInHeaders: false }));
+            })
+        );
 
-                        //cleanup
-                        yield Category.remove({ _id: cat._id });
-                        yield User.removeCategory(cat.user, cat._id);
+        it('should create a new category and assign it to the user', () =>
+            co(function* () {
+                let catName = 'Test Cat Name';
 
-                        done();
-                    });
-                });
-        });
+                let checks = request =>
+                    request
+                        .send({ name: catName })
+                        .expect('Content-Type', /json/)
+                        .expect(HttpStatus.CREATED)
+                        .then(res => {
+                            co(function* () {
+                                let cat = res.body;
+                                assert.ok(cat._id);
+                                assert.strictEqual(cat.name, catName);
+                                assert.ok(testUser._id.equals(cat.user));
+
+                                //cleanup
+                                yield Category.remove({ _id: cat._id });
+                                yield User.removeCategory(cat.user, cat._id);
+                            });
+                        });
+
+                yield checks(callUrl({ method: 'post', token: testUser.accessToken }));
+                yield checks(callUrl({ method: 'post', token: testUser.accessToken, tokenInHeaders: false }));
+            })
+        );
     });
 
     describe('GET /categories/:id', () => {
