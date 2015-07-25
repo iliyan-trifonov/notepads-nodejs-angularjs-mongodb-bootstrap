@@ -136,6 +136,10 @@ if (config) {
     app.use(config.apiBase + '/categories', categoriesRouter);
 }
 
+//html5 history, no # angular paths, redirect all to index
+app.get(['/categories', '/categories/*'], routes.index);
+app.get(['/notepads', '/notepads/*'], routes.index);
+
 //dev env
 if ('development' === app.get('env')) {
     console.info('activating morgan and errorhandler middleware for dev env');

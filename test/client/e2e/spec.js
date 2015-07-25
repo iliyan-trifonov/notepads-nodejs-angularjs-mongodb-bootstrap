@@ -122,7 +122,7 @@ describe('Notepads app', function() {
             element(by.css('.category>h3>a')).click();
 
             expect(browser.getCurrentUrl())
-                .toContain('#/notepads/add/catid');
+                .toContain('/notepads/add/catid');
 
             expect(element(by.id('category'))
                 .$('option:checked')
@@ -141,7 +141,7 @@ describe('Notepads app', function() {
             addNotepadBtn.click();
 
             expect(browser.getCurrentUrl())
-                .toEqual(config.devUrl + '#/notepads/add');
+                .toEqual(config.devUrl + 'notepads/add');
 
             expect(element(by.id('category'))
                 .$('option:checked')
@@ -173,7 +173,7 @@ describe('Notepads app', function() {
 
         it('should show the new notepad in the dashboard', function () {
             expect(browser.getCurrentUrl())
-                .toEqual(config.devUrl + '#/');
+                .toEqual(config.devUrl);
 
             element.all(by.css('.notepad')).then(function (notepads) {
                 expect(notepads.length).toBe(2);

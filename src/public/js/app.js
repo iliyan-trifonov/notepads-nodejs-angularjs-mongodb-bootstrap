@@ -8,7 +8,8 @@
         'ngRoute',
         'ngSanitize'
     ])
-    .config(['$routeProvider', 'USER_CONTEXT', function ($routeProvider, USER_CONTEXT) {
+    .config(['$routeProvider', '$locationProvider', 'USER_CONTEXT', function ($routeProvider, $locationProvider, USER_CONTEXT) {
+
         if (USER_CONTEXT.id) {
             $routeProvider.when('/', {
                 templateUrl: '/partials/dashboard.html',
@@ -52,6 +53,10 @@
                 controller: 'IndexCtrl'
             });
         }
+
         $routeProvider.otherwise({ redirectTo: '/' });
+
+        $locationProvider.html5Mode(true);
+
     }]);
 })(angular);

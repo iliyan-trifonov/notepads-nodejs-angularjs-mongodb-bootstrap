@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
+        <base href="/">
+
         <meta charset="UTF-8">
         <meta http-equiv="X-UA-COMPATIBLE" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -32,23 +34,23 @@
                         <span class="icon-bar"></span>
                         <span class="icon-bar"></span>
                     </button>
-                    <a class="navbar-brand" href="#/">Nodepads</a>
+                    <a class="navbar-brand" href="/">Nodepads</a>
                 </div>
                 <div id="navbar" class="collapse navbar-collapse">
                     <ul class="nav navbar-nav">
-                        <li><a ng-href="#/">Home</a></li>
+                        <li><a href="/">Home</a></li>
                         <% if (user) { %>
-                        <li><a ng-href="#/categories">Categories</a></li>
-                        <li><a ng-href="#/notepads/add">Add Notepad</a></li>
+                        <li><a href="/categories">Categories</a></li>
+                        <li><a href="/notepads/add">Add Notepad</a></li>
                         <% } %>
                     </ul>
                     <ul class="nav navbar-nav navbar-right">
                         <% if (user) { %>
                         <li><img src="<%= user.photo %>" /></li>
                         <li><a><%= user.name %></a></li>
-                        <li><a href="/logout" class="logout">Logout</a></li>
+                        <li><a href="/logout" target="_self" class="logout">Logout</a></li>
                         <% } else { %>
-                        <li><a href="/auth/facebook">Login</a></li>
+                        <li><a href="/auth/facebook" target="_self">Login</a></li>
                         <% } %>
                     </ul>
                 </div>
