@@ -154,39 +154,55 @@ describe('API /categories', () => {
     });
 
     describe('GET /categories/:id', () => {
-        it('should return NOT FOUND and an empty object literal when cat is not found', done => {
-            callUrl({ method: 'get', addUrl: '/' + mongoose.Types.ObjectId(), token: testUser.accessToken })
-                .expect('Content-Type', /json/)
-                .expect(HttpStatus.NOT_FOUND)
-                .end((err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
+        it('should return NOT FOUND and an empty object literal when cat is not found', () =>
+            co(function* () {
+                let checks = request =>
+                    request
+                        .expect('Content-Type', /json/)
+                        .expect(HttpStatus.NOT_FOUND)
+                        .then(res => {
+                            assert.deepEqual(res.body, {});
+                        });
 
-                    assert.deepEqual(res.body, {});
+               yield checks(callUrl({
+                   method: 'get',
+                   addUrl: '/' + mongoose.Types.ObjectId(),
+                   token: testUser.accessToken
+               }));
 
-                    done();
-                });
-        });
+               yield checks(callUrl({
+                           method: 'get',
+                           addUrl: '/' + mongoose.Types.ObjectId(),
+                           token: testUser.accessToken,
+                           tokenInHeaders: false
+                       }));
+            })
+        );
 
-        it('should return a category given its id', done => {
-            callUrl({ method: 'get', addUrl: '/' + testCat._id, token: testUser.accessToken })
-                .expect('Content-Type', /json/)
-                .expect(HttpStatus.OK)
-                .end((err, res) => {
-                    if (err) {
-                        return done(err);
-                    }
+        it('should return a category given its id', () =>
+            co(function* () {
+                let checks = request =>
+                    request
+                        .expect('Content-Type', /json/)
+                        .expect(HttpStatus.OK)
+                        .then(res => {
+                            let cat = res.body;
 
-                    let cat = res.body;
+                            assert.ok(cat);
+                            assert.ok(testCat._id.equals(cat._id));
+                            assert.strictEqual(cat.name, testCat.name);
+                        });
 
-                    assert.ok(cat);
-                    assert.ok(testCat._id.equals(cat._id));
-                    assert.strictEqual(cat.name, testCat.name);
+                yield checks(callUrl({ method: 'get', addUrl: '/' + testCat._id, token: testUser.accessToken }));
 
-                    done();
-                });
-        });
+                yield checks(callUrl({
+                    method: 'get',
+                    addUrl: '/' + testCat._id,
+                    token: testUser.accessToken,
+                    tokenInHeaders: false
+                }));
+            })
+        );
     });
 
     describe('PUT /categories/:id', () => {
