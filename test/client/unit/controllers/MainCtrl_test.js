@@ -1,5 +1,7 @@
 'use strict';
 
+/* jshint undef: false, unused: false */
+
 describe('Notepads.controllers.MainCtrl', function () {
     beforeEach(module('Notepads.controllers'));
     beforeEach(module('Notepads.services'));
