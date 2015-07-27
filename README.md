@@ -67,9 +67,13 @@ starting it for example in production:
 
 ## Testing
 
-Unit and integration tests (you may provide FB app id and secret in [app.conf.json](config/app.conf.json.dist)):
+Back-end unit and integration tests (you may provide FB app id and secret in [app.conf.json](config/app.conf.json.dist)):
 
     npm test
+    
+Front-end unit tests:
+
+    npm run karma
     
 End-to-end tests (must have FB email and pass in [app.conf.json](config/app.conf.json.dist)):
 

@@ -16,6 +16,7 @@
                 }, 1E3);
             }
 
+            //this function is visible and used by all sub-pages
             $scope.cancel = function () {
                 $window.history.back();
             };
