@@ -118,6 +118,21 @@
                     }
                 };
             }
-        ]);
+        ])
+
+        /*.service('Loading', [
+            function () {
+                return {
+                    show: function () {
+
+                    },
+                    hide: function () {
+
+                    }
+                };
+            }
+        ])*/
+
+    ;
 
 })(angular);
