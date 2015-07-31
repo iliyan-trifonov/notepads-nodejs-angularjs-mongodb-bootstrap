@@ -4,9 +4,11 @@
     angular.module('Nodepads', [
         'Notepads.controllers',
         'Notepads.services',
+        'Notepads.directives',
         'Notepads.vars',
         'ngRoute',
-        'ngSanitize'
+        'ngSanitize',
+        'ui.bootstrap'
     ])
     .config(['$routeProvider', '$locationProvider', 'USER_CONTEXT', function ($routeProvider, $locationProvider, USER_CONTEXT) {
 
