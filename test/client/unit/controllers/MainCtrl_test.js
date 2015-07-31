@@ -37,5 +37,20 @@ describe('Notepads.controllers.MainCtrl', function () {
             expect($scope.cancel).toBeDefined();
             expect(typeof $scope.cancel === "function").toBe(true);
         }));
+
+        it('cancel should call window.history.back', inject(function ($controller) {
+            var $scope = {};
+            var $window = {
+                history: {
+                    back: function () {
+                        //
+                    }
+                }
+            };
+            spyOn($window.history, "back");
+            var MainCtrl = $controller('MainCtrl', { $scope: $scope, $window: $window });
+            $scope.cancel();
+            expect($window.history.back).toHaveBeenCalled();
+        }));
     });
 });
