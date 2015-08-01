@@ -30,12 +30,17 @@
     ])
 
     .controller('DashboardCtrl', [
-        '$scope', 'Api', '$location',
-        function ($scope, Api, $location) {
+        '$scope', 'Api', '$location', 'Loading',
+        function ($scope, Api, $location, Loading) {
             function list() {
+                Loading.show();
                 Api.notepads.list()
                     .success(function (categories) {
                         $scope.categories = categories;
+                        Loading.hide();
+                    })
+                    .error(function () {
+                        Loading.hide();
                     });
             }
 
@@ -144,16 +149,17 @@
     ])
 
     .controller('CategoriesCtrl', [
-        '$scope', 'Api', '$location',/* 'Loading',*/
-        function ($scope, Api, $location/*, Loading*/) {
-            //Loading.show();
+        '$scope', 'Api', '$location', 'Loading',
+        function ($scope, Api, $location, Loading) {
+            Loading.show();
             Api.categories.list()
                 .success(function (categories) {
                     $scope.categories = categories;
-                })
-                /*.finally(function () {
                     Loading.hide();
-                })*/;
+                })
+                .error(function () {
+                    Loading.hide();
+                });
 
             $scope.addCategory = function () {
                 $location.path('/categories/add');

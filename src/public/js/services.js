@@ -120,18 +120,19 @@
             }
         ])
 
-        /*.service('Loading', [
-            function () {
+        .service('Loading', [
+            '$rootScope',
+            function ($rootScope) {
                 return {
                     show: function () {
-
+                        $rootScope.$emit('loading::show', 1);
                     },
                     hide: function () {
-
+                        $rootScope.$emit('loading::hide', 1);
                     }
                 };
             }
-        ])*/
+        ])
 
     ;
 

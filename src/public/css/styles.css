@@ -35,3 +35,19 @@ body {
     right: 10px;
     position: absolute;
 }
+
+.notepads-overlay {
+    position: absolute;
+    z-index: 1;
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    opacity: 0.8;
+}
+
+.notepads-overlay .notepads-progressbar {
+    position: relative;
+    top: 300px;
+    z-index: 2;
+    opacity: 1;
+}
