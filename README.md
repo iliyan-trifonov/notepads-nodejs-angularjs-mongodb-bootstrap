@@ -41,6 +41,8 @@ I count on its future [source maps parsing](https://github.com/gotwarlost/istanb
 
 ## Install
 
+Install [Java](https://java.com/en/download/) for the Selenium server.
+
 Install the global tools:
 
     npm install -g grunt-cli bower
