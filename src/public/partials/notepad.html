@@ -24,11 +24,21 @@
                 </div>
                 <div class="form-group">
                     <label for="title">Title:</label>
-                    <input type="text" id="title" class="form-control" ng-model="notepad.title"/>
+                    <input type="text"
+                           id="title"
+                           class="form-control"
+                           ng-model="notepad.title"
+                           placeholder="Notepad's title"
+                           required/>
                 </div>
                 <div class="form-group">
                     <label for="text">Text:</label>
-                    <textarea id="text" class="form-control" rows="20" ng-model="notepad.text"></textarea>
+                    <textarea id="text"
+                              class="form-control"
+                              rows="20"
+                              ng-model="notepad.text"
+                              placeholder="Notepad's text"
+                              required></textarea>
                 </div>
                 <button class="btn btn-primary"
                         ng-click="addEditNotepad()"
