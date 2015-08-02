@@ -51,3 +51,16 @@ body {
     z-index: 2;
     opacity: 1;
 }
+
+@keyframes fadeIn {
+    0%   { opacity: 0 }
+    100% { opacity: 1 }
+}
+
+@keyframes fadeOut {
+    0%   { opacity: 1 }
+    100% { opacity: 0 }
+}
+
+div[ng-view].ng-enter { animation: fadeIn 0.5s; }
+/*div[ng-view].ng-leave { animation: fadeOut 0.2s; }*/
