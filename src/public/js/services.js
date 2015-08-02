@@ -6,6 +6,8 @@
         .service('Api', [
             '$http',
             function ($http) {
+                // use full urls like https://notepads.iliyan-trifonov.com/api/v1 here
+                // to connect to a remote API
                 var apiBase = '/api/v1';
                 return {
                     notepads: {
