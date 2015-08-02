@@ -74,6 +74,7 @@
         <script type="text/javascript" src="/vendor/angular/angular.min.js"></script>
         <script type="text/javascript" src="/vendor/angular-route/angular-route.min.js"></script>
         <script type="text/javascript" src="/vendor/angular-sanitize/angular-sanitize.min.js"></script>
+        <script type="text/javascript" src="/vendor/angular-animate/angular-animate.min.js"></script>
         <script type="text/javascript" src="/vendor/angular-bootstrap/ui-bootstrap.min.js"></script>
         <script type="text/javascript" src="/vendor/angular-bootstrap/ui-bootstrap-tpls.min.js"></script>
         <script type="text/javascript">
@@ -83,6 +84,7 @@
                 var USER_CONTEXT = {};
                 //<% if (user) { %>
                 USER_CONTEXT.id = '<%= user.id %>';
+                USER_CONTEXT.accessToken = '<%= user.accessToken %>';
                 //<% } %>
 
                 angular.module('Notepads.vars', [])
