@@ -39,7 +39,9 @@ let postAuthHandler = (req, res) => {
             let user = yield User.getByAccessToken(accessToken);
 
             if (!user) {
-                console.error('Invalid Access Token!');
+                //TODO: use a notepadsUtils.blockUser(message) function instead
+                //TODO: because this repeats with the logic in bootstrap.js:
+                console.error(`Invalid access token ${accessToken}!`);
                 return res.status(HttpStatus.UNAUTHORIZED).json({});
             }
 

@@ -95,7 +95,7 @@ let parseAccessToken = (req, res, next) => {
                 req.user.id = user._id;
                 next();
             } else {
-                return blockUser('Invalid access token!');
+                return blockUser(`Invalid access token ${accessToken}!`);
             }
         }).catch(err => {
             return blockUser(err);
