@@ -265,25 +265,29 @@ describe('Notepads Routes', function () {
     });
 
     describe('getNotepadByIdHandler', () => {
-        it('should return NOT_FOUND if no notepad is found', done => {
+        it('should return BAD_REQUEST if no notepad id is given', done => {
             req.params = {};
-            res.execDone = false;
+            res.statusExpected = HttpStatus.BAD_REQUEST;
+            res.jsonChecker = obj => {
+                assert.deepEqual(obj, {});
+                done();
+            };
+            res.maxCalls = 1;
+
+            notepadsRouter.getNotepadByIdHandler(req, res);
+        });
+
+        it('should return NOT_FOUND if no notepad is found', done => {
+            req.params = {
+                id: mongoose.Types.ObjectId()
+            };
             res.statusExpected = HttpStatus.NOT_FOUND;
             res.jsonChecker = obj => {
                 assert.deepEqual(obj, {});
-                //allow a second call before done
-                if (!res.execDone) {
-                    res.execDone = true;
-                } else {
-                    done();
-                }
+                done();
             };
-            res.maxCalls = 2;
+            res.maxCalls = 1;
 
-            notepadsRouter.getNotepadByIdHandler(req, res);
-
-            //second call
-            req.params.id = mongoose.Types.ObjectId();
             notepadsRouter.getNotepadByIdHandler(req, res);
         });
 
@@ -638,12 +642,24 @@ describe('Notepads Routes', function () {
     });
 
     describe('deleteNotepadsIdHandler', () => {
-        it('should return NOT_FOUND if the Notepad is not found by the given params', done => {
+        it('should return BAD_REQUEST if the Notepad id param is not given', done => {
             req.params = req.user = {};
+            res.statusExpected = HttpStatus.BAD_REQUEST;
+            res.jsonChecker = obj => {
+                assert.deepEqual(obj, {});
+                done();
+            };
+
+            notepadsRouter.deleteNotepadsIdHandler(req, res);
+        });
+
+        it('should return NOT_FOUND if the Notepad is not found by the given params', done => {
+            req.params = req.user = {
+                id: mongoose.Types.ObjectId()
+            };
             res.statusExpected = HttpStatus.NOT_FOUND;
             res.jsonChecker = obj => {
                 assert.deepEqual(obj, {});
-
                 done();
             };
 

@@ -26,8 +26,8 @@ describe('API /users', function () {
 
     var db, testUser;
 
-    before(() => {
-        return co(function* () {
+    before(() =>
+        co(function* () {
             db = connection();
 
             testUser = yield User.createAsync({
@@ -54,8 +54,8 @@ describe('API /users', function () {
                     }
                 } catch (err) {/**/}
             }
-        });
-    });
+        })
+    );
 
     after(() => db.close());
 

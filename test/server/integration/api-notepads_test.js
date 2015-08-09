@@ -299,7 +299,9 @@ describe('API /notepads', () => {
         it('should return INTERNAL_SERVER_ERROR on error', done => {
             callUrl({ token: testUser.accessToken, method: 'post' })
                 .send({
-                    category: +new Date()
+                    category: +new Date(),
+                    title: +new Date(),
+                    text: +new Date()
                 })
                 .expect('Content-Type', /json/)
                 .expect(HttpStatus.INTERNAL_SERVER_ERROR)
