@@ -46,7 +46,7 @@
                                         scope.progress = 0;
                                     }
                                     scope.progress+=2;
-                                }, 100);
+                                }, 50);
                             }
                         }, 150);
                     });
