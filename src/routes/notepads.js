@@ -157,6 +157,10 @@ let getNotepadsHandler = (req, res) => {
 let getNotepadByIdHandler = (req, res) => {
     co(function* () {
 
+        if (!req.params.id) {
+            return res.status(HttpStatus.BAD_REQUEST).json({});
+        }
+
         let notepad = yield Notepad.getByIdForUser(req.params.id, req.user.id);
 
         if (!notepad) {
@@ -174,10 +178,19 @@ let getNotepadByIdHandler = (req, res) => {
 let postNotepadsHandler = (req, res) => {
     co(function* () {
 
+        let badReq = () =>
+            res.status(HttpStatus.BAD_REQUEST).json({});
+
+        //missing params
+        if (!req.body.category || !req.body.title || !req.body.text) {
+            return badReq();
+        }
+
         let category = yield Category.getByIdForUser(req.body.category, req.user.id);
 
-        if (!category || !req.body.title || !req.body.text) {
-            return res.status(HttpStatus.BAD_REQUEST).json({});
+        //not existing category
+        if (!category) {
+            return badReq();
         }
 
         let notepad = yield Notepad.createAsync({
@@ -243,6 +256,11 @@ let putNotepadsIdHandler = (req, res) => {
 
 let deleteNotepadsIdHandler = (req, res) => {
     co(function* () {
+
+        if (!req.params.id) {
+            return res.status(HttpStatus.BAD_REQUEST).json({});
+        }
+
         let notepad = yield  Notepad.getByIdForUser(req.params.id, req.user.id);
 
         if (!notepad) {
