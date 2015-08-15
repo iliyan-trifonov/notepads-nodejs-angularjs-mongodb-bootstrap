@@ -15,6 +15,7 @@
         '$routeProvider', '$locationProvider', 'USER_CONTEXT', '$httpProvider',
         function ($routeProvider, $locationProvider, USER_CONTEXT, $httpProvider) {
             if (USER_CONTEXT && USER_CONTEXT.id) {
+                //client urls
                 $routeProvider.when('/', {
                     templateUrl: '/partials/dashboard.html',
                     controller: 'DashboardCtrl'
@@ -52,11 +53,24 @@
                     controller: 'CategoryDelCtrl'
                 });
             } else {
-                $routeProvider.when('/', {
-                    templateUrl: '/partials/index.html',
-                    controller: 'IndexCtrl'
-                });
+                //public urls
+                $routeProvider
+                    .when('/', {
+                        templateUrl: '/partials/index.html',
+                        controller: 'IndexCtrl'
+                    });
             }
+
+            //common urls for both guest and client
+            $routeProvider
+                .when('/cookie-policy', {
+                    templateUrl: '/partials/cookie-policy.html',
+                    controller: 'MainCtrl'
+                })
+                .when('/privacy-policy', {
+                    templateUrl: '/partials/privacy-policy.html',
+                    controller: 'MainCtrl'
+                });
 
             $routeProvider.otherwise({ redirectTo: '/' });
 
