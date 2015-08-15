@@ -139,6 +139,8 @@ if (config) {
 //html5 history, no # angular paths, redirect all to index
 app.get(['/categories', '/categories/*'], routes.index);
 app.get(['/notepads', '/notepads/*'], routes.index);
+app.get('/cookie-policy', routes.index);
+app.get('/privacy-policy', routes.index);
 
 //dev env
 if ('development' === app.get('env')) {
