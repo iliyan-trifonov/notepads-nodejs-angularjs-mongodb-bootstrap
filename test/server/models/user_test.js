@@ -154,6 +154,7 @@ describe('User model', function () {
 
     describe('removeNotepads', function () {
         it('should remove some existing Notepads given these notepads\'s Ids', function () {
+            //prepare
             var nIds = [
                 mongoose.Types.ObjectId(),
                 mongoose.Types.ObjectId(),
@@ -162,18 +163,28 @@ describe('User model', function () {
             return Promise.map(nIds, function (id) {
                 return User.addNotepad(testUser._id, id);
             }).then(function (users) {
-                //get the last user result with all ids inserted
-                var user = users[2];
-                assert.notStrictEqual(user, null);
+                assert.strictEqual(users.length, 3);
+                let user;
+                //get the user result with all ids inserted
+                for (let checkedUser of users) {
+                    if (!user) {
+                        user = checkedUser;
+                    } else if (checkedUser.notepads.length > user.notepads.length) {
+                        user = checkedUser;
+                    }
+                }
+                assert.ok(user);
                 assert.ok(nIds.every(function (id) {
                     return user.notepads.indexOf(id) !== -1;
                 }));
             }).then(function () {
+                //execute
                 return User.removeNotepads(
                     testUser._id,
                     nIds
                 );
             }).then(function (user) {
+                //check
                 assert.notStrictEqual(user, null);
                 assert.ok(nIds.every(function (id) {
                     return user.notepads.indexOf(id) === -1;
