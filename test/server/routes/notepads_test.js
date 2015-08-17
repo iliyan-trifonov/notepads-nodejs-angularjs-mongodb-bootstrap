@@ -21,13 +21,13 @@ describe('Notepads Routes', function () {
         db = connection();
 
         co(function* () {
-            testUser = yield User.createAsync({
+            testUser = yield User.create({
                 facebookId: +new Date(),
                 name: 'Iliyan Trifonov',
                 photo: 'photourl'
             });
 
-            testCat = yield Category.createAsync({
+            testCat = yield Category.create({
                 name: 'Test category',
                 user: testUser._id
             });
@@ -49,7 +49,7 @@ describe('Notepads Routes', function () {
 
             for (let i = 0, l = notes.length; i < l; i++)
             {
-                let notepad = yield Notepad.createAsync(notes[i]);
+                let notepad = yield Notepad.create(notes[i]);
                 testNotepads.push(notepad);
                 testCat = yield Category.increaseNotepadsCountById(notepad.category);
                 testUser = yield User.addNotepad(notepad.user, notepad._id);
@@ -105,9 +105,9 @@ describe('Notepads Routes', function () {
 
     after(done => {
         co(function* () {
-            yield User.removeAsync({});
-            yield Category.removeAsync({});
-            yield Notepad.removeAsync({});
+            yield User.remove({});
+            yield Category.remove({});
+            yield Notepad.remove({});
             db.close();
             done();
         });
@@ -157,7 +157,7 @@ describe('Notepads Routes', function () {
     describe('getNotepadsHandler', () => {
        it('should return an empty array result if user with no notepads and categories is given', done => {
            co(function* () {
-              let user = yield User.createAsync({
+              let user = yield User.create({
                   facebookId: +new Date(),
                   name: 'Temp User',
                   photo: 'photourl'
@@ -182,7 +182,7 @@ describe('Notepads Routes', function () {
                     { name: 'Test Cat2' }
                 ];
 
-                let user = yield User.createAsync({
+                let user = yield User.create({
                     facebookId: +new Date(),
                     name: 'Temp User',
                     photo: 'photourl'
@@ -192,7 +192,7 @@ describe('Notepads Routes', function () {
                 req.params.insidecats = "1";
 
                 for (let i = 0, l = cats.length; i < l; i++) {
-                    yield Category.createAsync({
+                    yield Category.create({
                         name: cats[i].name,
                         user: user
                     });
@@ -377,9 +377,9 @@ describe('Notepads Routes', function () {
             notepadsRouter.postNotepadsHandler(req, res);
         });
 
-        it('should return INTERNAL SERVER ERROR when there is an error in Notepad.createAsync()', done => {
+        it('should return INTERNAL SERVER ERROR when there is an error in Notepad.create()', done => {
             let NotepadMock = {
-                createAsync: function (/*obj*/) {
+                create: function (/*obj*/) {
                     return Promise.reject(null);
                 }
             };
@@ -403,9 +403,9 @@ describe('Notepads Routes', function () {
             notepadsRouterWithMocks.postNotepadsHandler(req, res);
         });
 
-        it('should return INTERNAL SERVER ERROR when Notepad.createAsync() doesn\'t return a valid object', done => {
+        it('should return INTERNAL SERVER ERROR when Notepad.create() doesn\'t return a valid object', done => {
             let NotepadMock = {
-                createAsync: function (obj) {
+                create: function (obj) {
                     assert.ok(obj.category);
                     assert.ok(obj.user);
                     return Promise.resolve(null);
@@ -452,12 +452,12 @@ describe('Notepads Routes', function () {
                     testNotepads.push(obj);
 
                     //check category values
-                    let cat = yield Category.findOneAsync({ _id: testCat._id });
+                    let cat = yield Category.findOne({ _id: testCat._id }).exec();
                     assert.strictEqual(cat.notepadsCount, testCat.notepadsCount + 1);
                     testCat = cat;
 
                     //check user values
-                    let user = yield User.findOneAsync({ _id: testUser._id, notepads: obj._id });
+                    let user = yield User.findOne({ _id: testUser._id, notepads: obj._id }).exec();
                     assert.strictEqual(user.notepads.length, testUser.notepads.length + 1);
                     testUser = user;
 
@@ -546,13 +546,13 @@ describe('Notepads Routes', function () {
                 req.user = { id: testUser._id };
 
                 //create a new cat
-                cat = yield Category.createAsync({
+                cat = yield Category.create({
                     name: 'Test cat 2',
                     user: testUser
                 });
 
                 //create a new notepad for that cat
-                notepad = yield Notepad.createAsync({
+                notepad = yield Notepad.create({
                     title: 'Temp notepad',
                     text: 'Temp text',
                     category: cat._id,
@@ -589,13 +589,13 @@ describe('Notepads Routes', function () {
                         testNotepads.push(obj);
 
                         //check the new category changes - notepads num decreased
-                        let c = yield Category.findOneAsync({
+                        let c = yield Category.findOne({
                             _id: cat._id
-                        });
+                        }).exec();
                         assert.strictEqual(c.notepadsCount, 0);
 
                         //check the testingCat changes - notepads num increased
-                        testCat = yield Category.findOneAsync({ _id: testCat._id });
+                        testCat = yield Category.findOne({ _id: testCat._id }).exec();
                         assert.strictEqual(testCat.notepadsCount, testNotepads.length);
 
                         done();
@@ -678,13 +678,13 @@ describe('Notepads Routes', function () {
                     assert.ok(obj);
                     assert.deepEqual(obj, {});
 
-                    let cat = yield Category.findOneAsync({ _id: note.category });
+                    let cat = yield Category.findOne({ _id: note.category }).exec();
                     assert.strictEqual(cat.notepadsCount, testCat.notepadsCount - 1);
 
                     testCat = cat;
                     testNotepads.pop();
 
-                    let user = yield User.findOneAsync({ _id: note.user });
+                    let user = yield User.findOne({ _id: note.user });
                     assert.strictEqual(user.notepads.length, testUser.notepads.length - 1);
 
                     testUser = user;

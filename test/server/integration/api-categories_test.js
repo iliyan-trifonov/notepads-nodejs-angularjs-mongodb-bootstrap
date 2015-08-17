@@ -28,7 +28,7 @@ describe('API /categories', () => {
 
             request.setUrl(url);
 
-            testUser = yield User.createAsync({
+            testUser = yield User.create({
                 'facebookId': +new Date(),
                 'name': 'Iliyan Trifonov',
                 'photo': 'photourl'
@@ -36,12 +36,12 @@ describe('API /categories', () => {
 
             request.setToken(testUser.accessToken);
 
-            testCat = yield Category.createAsync({
+            testCat = yield Category.create({
                 name: 'Test category',
                 user: testUser._id
             });
 
-            testNotepad = yield Notepad.createAsync({
+            testNotepad = yield Notepad.create({
                 title: 'Test notepad',
                 text: 'Test notepad text',
                 category: testCat._id,
@@ -69,7 +69,7 @@ describe('API /categories', () => {
     describe('GET /categories', () => {
         it('should return status OK and an empty JSON array when the user has no categories', () =>
             co(function* () {
-                let user = yield User.createAsync({
+                let user = yield User.create({
                     name: 'Iliyan Trifonov',
                     facebookId: +new Date(),
                     photo: 'photourl'
@@ -256,20 +256,20 @@ describe('API /categories', () => {
         it('should remove the category, remove its id from user.categories, remove all notepads in that category and from user.notepads ', done => {
             co(function* () {
                 //prepare
-                let user = yield User.createAsync({
+                let user = yield User.create({
                     name: 'User to be deleted',
                     facebookId: +new Date(),
                     photo: 'photourl'
                 });
 
-                let cat = yield Category.createAsync({
+                let cat = yield Category.create({
                     name: 'Cat to be deleted',
                     user: user._id
                 });
 
                 user = yield User.addCategory(user._id, cat._id);
 
-                let notepad = yield Notepad.createAsync({
+                let notepad = yield Notepad.create({
                     title: 'Notepad to be deleted',
                     text: 'Test text',
                     category: cat._id,
@@ -297,10 +297,10 @@ describe('API /categories', () => {
 
                             //check if the should be deleted stuff exists
 
-                            assert.strictEqual(null, yield Category.findByIdAsync(cat._id));
-                            assert.strictEqual(null, yield Notepad.findByIdAsync(notepad._id));
+                            assert.strictEqual(null, yield Category.findById(cat._id).exec());
+                            assert.strictEqual(null, yield Notepad.findById(notepad._id).exec());
 
-                            user = yield User.findByIdAsync(user._id);
+                            user = yield User.findById(user._id).exec();
                             assert.ok(user.categories.indexOf(cat._id) === -1);
                             assert.ok(user.notepads.indexOf(notepad._id) === -1);
 

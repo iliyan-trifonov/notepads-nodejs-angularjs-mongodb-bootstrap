@@ -6,45 +6,51 @@ import User from './models/user';
 
 let config;
 
-let authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, done) {
-    let p = User.fb(fbProfile.id).then(function (existingUser) {
+let authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, callback) {
+    console.log('authVerification() called');
+    User.fb(fbProfile.id)
+    .then(function (existingUser) {
         if (existingUser) {
-            done(null, existingUser);
-            //break the promises chain here:
-            return p.cancel();
+            console.log('calling callback(null, existingUser)');
+            return callback(null, existingUser);
         } else {
-            return User.createAsync({
+            console.log('authVerification: creating a new user');
+            return User.create({
                 facebookId: fbProfile.id,
                 name: fbProfile.displayName,
                 photo: fbProfile.photos[0].value
+            })
+            .then(function (newUser) {
+                console.log('finished creating a new user');
+                if (!newUser) {
+                    let err = new Error('authVerification(): user creation unsuccessful!');
+                    console.error(err, { newUser: newUser });
+                    return callback(err, newUser);
+                }
+                console.log('authVerification: prepopulating for the new user', newUser);
+                //pre-populate some data for just created users
+                notepadsUtils.prepopulate(newUser._id).then(function (result) {
+                    //return the new user object
+                    callback(null, result.user);
+                });
             });
         }
-    }).then(function (newUser) {
-        if (!newUser) {
-            let err = new Error('authVerification(): user creation unsuccessful!');
-            console.error(err, { newUser: newUser });
-            return done(err, newUser);
-        }
-        //pre-populate some data for just created users
-        notepadsUtils.prepopulate(newUser._id).then(function (result) {
-            //return the new user object
-            done(null, result.user);
-        });
-    }).catch(function (err) {
+    })
+    .then(null, function (err) {
         console.error('authVerification(): error', err);
-        return done(err);
-    })/*.cancelable()*/;
+        return callback(err);
+    });
 };
 
-let authSerialize = function (user, done) {
-    done(null, user.facebookId);
+let authSerialize = function (user, callback) {
+    callback(null, user.facebookId);
 };
 
-let authDeserialize = function (fbId, done) {
+let authDeserialize = function (fbId, callback) {
     User.fb(fbId).then(function (user) {
-        done(null, user);
-    }).catch(function (err) {
-        done(err);
+        callback(null, user);
+    }).then(null, function (err) {
+        callback(err);
     });
 };
 

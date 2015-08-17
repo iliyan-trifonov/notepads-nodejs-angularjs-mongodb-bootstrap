@@ -21,7 +21,7 @@ describe('notepadsUtils', () => {
                 name = 'Iliyan Trifonov',
                 photo = 'photourl';
 
-            user = yield User.createAsync({
+            user = yield User.create({
                 facebookId: fbId,
                 name: name,
                 photo: photo
@@ -31,9 +31,9 @@ describe('notepadsUtils', () => {
 
     after(() => {
         return co(function* () {
-            yield User.removeAsync({});
-            yield Category.removeAsync({});
-            yield Notepad.removeAsync({});
+            yield User.remove({});
+            yield Category.remove({});
+            yield Notepad.remove({});
             db.close();
         });
     });
@@ -76,14 +76,14 @@ describe('notepadsUtils', () => {
                 //prepare
 
                 //refresh the user data:
-                user = yield User.findByIdAsync(user._id);
+                user = yield User.findById(user._id);
                 let oldNotesLen = user.notepads.length;
 
                 let category = yield Category.add('Test Cat Name', user._id);
 
                 assert.strictEqual(category.notepadsCount, 0);
 
-                let notepad = yield Notepad.createAsync({
+                let notepad = yield Notepad.create({
                     title: 'Test Notepad Title',
                     text: 'Test Notepad Text',
                     category: category._id,
@@ -96,12 +96,12 @@ describe('notepadsUtils', () => {
                 //check
 
                 //get the latest user data:
-                user = yield User.findByIdAsync(user._id);
+                user = yield User.findById(user._id);
                 assert.strictEqual(user.notepads.length, oldNotesLen + 1);
                 assert.ok(user.notepads.indexOf(notepad._id) !== -1);
 
                 //get the latest category data:
-                category = yield Category.findByIdAsync(category._id);
+                category = yield Category.findById(category._id);
                 assert.strictEqual(category.notepadsCount, 1);
 
                 assert.ok(result.user._id.equals(user._id));
@@ -116,10 +116,10 @@ describe('notepadsUtils', () => {
                 //prepare
 
                 //get one notepad from the test user:
-                let notepad = yield Notepad.findByIdAsync(user.notepads[0]);
+                let notepad = yield Notepad.findById(user.notepads[0]);
                 let oldNotesLen = user.notepads.length;
 
-                let category = yield Category.findByIdAsync(notepad.category);
+                let category = yield Category.findById(notepad.category);
                 let oldNotesCount = category.notepadsCount;
 
                 //execute
@@ -128,8 +128,8 @@ describe('notepadsUtils', () => {
                 //check
 
                 //update the user and category data:
-                user = yield User.findByIdAsync(user._id);
-                category = yield Category.findByIdAsync(category._id);
+                user = yield User.findById(user._id);
+                category = yield Category.findById(category._id);
 
                 assert.strictEqual(user.notepads.length, oldNotesLen - 1);
                 assert.strictEqual(category.notepadsCount, oldNotesCount - 1);

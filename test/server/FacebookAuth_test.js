@@ -16,38 +16,40 @@ describe('FacebookAuth', function () {
         db = connection();
     });
 
-    after(function (done) {
-        User.removeAsync({}).then(function () {
-            return Category.removeAsync({});
+    after(function () {
+        return User.remove({})
+        .then(function () {
+            return Category.remove({});
         }).then(function () {
-            return Notepad.removeAsync({});
+            return Notepad.remove({});
         }).then(function () {
             db.close();
-            done();
         });
     });
 
     describe('authVerification', function () {
         it('should return an existing user when existing uid is given', function (done) {
-            User.createAsync({
+            //prepare
+            User.create({
                 facebookId: +new Date(),
                 name: 'Iliyan Trifonov',
                 photo: 'photourl'
             }).then(function (user) {
                 assert.notStrictEqual(user, null);
+                //test
                 FacebookAuth.authVerification(null, null, {id: user.facebookId}, function (err, result) {
                     assert.ifError(err);
                     assert.notStrictEqual(result, null);
-                    assert.ok(result.equals(user));
+                    assert.ok(result._id.equals(user._id));
                     done();
                 });
-            }).catch(function (err) {
-                assert.ifError(err);
-                done();
+            }, function (err) {
+                done(err);
             });
         });
 
         it('should create a new user for not existing uid', function (done) {
+            console.log('should create a new user for not existing uid started');
             var fbProfile = {
                 id: String(+new Date().getTime()),
                 displayName: 'Iliyan Trifonov ' +new Date().getTime(),
@@ -94,7 +96,7 @@ describe('FacebookAuth', function () {
 
     describe('authDeserialize', function () {
         it('should return a user from a given facebookId', function (done) {
-            User.createAsync({
+            User.create({
                 facebookId: +new Date(),
                 name: 'Iliyan Trifonov',
                 photo: 'photourl'

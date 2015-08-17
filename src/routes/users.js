@@ -67,7 +67,7 @@ let postAuthHandler = (req, res) => {
                 return res.status(HttpStatus.OK).json({ accessToken: user.accessToken });
             } else {
                 //create a new user
-                user = yield User.createAsync({
+                user = yield User.create({
                     facebookId: graphUser.id,
                     name: graphUser.name,
                     photo: graphUser.picture.data.url

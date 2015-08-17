@@ -15,7 +15,7 @@ describe('Category Model', function () {
         //TODO: use callback
         db = connection();
         //add some testing data
-        User.createAsync({
+        User.create({
             facebookId: +new Date(),
             name: 'Iliyan Trifonov',
             photo: 'photourl'
@@ -25,7 +25,7 @@ describe('Category Model', function () {
             testUser = user;
 
             //TODO: create categories in a loop - avoids repeating code
-            return Category.createAsync({
+            return Category.create({
                 name: 'Test cat1',
                 user: user._id
             });
@@ -34,7 +34,7 @@ describe('Category Model', function () {
 
             testCats.push(category);
 
-            return Category.createAsync({
+            return Category.create({
                 name: 'Test cat2',
                 user: testUser._id
             });
@@ -47,15 +47,14 @@ describe('Category Model', function () {
 
     });
 
-    after(function (done) {
-        Category.removeAsync({})
+    after(function () {
+        return Category.remove({})
             .then(function () {
-                return User.removeAsync({});
+                return User.remove({});
             })
             .then(function () {
                 db.close();
-            })
-            .then(done);
+            });
     });
 
     it('should create and save a new Category', function () {
@@ -63,7 +62,7 @@ describe('Category Model', function () {
             name: 'Test cat',
             user: mongoose.Types.ObjectId()
         };
-        return Category.createAsync(cat).then(function (category) {
+        return Category.create(cat).then(function (category) {
             assert.ok(category !== null);
             assert.strictEqual(category.name, cat.name);
             assert.strictEqual(category.notepadsCount, 0);

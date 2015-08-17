@@ -193,7 +193,7 @@ let postNotepadsHandler = (req, res) => {
             return badReq();
         }
 
-        let notepad = yield Notepad.createAsync({
+        let notepad = yield Notepad.create({
             category: category._id,
             title: req.body.title,
             text: req.body.text,

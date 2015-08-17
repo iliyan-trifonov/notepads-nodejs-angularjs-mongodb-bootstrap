@@ -29,7 +29,7 @@ describe('API /notepads', () => {
 
             request.setUrl(url);
 
-            testUser = yield User.createAsync({
+            testUser = yield User.create({
                 'facebookId': +new Date(),
                 'name': 'Iliyan Trifonov',
                 'photo': 'photourl'
@@ -37,12 +37,12 @@ describe('API /notepads', () => {
 
             request.setToken(testUser.accessToken);
 
-            testCat = yield Category.createAsync({
+            testCat = yield Category.create({
                 name: 'Test category',
                 user: testUser._id
             });
 
-            testNotepad = yield Notepad.createAsync({
+            testNotepad = yield Notepad.create({
                 title: 'Test notepad',
                 text: 'Test notepad text',
                 category: testCat._id,
@@ -70,7 +70,7 @@ describe('API /notepads', () => {
         describe('?insidecats=1', () => {
             it('should return an empty array if no cats are found', () =>
                 co(function* () {
-                    let user = yield User.createAsync({
+                    let user = yield User.create({
                         name: 'Iliyan Trifonov',
                         facebookId: +new Date(),
                         photo: 'photourl'
@@ -103,7 +103,7 @@ describe('API /notepads', () => {
 
         it('should return NOT_FOUND if user has no notepads', () =>
             co(function* () {
-                let user = yield User.createAsync({
+                let user = yield User.create({
                     name: 'Iliyan Trifonov',
                     facebookId: +new Date(),
                     photo: 'photourl'
@@ -150,7 +150,7 @@ describe('API /notepads', () => {
 
         it('should return NOT_FOUND when there is no notepad with the given uid', done => {
             co(function* () {
-                let user = yield User.createAsync({
+                let user = yield User.create({
                     name: 'Iliyan Trifonov',
                     facebookId: +new Date(),
                     photo: 'photourl'
@@ -288,8 +288,8 @@ describe('API /notepads', () => {
 
                     co(function* () {
                         //refresh the test user and cat
-                        testUser = yield User.findByIdAsync(testUser._id);
-                        testCat = yield Category.findByIdAsync(testCat._id);
+                        testUser = yield User.findById(testUser._id).exec();
+                        testCat = yield Category.findById(testCat._id).exec();
 
                         done();
                     });
@@ -445,8 +445,8 @@ describe('API /notepads', () => {
                             let oldCatNotepadsCount = testCat.notepadsCount;
 
                             //refresh the new and old cats
-                            testCat = yield Category.findByIdAsync(testCat._id);
-                            newCat = yield Category.findByIdAsync(newCat._id);
+                            testCat = yield Category.findById(testCat._id).exec();
+                            newCat = yield Category.findById(newCat._id).exec();
 
                             assert.strictEqual(testCat.notepadsCount, oldCatNotepadsCount - 1);
                             assert.strictEqual(newCat.notepadsCount, 1);
@@ -481,7 +481,7 @@ describe('API /notepads', () => {
         it('should delete the notepad, update user and category data and return NO_CONTENT', () =>
             co(function* () {
                 //create a new notepad to delete
-                let notepadDel = yield Notepad.createAsync({
+                let notepadDel = yield Notepad.create({
                     title: 'del title',
                     text: 'del text',
                     category: testCat._id,
@@ -506,11 +506,11 @@ describe('API /notepads', () => {
                     .expect(HttpStatus.NO_CONTENT);
 
                 //check
-                assert.strictEqual(yield Notepad.findByIdAsync(notepadDel._id), null);
+                assert.strictEqual(yield Notepad.findById(notepadDel._id).exec(), null);
 
                 //refresh the test user and cat data
-                testCat = yield Category.findByIdAsync(testCat._id);
-                testUser = yield User.findByIdAsync(testUser._id);
+                testCat = yield Category.findById(testCat._id).exec();
+                testUser = yield User.findById(testUser._id).exec();
 
                 //make sure the deleted notepad doesn't exist in user and cat data:
                 assert.strictEqual(testCat.notepadsCount, oldNotepadsCount - 1);

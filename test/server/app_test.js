@@ -77,7 +77,7 @@ describe('app', function () {
 
             it('should set req.user by given valid accessToken', done => {
                 co(function* () {
-                    let user = yield User.createAsync({
+                    let user = yield User.create({
                         name: 'Iliyan Trifonov',
                         facebookId: +new Date(),
                         photo: 'photourl'
@@ -106,7 +106,7 @@ describe('app', function () {
 
             it('should set req.user by given valid accessToken', done => {
                 co(function* () {
-                    let user = yield User.createAsync({
+                    let user = yield User.create({
                         name: 'Iliyan Trifonov',
                         facebookId: +new Date(),
                         photo: 'photourl'

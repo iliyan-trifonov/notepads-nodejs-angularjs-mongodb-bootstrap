@@ -20,13 +20,13 @@ describe('Categories Routes', () => {
         co(function* () {
             db = connection();
 
-            user = yield User.createAsync({
+            user = yield User.create({
                 facebookId: +new Date(),
                 name: 'Iliyan Trifonov',
                 photo: 'photourl'
             });
 
-            category = yield Category.createAsync({
+            category = yield Category.create({
                 name: 'Sample Category',
                 user: user._id
             });
@@ -37,9 +37,9 @@ describe('Categories Routes', () => {
 
     after(() =>
         co(function* () {
-            yield User.removeAsync({});
-            yield Category.removeAsync({});
-            yield Notepad.removeAsync({});
+            yield User.remove({});
+            yield Category.remove({});
+            yield Notepad.remove({});
             db.close();
         })
     );
@@ -115,7 +115,7 @@ describe('Categories Routes', () => {
             res.json = cat => {
                 assert.ok(cat);
                 assert.strictEqual(cat.name, testCatName);
-                User.findAsync({ category: cat._id })
+                User.find({ category: cat._id }).exec()
                     .then(user => assert.ok(user))
                     .then(done);
             };
@@ -290,9 +290,9 @@ describe('Categories Routes', () => {
             req.params = { id: category._id };
             req.user = { id: user._id };
             let CategoryMock = {
-                findByIdAndRemoveAsync: catId => {
+                findByIdAndRemove: catId => {
                     assert.ok(catId);
-                    return Promise.reject(null);
+                    return () => Promise.reject(null);
                 }
             };
             let categoriesRouterWithMocks = proxyquire('../../../src/routes/categories', {
@@ -314,7 +314,7 @@ describe('Categories Routes', () => {
             req.user = { id: user._id };
 
             let CategoryMock = {
-                findByIdAndRemoveAsync: catId => {
+                findByIdAndRemove: catId => {
                     assert.ok(catId);
                     return Promise.resolve(category);
                 }
@@ -347,7 +347,7 @@ describe('Categories Routes', () => {
         it('should delete a category, delete all notepads belonging to that category and update categories in user', done => {
             let cat;
             //create a new category
-            Category.createAsync({ name: 'Test cat to delete', user: user._id }).then(category => {
+            Category.create({ name: 'Test cat to delete', user: user._id }).then(category => {
                 assert.ok(category);
                 cat = category;
                 //add it to the user's categories array
@@ -355,7 +355,7 @@ describe('Categories Routes', () => {
             }).then(user => {
                 assert.ok(user);
                 //create a new notepad for that category and user
-                return Notepad.createAsync({
+                return Notepad.create({
                     title: 'asdas',
                     text: 'dfgdfg',
                     category: cat._id,
@@ -385,15 +385,15 @@ describe('Categories Routes', () => {
                         //check with the created cat above:
 
                         //category doesn't exist
-                        Category.findOneAsync({ id: cat._id }).then(doc => {
+                        Category.findOne({ id: cat._id }).exec().then(doc => {
                             assert.strictEqual(doc, null);
 
                             //user with that category doesn't exist
-                            return User.findOneAsync({ categories: cat._id });
+                            return User.findOne({ categories: cat._id }).exec();
                         }).then(doc => {
                             assert.strictEqual(doc, null);
 
-                            return Notepad.findOneAsync({ category: cat._id }).then(doc => {
+                            return Notepad.findOne({ category: cat._id }).exec().then(doc => {
                                 assert.strictEqual(doc, null);
                             });
                         }).then(done);

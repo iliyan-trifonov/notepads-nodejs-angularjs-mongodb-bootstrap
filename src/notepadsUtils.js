@@ -15,20 +15,24 @@ export let prepopulate = uid => {
             throw new Error('Invalid user id!');
         }
 
-        user = userOrig = yield User.findOneAsync({ _id: uid });
+        user = userOrig = yield User.findOne({ _id: uid }).exec();
+
+        console.log('user after findOne()', user);
 
         if (!user) {
             throw new Error('User not found!');
         }
 
-        category = yield Category.createAsync({
+        category = yield Category.create({
             'name': 'Sample category',
             'user': user._id
         });
 
         user = yield User.addCategory(user._id, category._id);
 
-        notepad = yield Notepad.createAsync({
+        console.log('user after addCategory()', user);
+
+        notepad = yield Notepad.create({
             title: 'Read me',
             text: 'Use the menu on the top left to create your own categories ' +
             'and then add notepads to them.' + "\n\n" +
@@ -49,9 +53,13 @@ export let prepopulate = uid => {
             user: user._id
         });
 
+        console.log('prepopulate: new notepad created');
+
         category = yield Category.increaseNotepadsCountById(category._id);
 
         user = yield User.addNotepad(user._id, notepad._id);
+
+        console.log('prepopulate: returning the result');
 
         return {
             user: user,
@@ -78,7 +86,7 @@ export let prepopulate = uid => {
                         notepads: userOrig.notepads
                     }
                 }
-            );
+            ).exec();
         }
         //
 

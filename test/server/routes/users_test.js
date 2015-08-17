@@ -36,7 +36,7 @@ describe('Users Routes', function () {
                 return co(function* () {
                     assert.ok(uid);
                     return {
-                        user: yield User.findByIdAsync(uid),
+                        user: yield User.findById(uid).exec(),
                         category: {},
                         notepad: {}
                     };
@@ -49,7 +49,7 @@ describe('Users Routes', function () {
             '../notepadsUtils': notepadsUtilsMock
         });
 
-        return User.createAsync({
+        return User.create({
             name: 'Iliyan Trifonov',
             photo: 'photourl',
             facebookId: +new Date()
@@ -69,7 +69,7 @@ describe('Users Routes', function () {
     });
 
     after(function () {
-        return User.removeAsync({})
+        return User.remove({})
             //TODO: try .then(db...bind(db)) instead:
             .then(function () {
                 db.close();
@@ -235,7 +235,7 @@ describe('Users Routes', function () {
                     co(function* () {
                         assert.ok(data.accessToken);
 
-                        let user = yield User.findOneAsync({ accessToken: data.accessToken });
+                        let user = yield User.findOne({ accessToken: data.accessToken }).exec();
                         assert.strictEqual(String(user.facebookId), String(req.body.fbId));
                         assert.strictEqual(user.name, testUsername);
 

@@ -30,7 +30,7 @@ describe('API /users', function () {
         co(function* () {
             db = connection();
 
-            testUser = yield User.createAsync({
+            testUser = yield User.create({
                 'facebookId': +new Date(),
                 'name': 'Iliyan Trifonov',
                 'photo': 'photourl'
@@ -132,7 +132,7 @@ describe('API /users', function () {
             }
 
             //remove the user if exists
-            User.removeAsync({
+            User.remove({
                 facebookId: config.testFBUser.fbId
             }).then(() => {
                 request(app)
@@ -152,17 +152,17 @@ describe('API /users', function () {
 
                             //check the data inserted by prepopulate():
 
-                            let user = yield User.findOneAsync({ accessToken: result.body.accessToken });
+                            let user = yield User.findOne({ accessToken: result.body.accessToken }).exec();
                             assert.strictEqual(String(user.facebookId), String(config.testFBUser.fbId));
                             assert.strictEqual(user.categories.length, 1);
                             assert.strictEqual(user.notepads.length, 1);
 
-                            let cat = yield Category.findByIdAsync(user.categories[0].toString());
+                            let cat = yield Category.findById(user.categories[0].toString()).exec();
                             assert.ok(cat._id.equals(user.categories[0]));
                             assert.strictEqual(cat.notepadsCount, 1);
                             assert.strictEqual(cat.name, 'Sample category');
 
-                            let notepad = yield Notepad.findByIdAsync(user.notepads[0]);
+                            let notepad = yield Notepad.findById(user.notepads[0]).exec();
                             assert.ok(notepad._id.equals(user.notepads[0]));
                             assert.ok(notepad.category.equals(cat._id));
                             assert.strictEqual(notepad.title, 'Read me');
@@ -180,9 +180,9 @@ describe('API /users', function () {
             }
 
             //the user should be created by the previous test
-            User.findOneAsync({
+            User.findOne({
                 facebookId: config.testFBUser.fbId
-            }).then(user => {
+            }).exec().then(user => {
                 assert.ok(user);
                 assert.ok(user.accessToken);
 

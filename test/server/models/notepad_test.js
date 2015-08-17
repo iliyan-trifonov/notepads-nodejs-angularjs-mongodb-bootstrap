@@ -68,7 +68,7 @@ describe('Notepad Model', function () {
             category: cat,
             user: user
         };
-        return Notepad.createAsync(notepad).then(function (doc) {
+        return Notepad.create(notepad).then(function (doc) {
             assert.ok(doc !== null);
             assert.strictEqual(doc.title, notepad.title);
             assert.strictEqual(doc.text, notepad.text);

@@ -105,7 +105,7 @@ let deleteIdHandler = (req, res) => {
             return res.status(HttpStatus.NOT_FOUND).json({});
         }
 
-        category = yield Category.findByIdAndRemoveAsync(category._id);
+        category = yield Category.findByIdAndRemove(category._id).exec();
 
         let user = yield User.removeCategory(category.user, category._id);
 
@@ -115,11 +115,11 @@ let deleteIdHandler = (req, res) => {
 
         //delete all orphaned notepads(if any) belonging to the deleted category
         //TODO: think about putting the notepads in Uncategorized category instead of deleting them
-        let notepads = yield Notepad.findAsync({ user: req.user.id, category: category._id });
+        let notepads = yield Notepad.find({ user: req.user.id, category: category._id }).exec();
 
         if (notepads) {
             let ns = pluck(notepads, '_id');
-            yield Notepad.removeAsync({ _id: { $in: ns } });
+            yield Notepad.remove({ _id: { $in: ns } });
             //remove the notepads' ids from User.notepads too
             yield User.removeNotepads(req.user.id, ns);
         }

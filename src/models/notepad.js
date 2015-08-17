@@ -1,7 +1,8 @@
 'use strict';
 
-import Promise from 'bluebird';
-let mongoose = Promise.promisifyAll(require('mongoose'));
+//import Promise from 'bluebird';
+//let mongoose = Promise.promisifyAll(require('mongoose'));
+import mongoose from 'mongoose';
 
 let notepadSchema = new mongoose.Schema({
     title: { type: String, required: true },
@@ -11,15 +12,15 @@ let notepadSchema = new mongoose.Schema({
 });
 
 notepadSchema.static('getByIdForUser', (notepadId, uid) =>
-    Notepad.findOneAsync({ _id: notepadId, user: uid }, 'title text category')
+    Notepad.findOne({ _id: notepadId, user: uid }, 'title text category').exec()
 );
 
 notepadSchema.static('getByUserId', uid =>
-    Notepad.findAsync({ user: uid }, 'title text category')
+    Notepad.find({ user: uid }, 'title text category').exec()
 );
 
 notepadSchema.static('updateForUserId', (notepadId, uid, data) =>
-    Notepad.findOneAndUpdateAsync(
+    Notepad.findOneAndUpdate(
         { _id: notepadId, user: uid },
         { $set: {
             title: data.title,
@@ -27,7 +28,7 @@ notepadSchema.static('updateForUserId', (notepadId, uid, data) =>
             category: data.category
         } },
         { 'new': true }
-    )
+    ).exec()
 );
 
 var Notepad = mongoose.model('Notepad', notepadSchema);

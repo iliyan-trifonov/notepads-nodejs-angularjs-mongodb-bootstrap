@@ -15,7 +15,7 @@ describe('User model', function () {
         //TODO: use callback/promise
         db = connection();
 
-        return User.createAsync({
+        return User.create({
             facebookId: +new Date(),
             name: 'Iliyan Trifonov',
             photo: 'photourl',
@@ -28,16 +28,17 @@ describe('User model', function () {
                 mongoose.Types.ObjectId(),
                 mongoose.Types.ObjectId()
             ]
-        }).then(function (user) {
+        })
+        .then(function (user) {
             assert.notStrictEqual(user, null);
             testUser = user;
         });
     });
 
     after(function () {
-        return User.removeAsync({})
-            //TODO: try .then(db...bind(db)) instead:
+        return User.remove({})
             .then(function () {
+                //TODO: try .then(db...bind(db)) instead:
                 db.close();
             });
     });
@@ -48,11 +49,12 @@ describe('User model', function () {
             name: 'Iliyan Trifonov ' +new Date().getTime(),
             photo: 'photourl'
         };
-        return User.createAsync(user).then(function (doc) {
+        return User.create(user).then(function (doc) {
             assert.notStrictEqual(doc, null);
             assert.strictEqual(doc.name, user.name);
-        }).then(function () {
-            return User.findOneAndRemoveAsync({ _id: user._id });
+            return doc;
+        }).then(function (doc) {
+            return User.findOneAndRemove({ _id: doc._id });
         });
     });
 
