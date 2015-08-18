@@ -7,27 +7,22 @@ import User from './models/user';
 let config;
 
 let authVerification = function (fbAccessToken, fbRefreshToken, fbProfile, callback) {
-    console.log('authVerification() called');
     User.fb(fbProfile.id)
     .then(function (existingUser) {
         if (existingUser) {
-            console.log('calling callback(null, existingUser)');
             return callback(null, existingUser);
         } else {
-            console.log('authVerification: creating a new user');
             return User.create({
                 facebookId: fbProfile.id,
                 name: fbProfile.displayName,
                 photo: fbProfile.photos[0].value
             })
             .then(function (newUser) {
-                console.log('finished creating a new user');
                 if (!newUser) {
                     let err = new Error('authVerification(): user creation unsuccessful!');
                     console.error(err, { newUser: newUser });
                     return callback(err, newUser);
                 }
-                console.log('authVerification: prepopulating for the new user', newUser);
                 //pre-populate some data for just created users
                 notepadsUtils.prepopulate(newUser._id).then(function (result) {
                     //return the new user object

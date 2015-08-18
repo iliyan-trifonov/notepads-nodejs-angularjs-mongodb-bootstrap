@@ -72,8 +72,6 @@ describe('Notepads Routes', function () {
             statusCalls: 0,
             jsonCalls: 0,
             status: function(status) {
-                console.log(`res.status(${status}) called`);
-
                 if (!this.statusExpected) {
                     throw new Error('unconfigured response object!');
                 }

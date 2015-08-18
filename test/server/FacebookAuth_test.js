@@ -49,7 +49,6 @@ describe('FacebookAuth', function () {
         });
 
         it('should create a new user for not existing uid', function (done) {
-            console.log('should create a new user for not existing uid started');
             var fbProfile = {
                 id: String(+new Date().getTime()),
                 displayName: 'Iliyan Trifonov ' +new Date().getTime(),

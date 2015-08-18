@@ -17,8 +17,6 @@ export let prepopulate = uid => {
 
         user = userOrig = yield User.findOne({ _id: uid }).exec();
 
-        console.log('user after findOne()', user);
-
         if (!user) {
             throw new Error('User not found!');
         }
@@ -29,8 +27,6 @@ export let prepopulate = uid => {
         });
 
         user = yield User.addCategory(user._id, category._id);
-
-        console.log('user after addCategory()', user);
 
         notepad = yield Notepad.create({
             title: 'Read me',
@@ -53,13 +49,9 @@ export let prepopulate = uid => {
             user: user._id
         });
 
-        console.log('prepopulate: new notepad created');
-
         category = yield Category.increaseNotepadsCountById(category._id);
 
         user = yield User.addNotepad(user._id, notepad._id);
-
-        console.log('prepopulate: returning the result');
 
         return {
             user: user,
