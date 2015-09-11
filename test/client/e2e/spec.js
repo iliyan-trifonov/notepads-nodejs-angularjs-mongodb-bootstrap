@@ -16,12 +16,12 @@ describe('Notepads app', function() {
 
     it('should remove all data in the test DB', function (done) {
         var db = connection();
-        User.removeAsync({})
+        User.remove({})
             .then(function () {
-                return Category.removeAsync({});
+                return Category.remove({});
             })
             .then(function () {
-                return Notepad.removeAsync({});
+                return Notepad.remove({});
             })
             .then(function () {
                 db.close();
@@ -57,7 +57,7 @@ describe('Notepads app', function() {
     describe('login/logout', function () {
         it('should remove the testing user from DB if exists', function (done) {
             var db = connection();
-            return User.removeAsync({
+            return User.remove({
                 facebookId: config.testFBUser.fbId
             }).then(function () {
                 db.close();
