@@ -5,6 +5,8 @@ let config;
 import express from 'express';
 import * as routes from './routes';
 import session from 'express-session';
+import mongoose from 'mongoose';
+const MongoStore = require('connect-mongo')(session);
 //favicon = require('serve-favicon')
 import path from 'path';
 import passport from 'passport';
@@ -54,7 +56,8 @@ if (config) {
         //TODO: check these properties for their default values
         resave: true,
         saveUninitialized: true,
-        secret: config.sessionSecret
+        secret: config.sessionSecret,
+        store: new MongoStore({ mongooseConnection: mongoose.connection })
     }));
     FacebookAuth.setAppConfig(config);
     FacebookAuth.call(null, passport);
