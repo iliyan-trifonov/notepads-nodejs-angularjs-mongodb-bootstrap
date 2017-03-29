@@ -42,7 +42,7 @@ try {
     }
 }
 
-app.set('port', process.env.PORT || 3000);
+app.set('port', 3001);
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'ejs');
 //app.use(favicon(__dirname + '/public/favicon.ico'));
@@ -169,8 +169,8 @@ let createConnection = () => {
 };
 
 let startServer = () => {
-    app.listen(app.get('port'), () => {
-        console.info('Express server listening on port ' + app.get('port'));
+    app.listen(app.get('port'), '127.0.0.1', () => {
+        console.info('Express server listening on 127.0.0.1:' + app.get('port'));
     });
 };
 
