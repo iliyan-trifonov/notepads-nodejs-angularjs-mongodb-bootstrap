@@ -76,6 +76,7 @@
 
             $locationProvider.html5Mode(true);
 
+            //send the acces token with every request
             $httpProvider.interceptors.push(function() {
                 return {
                     'request': function(config) {
