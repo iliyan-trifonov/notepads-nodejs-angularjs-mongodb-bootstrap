@@ -3,7 +3,8 @@
   "facebook": {
     "app": {
       "id": "FACEBOOK_APP_ID",
-      "secret": "FACEBOOK_APP_SECRET"
+      "secret": "FACEBOOK_APP_SECRET",
+      "callbackUrl": "/auth/facebook/callback"
     }
   },
   "apiBase": "/api/v1",
